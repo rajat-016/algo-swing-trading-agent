@@ -58,6 +58,10 @@ class Settings(BaseSettings):
     risk_per_trade: float = Field(default=1.0)
     min_momentum_score: float = Field(default=0.4)
 
+    # Market Protection (SL-M orders)
+    use_market_protection: bool = Field(default=False)
+    market_protection_pct: float = Field(default=0.5)
+
     # Database
     database_url: str = Field(default="sqlite:///trading.db")
 

@@ -1,0 +1,172 @@
+# Algo Swing Trading Agent - OpenCode Chat History
+
+## Session Date: 2026-04-22
+
+---
+
+## Issue 1: Trading Mode Fixed to .env Priority
+
+**Problem:** User set TRADING_MODE=live but server still ran in paper mode
+
+**Root Cause:**
+- run.ps1 line 78 sets `$env:TRADING_MODE = $Mode` (default "paper") before starting Python
+- Pydantic loads OS environment variables FIRST, then .env file values
+
+**Fix (config.py):**
+- Added `_read_env_file_value()` function to read .env directly at module import time
+- At module load, read .env file value and force into `os.environ["TRADING_MODE"]`
+- This ensures .env file ALWAYS takes priority over run.ps1 env var
+
+---
+
+## Issue 2: Broker Not Connected in Live Mode
+
+**Problem:** "Broker not connected - skipping cycle" warning in live mode
+
+**Root Cause:** Wrong Zerodha API endpoints
+- Code used `https://kite.zerodha.com` but correct is `https://api.kite.trade`
+- Endpoint paths were wrong: `/api/v3/profile`, `/api/v3/quote`, etc.
+
+**Fix (zerodha.py):**
+- Changed `kite_url` default from `https://kite.zerodha.com` to `https://api.kite.trade`
+- Fixed all API endpoints
+
+---
+
+## Issue 3: Available Cash Showing ₹0
+
+**Problem:** Available cash showed ₹0 in live mode
+
+**Root Cause:**
+- Wrong endpoint: `/margins` returns 403 Access Denied
+- Wrong data key: `margins.get("available")` returns dict
+
+**Fix (zerodha.py + loop.py):**
+- Changed endpoint to `/user/margins`
+- Fixed parse to `margins.get("available").get("cash")`
+
+---
+
+## Issue 4: Historical Data Returns 0 Candles
+
+**Problem:** Historical data returned 0 candles in live mode
+
+**Root Causes:**
+1. Symbol format mismatch - ChartInk uses full names, Zerodha uses short symbols
+2. Wrong API endpoint format
+3. BSE vs NSE conflict
+
+**Fix (zerodha.py + chartink.py):**
+
+1. **ChartInk update**: Read Symbol column directly
+
+2. **Symbol mapping**: Added proper caches:
+   - `_name_to_symbol_cache`: ChartInk name → Zerodha symbol
+   - `_symbol_to_token_cache`: Zerodha symbol → instrument token (NSE only)
+
+3. **API endpoint**: Fixed to correct path format:
+   - Before: `/instruments/historical?instrument_token=X&interval=Y`
+   - After: `/instruments/historical/{token}/{interval}`
+
+4. **NSE priority**: Filter to only use NSE EQ instruments
+
+---
+
+## Issue 5: ML Model Integration
+
+**Problem:** Need ML-based momentum ranking instead of pure technical
+
+**Solution:**
+- Created `train_model.py` to train ML model
+- Based on reference project from algo-trading-platform
+- Uses GradientBoostingClassifier
+- Trained model: model.joblib (93.47% accuracy)
+
+**Hybrid Approach:**
+- If ML BUY probability > 0.1 → use ML score
+- Otherwise → fall back to technical score
+- This handles imbalanced training data (mostly HOLD)
+
+---
+
+## Issue 6: No Entries Due to High Threshold
+
+**Problem:** Momentum threshold (0.4) too high, no stocks qualify
+
+**Solution:**
+- Removed momentum threshold
+- Using ML + technical score hybrid:
+  - If ML says BUY → enter
+  - If ML says HOLD but confidence > 50% → enter
+  - If technical score >= 0.3 → enter (fallback)
+
+---
+
+## Issue 7: Duplicate DB Files
+
+**Problem:** Two trading.db files - root and backend
+
+**Solution:**
+- Deleted root trading.db
+- Root .env uses relative path → uses backend/ when run from backend/
+- Clear DB when order fails
+
+---
+
+## Issue 8: Order Success Check
+
+**Problem:** DB updated even when order failed on broker
+
+**Fix (loop.py _place_entry):**
+- Added order success check
+- Only add to DB if order.order_id is returned
+- Returns early if order fails
+
+---
+
+## Issue 9: DB-Broker Status Sync
+
+**Problem:** DB status doesn't match broker
+
+**Fix (loop.py _sync_positions_from_broker):**
+- Now checks all broker positions
+- Marks stocks as EXITED if not in broker
+- Adds new positions from broker automatically
+
+---
+
+## Issue 10: Cycle Time Display
+
+**Problem:** No elapsed time shown
+
+**Fix (loop.py _run_cycle):**
+- Added elapsed time tracking
+- Shows: "Trading Cycle (LIVE - 5mins)" format
+
+---
+
+## Files Modified
+
+- backend/core/config.py
+- backend/services/broker/zerodha.py
+- backend/services/broker/chartink.py
+- backend/services/trading/loop.py
+- backend/services/ai/analyzer.py
+- backend/services/ai/features.py
+- backend/services/ai/model.py
+- backend/train_model.py
+- backend/model.joblib (new)
+- backend/.env
+
+---
+
+## Key Configuration
+
+Edit `.env` to control trading mode:
+```
+TRADING_MODE=live   # or
+TRADING_MODE=paper
+MAX_POSITIONS=3
+```
+
+(End of file - total 140 lines)

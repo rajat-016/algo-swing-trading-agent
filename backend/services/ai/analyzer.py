@@ -4,7 +4,7 @@ from typing import Optional, Dict, List
 import pandas as pd
 from datetime import timedelta
 
-from services.broker.zerodha import ZerodhaBroker
+from services.broker.kite import KiteBroker
 from services.ai.features import FeatureEngineer
 from services.ai.model import ModelTrainer
 from core.config import get_settings
@@ -14,6 +14,7 @@ from core.logging import logger
 @dataclass
 class StockAnalysis:
     symbol: str
+    trading_symbol: str
     should_enter: bool
     confidence: float
     signal: str
@@ -23,10 +24,11 @@ class StockAnalysis:
     position_size: int
     reason: str
     momentum_score: float = 0.0
+    current_price: float = 0.0
 
 
 class StockAnalyzer:
-    def __init__(self, broker: ZerodhaBroker, model_path: Optional[str] = None):
+    def __init__(self, broker: KiteBroker, model_path: Optional[str] = None):
         self.broker = broker
         self.settings = get_settings()
         self.feature_engineer = FeatureEngineer()
@@ -46,7 +48,7 @@ class StockAnalyzer:
         try:
             if self.model.load_model(model_path):
                 self._model_loaded = True
-                logger.info(f"Model loaded: {model_path}")
+                logger.debug(f"Model loaded: {model_path}")
                 return True
             return False
         except Exception as e:
@@ -54,72 +56,68 @@ class StockAnalyzer:
             return False
 
     async def analyze(self, symbol: str, available_cash: float) -> StockAnalysis:
-        logger.info(f"Analyzing: {symbol}")
-
+        chartink_input = symbol
+        trading_symbol = self.broker._map_chartink_to_zerodha(symbol)
+        
         try:
-            df = await self._fetch_data(symbol)
+            df = await self._fetch_data(trading_symbol)
             if df.empty or len(df) < 20:
-                logger.info(f"No data for {symbol} (got {len(df)} candles)")
-                return self._create_analysis(symbol, False, 0, "HOLD", 0, 0, 0, 0, "Insufficient data")
-
+                logger.info(f"{trading_symbol}: No data ({len(df)} candles)")
+                return self._create_analysis(symbol, trading_symbol, False, 0, "HOLD", 0, 0, 0, 0, "Insufficient data")
+            
             current_price = float(df["close"].iloc[-1])
-            momentum_score = self._calculate_momentum_score(df)
-            confidence = momentum_score * 100
-
-            if momentum_score < 0.4:
-                logger.info(f"{symbol}: Momentum {momentum_score:.2f} < 0.4")
+            technical_score = self._calculate_technical_score(df)
+            
+            ml_signal = "HOLD"
+            ml_confidence = 0
+            
+            if self._model_loaded:
+                try:
+                    prediction = await self._get_prediction(df)
+                    ml_signal = prediction.get("signal", "HOLD")
+                    ml_confidence = prediction.get("confidence", 0)
+                except:
+                    pass
+            
+            momentum_score = self._get_momentum_for_ranking(df) if self._model_loaded else technical_score
+            
+            should_enter = False
+            reason = ""
+            
+            if ml_signal == "BUY" or (ml_signal == "HOLD" and ml_confidence > 50):
+                should_enter = True
+                reason = f"ML: {ml_signal} ({ml_confidence:.0f}%)"
+            elif technical_score >= 0.3:
+                should_enter = True
+                reason = f"Technical: {technical_score:.2f}"
+                ml_confidence = technical_score * 100
+            
+            if not should_enter:
+                logger.info(f"{symbol}: SKIP - {ml_signal}/{ml_confidence:.0f}%, Tech={technical_score:.2f}")
                 return self._create_analysis(
-                    symbol,
-                    False,
-                    confidence,
-                    "HOLD",
-                    current_price,
-                    0,
-                    0,
-                    0,
-                    f"Weak momentum: {momentum_score:.2f}",
-                    momentum_score,
+                    symbol, trading_symbol, False, ml_confidence, "HOLD", current_price, 0, 0, 0,
+                    f"ML:{ml_signal}/Tech:{technical_score:.2f}", momentum_score, current_price
                 )
-
+            
             target, sl = self._calculate_targets(df, current_price)
             position_size = self._calculate_position_size(current_price, sl, available_cash)
-            logger.info(f"{symbol}: Momentum {momentum_score:.2f} | Price {current_price:.2f} | Size {position_size}")
-
+            
             if position_size < 1:
                 return self._create_analysis(
-                    symbol,
-                    False,
-                    confidence,
-                    "HOLD",
-                    current_price,
-                    target,
-                    sl,
-                    position_size,
-                    "Position size too small",
-                    momentum_score,
+                    symbol, trading_symbol, False, ml_confidence, "HOLD", current_price, target, sl, position_size,
+                    "Position size too small", momentum_score, current_price
                 )
-
-            should_enter = momentum_score >= 0.4
-            if should_enter:
-                logger.info(f"*** {symbol} QUALIFIES: Momentum {momentum_score:.2f} | Price {current_price:.2f} | Size {position_size} ***")
-            reason = self._generate_entry_reason(df, confidence, momentum_score)
-
+            
+            logger.info(f"{symbol} ({trading_symbol}): QUALIFIES -{reason} | Price=₹{current_price:.2f} | Qty={position_size}")
+            
             return self._create_analysis(
-                symbol,
-                should_enter,
-                confidence,
-                "BUY" if should_enter else "HOLD",
-                current_price,
-                target,
-                sl,
-                position_size,
-                reason,
-                momentum_score,
+                symbol, trading_symbol, True, ml_confidence, "BUY", current_price, target, sl, position_size,
+                reason, momentum_score, current_price
             )
-
+            
         except Exception as e:
             logger.error(f"Analysis failed for {symbol}: {e}")
-            return self._create_analysis(symbol, False, 0, "ERROR", 0, 0, 0, 0, str(e))
+            return self._create_analysis(symbol, "", False, 0, "ERROR", 0, 0, 0, 0, str(e), 0, 0)
 
     async def analyze_batch(self, symbols: List[str], available_cash: float) -> List[StockAnalysis]:
         all_analysis = []
@@ -127,15 +125,20 @@ class StockAnalyzer:
             analysis = await self.analyze(symbol, available_cash)
             all_analysis.append(analysis)
 
-        all_analysis.sort(key=lambda x: x.momentum_score, reverse=True)
-
-        top_count = min(5, len(all_analysis))
-        results = all_analysis[:top_count]
+        valid_analysis = [a for a in all_analysis if a.should_enter and a.position_size > 0]
+        valid_analysis.sort(key=lambda x: x.momentum_score, reverse=True)
         
-        logger.info(f"Top {top_count} by momentum:")
+        top_count = min(3, len(valid_analysis))
+        results = valid_analysis[:top_count]
+        
+        if not results:
+            logger.info("Top stocks: No qualifying entries")
+            return results
+            
+        logger.info(f"Top {top_count} Momentum Stocks:")
         for i, a in enumerate(results):
-            logger.info(f"  {i+1}. {a.symbol}: {a.momentum_score:.2f}")
-        
+            logger.info(f"  {i+1}. {a.trading_symbol}: ML={a.signal} ({a.confidence:.0f}%) | Price=₹{a.current_price:.2f} | Qty={a.position_size}")
+
         return results
 
     def rank_stocks(self, symbols: List[str], available_cash: float, max_positions: int = 3) -> List[Dict]:
@@ -188,20 +191,54 @@ class StockAnalyzer:
                 return {"signal": "HOLD", "confidence": 0}
 
             available_features = [f for f in self.model.feature_names if f in features_df.columns]
-            X = features_df[available_features].tail(1).values
+            if not available_features:
+                return {"signal": "HOLD", "confidence": 0}
 
+            X = features_df[available_features].tail(1).values
             prediction = self.model.predict(X)[0]
             probabilities = self.model.predict_proba(X)[0]
 
             signal_map = {-1: "SELL", 0: "HOLD", 1: "BUY"}
-            signal = signal_map.get(prediction, "HOLD")
+            signal = signal_map.get(int(prediction), "HOLD")
             confidence = float(max(probabilities)) * 100
 
             return {"signal": signal, "confidence": confidence}
 
         except Exception as e:
-            logger.debug(f"Prediction failed: {e}")
+            logger.warning(f"Prediction failed: {e}")
             return {"signal": "HOLD", "confidence": 0}
+
+    def _get_momentum_for_ranking(self, df: pd.DataFrame) -> float:
+        if df.empty or len(df) < 50:
+            return 0
+
+        try:
+            if not self._model_loaded:
+                return self._calculate_technical_score(df)
+
+            features_df = self.feature_engineer.generate_features(df)
+            features_df = features_df.dropna()
+
+            if len(features_df) < 20:
+                return 0
+
+            available_features = [f for f in self.model.feature_names if f in features_df.columns]
+            if not available_features:
+                return 0
+
+            X = features_df[available_features].tail(1).values
+            probabilities = self.model.predict_proba(X)
+
+            if len(probabilities) == 0:
+                return self._calculate_technical_score(df)
+
+            prob_buy = float(probabilities[0][2]) if len(probabilities[0]) > 2 else 0
+
+            return prob_buy
+
+        except Exception as e:
+            logger.debug(f"Momentum ranking failed: {e}")
+            return 0
 
     def _calculate_momentum_score(self, df: pd.DataFrame) -> float:
         if df.empty or len(df) < 50:
@@ -253,31 +290,51 @@ class StockAnalyzer:
             return 0
 
         try:
-            score = 0
+            price_score = 0
+            volume_score = 0
+            trend_score = 0
+            rsi_score = 0
 
+            price_change_5d = ((df["close"].iloc[-1] - df["close"].iloc[-6]) / df["close"].iloc[-6]) * 100 if len(df) >= 6 else 0
             price_change_10d = ((df["close"].iloc[-1] - df["close"].iloc[-11]) / df["close"].iloc[-11]) * 100 if len(df) >= 11 else 0
-            score += min(30, max(0, price_change_10d * 3))
-
-            if "rsi_14" in df.columns:
-                rsi = df["rsi_14"].iloc[-1]
-                if rsi < 30:
-                    score += 30
-                elif rsi < 50:
-                    score += 20
-                elif rsi < 70:
-                    score += 10
+            price_score = min(30, max(0, price_change_10d * 3))
 
             if "volume_ratio" in df.columns:
                 vol_ratio = float(df["volume_ratio"].iloc[-1]) if not pd.isna(df["volume_ratio"].iloc[-1]) else 0
-                score += min(20, vol_ratio * 10)
+                volume_score = min(20, vol_ratio * 10)
 
             if "ema_20" in df.columns and "ema_50" in df.columns:
                 ema_20 = df["ema_20"].iloc[-1]
                 ema_50 = df["ema_50"].iloc[-1]
-                if not pd.isna(ema_20) and not pd.isna(ema_50) and ema_20 > ema_50:
-                    score += 20
+                current_price = df["close"].iloc[-1]
+                if not pd.isna(ema_20) and not pd.isna(ema_50):
+                    if ema_20 > ema_50:
+                        trend_score = 20
+                        if current_price > ema_20:
+                            trend_score += 10
 
-            return score / 100
+            if "rsi_14" in df.columns:
+                rsi = df["rsi_14"].iloc[-1]
+                if not pd.isna(rsi):
+                    if rsi < 30:
+                        rsi_score = 30
+                    elif rsi < 40:
+                        rsi_score = 20
+                    elif rsi < 60:
+                        rsi_score = 25
+                    elif rsi < 70:
+                        rsi_score = 15
+                    else:
+                        rsi_score = 5
+
+            total_score = (
+                price_score * 0.4 +
+                volume_score * 0.2 +
+                trend_score * 0.2 +
+                rsi_score * 0.2
+            )
+
+            return total_score / 100
 
         except Exception as e:
             logger.debug(f"Technical score calc failed: {e}")
@@ -342,6 +399,7 @@ class StockAnalyzer:
     def _create_analysis(
         self,
         symbol: str,
+        trading_symbol: str,
         should_enter: bool,
         confidence: float,
         signal: str,
@@ -351,9 +409,11 @@ class StockAnalyzer:
         position_size: int,
         reason: str,
         momentum_score: float = 0,
+        current_price: float = 0,
     ) -> StockAnalysis:
         return StockAnalysis(
             symbol=symbol,
+            trading_symbol=trading_symbol,
             should_enter=should_enter,
             confidence=confidence,
             signal=signal,
@@ -363,4 +423,5 @@ class StockAnalyzer:
             position_size=position_size,
             reason=reason,
             momentum_score=momentum_score,
+            current_price=current_price,
         )

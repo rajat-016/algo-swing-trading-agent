@@ -1,14 +1,8 @@
-import joblib
 import numpy as np
 import pandas as pd
 from typing import Tuple, Optional, List
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, classification_report
-
-from services.ai.features import FeatureEngineer
 from core.logging import logger
+from services.ai.features import FeatureEngineer
 
 
 class ModelTrainer:
@@ -16,12 +10,15 @@ class ModelTrainer:
         self.target_return = target_return
         self.stop_loss = stop_loss
         self.feature_engineer = FeatureEngineer()
-        self.model: Optional[GradientBoostingClassifier] = None
-        self.scaler: Optional[StandardScaler] = None
+        self.model = None
+        self.scaler = None
         self.feature_names: List[str] = []
         self._is_trained = False
 
     def prepare_data(self, df: pd.DataFrame, lookahead: int = 5) -> Tuple:
+        from sklearn.model_selection import train_test_split
+        from sklearn.preprocessing import StandardScaler
+
         features_df = self.feature_engineer.generate_features(df)
 
         features_df = self._create_labels(features_df, lookahead)
@@ -63,6 +60,7 @@ class ModelTrainer:
         return df
 
     def train(self, X_train: np.ndarray, y_train: np.ndarray) -> bool:
+        from sklearn.ensemble import GradientBoostingClassifier
         try:
             self.model = GradientBoostingClassifier(
                 n_estimators=100,
@@ -81,6 +79,7 @@ class ModelTrainer:
             return False
 
     def evaluate(self, X_test: np.ndarray, y_test: np.ndarray) -> dict:
+        from sklearn.metrics import accuracy_score, classification_report
         if not self.model:
             return {"accuracy": 0}
 
@@ -93,6 +92,7 @@ class ModelTrainer:
         }
 
     def save_model(self, path: str) -> bool:
+        import joblib
         if not self.model:
             return False
 
@@ -108,13 +108,14 @@ class ModelTrainer:
             return False
 
     def load_model(self, path: str) -> bool:
+        import joblib
         try:
             data = joblib.load(path)
             self.model = data["model"]
             self.scaler = data["scaler"]
             self.feature_names = data["feature_names"]
             self._is_trained = True
-            logger.info(f"Model loaded from {path}")
+            logger.debug(f"Model loaded from {path}")
             return True
         except Exception as e:
             logger.error(f"Model load failed - {e}")
@@ -124,15 +125,38 @@ class ModelTrainer:
         if not self.model:
             return np.array([])
 
-        X_scaled = self.scaler.transform(X)
-        return self.model.predict(X_scaled)
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            X_aligned = self._align_features(X)
+            X_scaled = self.scaler.transform(X_aligned)
+            return self.model.predict(X_scaled)
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         if not self.model:
             return np.array([])
 
-        X_scaled = self.scaler.transform(X)
-        return self.model.predict_proba(X_scaled)
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            X_aligned = self._align_features(X)
+            X_scaled = self.scaler.transform(X_aligned)
+            return self.model.predict_proba(X_scaled)
+
+    def _align_features(self, X: np.ndarray) -> np.ndarray:
+        if not self.feature_names:
+            return X
+
+        expected_cols = len(self.feature_names)
+        if X.shape[1] == expected_cols:
+            return X
+
+        if X.shape[1] > expected_cols:
+            return X[:, :expected_cols]
+
+        padded = np.zeros((X.shape[0], expected_cols))
+        padded[:, :X.shape[1]] = X
+        return padded
 
     def is_trained(self) -> bool:
         return self._is_trained

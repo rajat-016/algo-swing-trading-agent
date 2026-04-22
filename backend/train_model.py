@@ -13,7 +13,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, classification_report
 
-from services.broker.zerodha import get_broker
+from services.broker.kite import get_broker
 from services.broker.chartink import get_chartink_client
 from services.ai.features import FeatureEngineer
 from core.logging import logger

@@ -37,17 +37,22 @@ class ChartInkClient:
                 rows = await page.query_selector_all("table tbody tr")
                 for row in rows:
                     cells = await row.query_selector_all("td")
-                    if len(cells) >= 2:
-                        symbol_text = (await cells[1].inner_text()).strip()
-                        if symbol_text and not symbol_text.startswith("-"):
-                            zerodha_symbol = symbol_text
-                            symbols.append(zerodha_symbol)
+                    if len(cells) >= 3:
+                        c0 = (await cells[0].inner_text()).strip()
+                        c1 = (await cells[1].inner_text()).strip()
+                        c2 = (await cells[2].inner_text()).strip() if len(cells) > 2 else ""
+                        if c0 and not c0.startswith("-") and len(c0) < 20 and not c0.replace(" ", "").isdigit():
+                            symbols.append(c0)
+                        elif c2 and not c2.startswith("-") and len(c2) < 20 and not c2.replace(" ", "").isdigit():
+                            symbols.append(c2)
+                        elif c1 and not c1.startswith("-") and len(c1) < 20 and not c1.replace(" ", "").isdigit():
+                            symbols.append(c1)
 
                 await browser.close()
 
                 self._symbols = symbols
                 self._last_fetch = asyncio.get_event_loop().time()
-                logger.info(f"ChartInk: Fetched {len(symbols)} stocks")
+                logger.info(f"ChartInk: Fetched {len(symbols)} stocks: {symbols}")
                 return symbols
 
         except Exception as e:

@@ -8,13 +8,25 @@ from core.logging import logger
 from api.routes import router
 from api.routes.trading import set_trading_loop
 from api.routes.websocket import router as ws_router, get_manager
-from services.broker.zerodha import get_broker
+from services.broker.kite import get_broker
 from services.broker.chartink import get_chartink_client
-from services.ai.analyzer import StockAnalyzer
 from services.trading.loop import TradingLoop
 
 
 _trading_loop = None
+
+
+def _start_loop_sync(loop_instance):
+    import asyncio
+    from threading import Thread
+    loop = asyncio.new_event_loop()
+
+    def run():
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(loop_instance.start())
+
+    t = Thread(target=run, daemon=True)
+    t.start()
 
 
 @asynccontextmanager
@@ -23,11 +35,11 @@ async def lifespan(app: FastAPI):
 
     logger.info("Starting application...")
     init_db()
-    logger.info("Database initialized")
 
     settings = get_settings()
 
     broker = get_broker()
+
     if settings.is_live_trading:
         broker.connect()
         logger.info("Connected to Zerodha")
@@ -35,17 +47,22 @@ async def lifespan(app: FastAPI):
         logger.info("Running in paper trading mode")
 
     chartink = get_chartink_client()
-    analyzer = StockAnalyzer(broker)
 
     _trading_loop = TradingLoop(
         broker=broker,
         chartink=chartink,
-        analyzer=analyzer,
-        interval_seconds=300,
+        interval_seconds=settings.cycle_interval_seconds,
     )
     set_trading_loop(_trading_loop)
 
     logger.info(f"Trading mode: {settings.trading_mode.upper()}")
+
+    if settings.auto_start_trading:
+        try:
+            logger.info("Auto-starting trading loop in background...")
+            _start_loop_sync(_trading_loop)
+        except Exception as e:
+            logger.error(f"Auto-start failed: {e}")
 
     yield
 
@@ -77,11 +94,12 @@ def create_app() -> FastAPI:
 
     @app.get("/")
     async def root():
+        settings = get_settings()
         return {
             "name": "Algo Swing Trading Agent",
             "version": "1.0.0",
             "status": "running",
-            "mode": get_settings().trading_mode,
+            "mode": settings.trading_mode,
         }
 
     @app.get("/health")

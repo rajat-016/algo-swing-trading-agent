@@ -1,9 +1,12 @@
 import uvicorn
-from core.config import get_settings
+import time
+start = time.time()
 
+from core.config import get_settings
 
 def main():
     settings = get_settings()
+    print(f"Config loaded: {time.time() - start:.2f}s")
 
     uvicorn.run(
         "api.main:app",
@@ -14,4 +17,5 @@ def main():
 
 
 if __name__ == "__main__":
+    print(f"Imports complete: {time.time() - start:.2f}s")
     main()

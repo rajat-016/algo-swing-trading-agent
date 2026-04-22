@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional, Dict, List
 from sqlalchemy.orm import Session
 
-from services.broker.zerodha import ZerodhaBroker
+from services.broker.kite import KiteBroker
 from services.broker.chartink import ChartInkClient
 from models.stock import Stock, StockStatus, ExitReason
 from core.config import get_settings
@@ -23,7 +23,7 @@ def _broadcast_ws(data: dict):
 class TradingLoop:
     def __init__(
         self,
-        broker: ZerodhaBroker,
+        broker: KiteBroker,
         chartink: ChartInkClient,
         interval_seconds: int = 300,
     ):
@@ -72,13 +72,24 @@ class TradingLoop:
         logger.info(f"Trading loop started ({mode} mode)")
         await self._run_cycle()
 
+    _cycle_start_time: datetime = None
+
     def stop(self):
         self._running = False
         logger.info("Trading loop stopped")
 
     async def _run_cycle(self):
+        interval_mins = self.settings.cycle_interval_seconds // 60
+        
+        if self._cycle_start_time:
+            elapsed = int((datetime.now() - self._cycle_start_time).total_seconds() / 60)
+            time_info = f"{elapsed}mins"
+        else:
+            time_info = f"interval-{interval_mins}mins"
+        
         cycle_time = datetime.now().strftime("%H:%M:%S")
-        logger.info(f"[{cycle_time}] === Trading Cycle ({self.settings.trading_mode.upper()}) ===")
+        logger.info(f"[{cycle_time}] === Trading Cycle ({self.settings.trading_mode.upper()} - {time_info}) ===")
+        self._cycle_start_time = datetime.now()
 
         if self.is_live_mode and not self.broker.is_connected():
             logger.warning("Broker not connected - skipping cycle")
@@ -111,7 +122,7 @@ class TradingLoop:
             margins = self.broker.get_margins()
             if margins:
                 available = float(margins.get("available", {}).get("cash", 0))
-                logger.info(f"Live mode: Available cash ₹{available:,.0f}")
+                logger.info(f"Live mode: Available cash ₹{available:,.2f}")
                 return available
         except Exception as e:
             logger.error(f"Error getting funds: {e}")
@@ -136,12 +147,15 @@ class TradingLoop:
 
         try:
             broker_positions = self.broker.get_positions()
+            broker_symbols = set()
+            
             for pos in broker_positions:
                 symbol = pos.get("tradingsymbol", "")
                 qty = pos.get("quantity", 0)
                 avg_price = pos.get("average_price", 0)
 
                 if qty > 0 and symbol:
+                    broker_symbols.add(symbol)
                     existing = db.query(Stock).filter(
                         Stock.symbol == symbol,
                         Stock.status == StockStatus.ENTERED
@@ -161,12 +175,21 @@ class TradingLoop:
                         db.add(new_stock)
                         db.commit()
                         logger.info(f"Synced position: {symbol}")
+            
+            entered_stocks = db.query(Stock).filter(Stock.status == StockStatus.ENTERED).all()
+            for stock in entered_stocks:
+                if stock.symbol not in broker_symbols:
+                    logger.info(f"Position {stock.symbol} not in broker - marking EXITED")
+                    stock.status = StockStatus.EXITED
+                    stock.exit_date = datetime.utcnow()
+                    stock.exit_reason = "Synced - closed on broker"
+                    db.commit()
 
         except Exception as e:
             logger.error(f"Error syncing positions: {e}")
 
     async def _process_entries(self, db: Session, cash: float, open_positions: Dict):
-        logger.info(f"Available cash: ₹{cash:,.0f}")
+        logger.info(f"Available cash: ₹{cash:,.2f}")
 
         if cash < 500:
             logger.warning("Insufficient cash")
@@ -188,39 +211,70 @@ class TradingLoop:
             return
 
         available_slots = self.settings.max_positions - len(open_positions)
+        if available_slots < 1:
+            return
+
+        max_stocks_to_analyze = min(available_slots * 4, len(chartink_symbols))
         analysis_results = await self.analyzer.analyze_batch(
-            chartink_symbols[:20],
+            chartink_symbols[:max_stocks_to_analyze],
             cash / max(available_slots, 1),
         )
 
-        for analysis in analysis_results[:available_slots]:
+        entries_placed = 0
+        remaining_cash = cash
+
+        for analysis in analysis_results:
+            if entries_placed >= available_slots:
+                break
+
             if analysis.symbol in open_positions:
+                continue
+
+            if not analysis.should_enter:
                 continue
 
             if analysis.position_size < 1:
                 continue
 
+            cost = analysis.entry_price * analysis.position_size
+            if cost > remaining_cash:
+                logger.warning(f"Skipping {analysis.symbol}: need ₹{cost:.0f}, have ₹{remaining_cash:.0f}")
+                continue
+
             await self._place_entry(db, analysis)
+            remaining_cash -= cost
+            entries_placed += 1
+
+        if entries_placed == 0:
+            logger.info("No entries placed")
 
     async def _place_entry(self, db: Session, analysis: StockAnalysis):
-        symbol = analysis.symbol
-
+        zerodha_symbol = analysis.trading_symbol
+        
         if self.is_live_mode:
             order = self.broker.place_order(
-                trading_symbol=symbol,
+                trading_symbol=zerodha_symbol,
                 side=OrderSide.BUY,
                 quantity=analysis.position_size,
                 order_type=OrderType.LIMIT,
                 price=analysis.entry_price,
                 product_type=ProductType.CNC,
+                use_market_protection=self.settings.use_market_protection,
+                market_protection_pct=self.settings.market_protection_pct,
             )
-            broker_order_id = order.order_id if order else None
+            
+            if not order or not order.order_id:
+                logger.error(f"[LIVE] Order failed for {zerodha_symbol}")
+                return
+                
+            broker_order_id = order.order_id
+            logger.info(f"[LIVE] Order placed: {broker_order_id} for {zerodha_symbol}")
         else:
             broker_order_id = f"PAPER_{int(datetime.utcnow().timestamp())}"
-            logger.info(f"[PAPER] Simulated BUY order: {symbol} | Qty: {analysis.position_size} | Price: ₹{analysis.entry_price:.2f}")
+            logger.info(f"[PAPER] Simulated BUY order: {zerodha_symbol} | Qty: {analysis.position_size} | Price: ₹{analysis.entry_price:.2f}")
 
         stock = Stock(
-            symbol=symbol,
+            symbol=zerodha_symbol,
             status=StockStatus.ENTERED,
             entry_price=analysis.entry_price,
             target_price=analysis.target_price,
@@ -236,7 +290,7 @@ class TradingLoop:
 
         _broadcast_ws({
             "type": "entry",
-            "symbol": symbol,
+            "symbol": zerodha_symbol,
             "price": analysis.entry_price,
             "quantity": analysis.position_size,
             "target": analysis.target_price,
@@ -245,7 +299,7 @@ class TradingLoop:
         })
 
         mode_prefix = "[PAPER]" if self.is_paper_mode else "[LIVE]"
-        logger.info(f"{mode_prefix} ENTRY: {symbol} | Price: ₹{analysis.entry_price:.2f} | Qty: {analysis.position_size} | Target: ₹{analysis.target_price:.2f} | SL: ₹{analysis.stop_loss:.2f}")
+        logger.info(f"{mode_prefix} ENTRY: {zerodha_symbol} | Price: ₹{analysis.entry_price:.2f} | Qty: {analysis.position_size} | Target: ₹{analysis.target_price:.2f} | SL: ₹{analysis.stop_loss:.2f}")
 
     async def _check_exit(self, db: Session, symbol: str, pos_data: Dict):
         if self.is_paper_mode:
@@ -298,9 +352,11 @@ class TradingLoop:
                 trading_symbol=symbol,
                 side=OrderSide.SELL,
                 quantity=quantity,
-                order_type=OrderType.LIMIT,
+                order_type=OrderType.SL,
                 price=exit_price,
                 product_type=ProductType.CNC,
+                use_market_protection=self.settings.use_market_protection,
+                market_protection_pct=self.settings.market_protection_pct,
             )
             exit_order_id = order.order_id if order else None
         else:

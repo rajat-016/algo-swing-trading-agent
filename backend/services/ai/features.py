@@ -45,14 +45,15 @@ class FeatureEngineer:
 
         result = df.copy()
 
-        for window in [5, 10, 20, 50, 100, 12, 26]:
+        for window in [5, 10, 20, 50, 100, 200, 12, 26]:
             result[f"sma_{window}"] = result["close"].rolling(window=window).mean()
             result[f"ema_{window}"] = result["close"].ewm(span=window, adjust=False).mean()
 
         result["sma_5_20_diff"] = result["sma_5"] - result["sma_20"]
         result["sma_20_50_diff"] = result["sma_20"] - result["sma_50"]
+        result["sma_50_200_diff"] = result["sma_50"] - result["sma_200"]
 
-        for window in [20, 50]:
+        for window in [5, 20, 50]:
             result[f"price_to_sma_{window}"] = result["close"] / result[f"sma_{window}"]
 
         return result
@@ -67,7 +68,7 @@ class FeatureEngineer:
         gain = delta.where(delta > 0, 0)
         loss = -delta.where(delta < 0, 0)
 
-        for period in [7, 14]:
+        for period in [7, 14, 21]:
             avg_gain = gain.rolling(window=period).mean()
             avg_loss = loss.rolling(window=period).mean()
             rs = avg_gain / avg_loss
@@ -77,7 +78,7 @@ class FeatureEngineer:
         result["macd_signal"] = result["macd"].ewm(span=9, adjust=False).mean()
         result["macd_hist"] = result["macd"] - result["macd_signal"]
 
-        for period in [5, 10, 20]:
+        for period in [12, 26]:
             result[f"momentum_{period}"] = result["close"] / result["close"].shift(period)
 
         result["roc"] = ((result["close"] - result["close"].shift(10)) / result["close"].shift(10)) * 100
@@ -96,9 +97,11 @@ class FeatureEngineer:
 
         true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
 
-        result["atr_14"] = true_range.rolling(window=14).mean()
+        for period in [7, 14, 21]:
+            result[f"atr_{period}"] = true_range.rolling(window=period).mean()
 
-        result["stddev_20"] = result["close"].rolling(window=20).std()
+        for period in [5, 20, 50]:
+            result[f"stddev_{period}"] = result["close"].rolling(window=period).std()
 
         result["bb_upper"] = result["sma_20"] + (result["stddev_20"] * 2)
         result["bb_lower"] = result["sma_20"] - (result["stddev_20"] * 2)
@@ -112,7 +115,8 @@ class FeatureEngineer:
 
         result = df.copy()
 
-        result["volume_sma_20"] = result["volume"].rolling(window=20).mean()
+        for window in [5, 20]:
+            result[f"volume_sma_{window}"] = result["volume"].rolling(window=window).mean()
         result["volume_ratio"] = result["volume"] / result["volume_sma_20"]
 
         result["obv"] = (np.sign(result["close"].diff()) * result["volume"]).cumsum()
@@ -120,6 +124,10 @@ class FeatureEngineer:
         result["vwap"] = (
             (result["typical_price"] * result["volume"]).rolling(window=20).sum()
             / result["volume"].rolling(window=20).sum()
+        )
+
+        result["volume_price_correlation"] = (
+            result["close"].rolling(window=20).corr(result["volume"])
         )
 
         return result
@@ -140,26 +148,35 @@ class FeatureEngineer:
             "sma_20",
             "sma_50",
             "sma_100",
+            "sma_200",
             "sma_5_20_diff",
             "sma_20_50_diff",
+            "sma_50_200_diff",
+            "price_to_sma_5",
             "price_to_sma_20",
             "price_to_sma_50",
             "rsi_7",
             "rsi_14",
+            "rsi_21",
             "macd",
             "macd_signal",
             "macd_hist",
-            "momentum_5",
-            "momentum_10",
-            "momentum_20",
+            "momentum_12",
+            "momentum_26",
             "roc",
+            "atr_7",
             "atr_14",
+            "atr_21",
+            "stddev_5",
             "stddev_20",
+            "stddev_50",
             "bb_upper",
             "bb_lower",
             "bb_position",
+            "volume_sma_5",
             "volume_sma_20",
             "volume_ratio",
             "obv",
             "vwap",
+            "volume_price_correlation",
         ]
