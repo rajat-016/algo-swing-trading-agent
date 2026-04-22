@@ -45,7 +45,7 @@ class FeatureEngineer:
 
         result = df.copy()
 
-        for window in [5, 10, 20, 50, 100]:
+        for window in [5, 10, 20, 50, 100, 12, 26]:
             result[f"sma_{window}"] = result["close"].rolling(window=window).mean()
             result[f"ema_{window}"] = result["close"].ewm(span=window, adjust=False).mean()
 

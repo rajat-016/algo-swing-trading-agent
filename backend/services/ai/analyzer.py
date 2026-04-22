@@ -35,8 +35,9 @@ class StockAnalyzer:
             stop_loss=self.settings.stop_loss_pct / 100,
         )
         self._model_loaded = False
-        self.min_confidence = self.settings.min_confidence
+        self.min_momentum_score = self.settings.min_momentum_score
         self.lookback_days = 60
+        self.interval = "60minute"
 
         if model_path:
             self.load_model(model_path)
@@ -58,38 +59,38 @@ class StockAnalyzer:
         try:
             df = await self._fetch_data(symbol)
             if df.empty or len(df) < 20:
+                logger.info(f"No data for {symbol} (got {len(df)} candles)")
                 return self._create_analysis(symbol, False, 0, "HOLD", 0, 0, 0, 0, "Insufficient data")
 
             current_price = float(df["close"].iloc[-1])
-            prediction = await self._get_prediction(df)
             momentum_score = self._calculate_momentum_score(df)
+            confidence = momentum_score * 100
 
-            confidence = prediction.get("confidence", 0) if prediction else 0
-            ml_signal = prediction.get("signal", "HOLD") if prediction else "HOLD"
-
-            if confidence < self.min_confidence and ml_signal != "BUY":
+            if momentum_score < 0.4:
+                logger.info(f"{symbol}: Momentum {momentum_score:.2f} < 0.4")
                 return self._create_analysis(
                     symbol,
                     False,
                     confidence,
-                    ml_signal,
+                    "HOLD",
                     current_price,
                     0,
                     0,
                     0,
-                    f"Low confidence: {confidence:.1f}%",
+                    f"Weak momentum: {momentum_score:.2f}",
                     momentum_score,
                 )
 
             target, sl = self._calculate_targets(df, current_price)
             position_size = self._calculate_position_size(current_price, sl, available_cash)
+            logger.info(f"{symbol}: Momentum {momentum_score:.2f} | Price {current_price:.2f} | Size {position_size}")
 
             if position_size < 1:
                 return self._create_analysis(
                     symbol,
                     False,
                     confidence,
-                    ml_signal,
+                    "HOLD",
                     current_price,
                     target,
                     sl,
@@ -98,7 +99,9 @@ class StockAnalyzer:
                     momentum_score,
                 )
 
-            should_enter = confidence >= self.min_confidence or ml_signal == "BUY"
+            should_enter = momentum_score >= 0.4
+            if should_enter:
+                logger.info(f"*** {symbol} QUALIFIES: Momentum {momentum_score:.2f} | Price {current_price:.2f} | Size {position_size} ***")
             reason = self._generate_entry_reason(df, confidence, momentum_score)
 
             return self._create_analysis(
@@ -119,14 +122,20 @@ class StockAnalyzer:
             return self._create_analysis(symbol, False, 0, "ERROR", 0, 0, 0, 0, str(e))
 
     async def analyze_batch(self, symbols: List[str], available_cash: float) -> List[StockAnalysis]:
-        results = []
+        all_analysis = []
         for symbol in symbols:
             analysis = await self.analyze(symbol, available_cash)
-            if analysis.should_enter:
-                results.append(analysis)
+            all_analysis.append(analysis)
 
-        results.sort(key=lambda x: (x.confidence, x.momentum_score), reverse=True)
-        logger.info(f"Batch analysis: {len(results)}/{len(symbols)} passed filters")
+        all_analysis.sort(key=lambda x: x.momentum_score, reverse=True)
+
+        top_count = min(5, len(all_analysis))
+        results = all_analysis[:top_count]
+        
+        logger.info(f"Top {top_count} by momentum:")
+        for i, a in enumerate(results):
+            logger.info(f"  {i+1}. {a.symbol}: {a.momentum_score:.2f}")
+        
         return results
 
     def rank_stocks(self, symbols: List[str], available_cash: float, max_positions: int = 3) -> List[Dict]:
@@ -146,7 +155,7 @@ class StockAnalyzer:
             to_date = datetime.utcnow()
             from_date = to_date - timedelta(days=self.lookback_days)
 
-            data = self.broker.get_historical_data(symbol, from_date, to_date, "15minute")
+            data = self.broker.get_historical_data(symbol, from_date, to_date, self.interval)
             if not data:
                 return pd.DataFrame()
 
@@ -195,6 +204,51 @@ class StockAnalyzer:
             return {"signal": "HOLD", "confidence": 0}
 
     def _calculate_momentum_score(self, df: pd.DataFrame) -> float:
+        if df.empty or len(df) < 50:
+            return 0
+
+        try:
+            features_df = self.feature_engineer.generate_features(df)
+            features_df = features_df.dropna()
+
+            if len(features_df) < 20:
+                return 0
+
+            if not self._model_loaded:
+                return self._calculate_technical_score(df)
+
+            try:
+                available_features = [f for f in self.model.feature_names if f in features_df.columns]
+                if not available_features:
+                    return 0
+
+                X = features_df[available_features].tail(1).values
+                probabilities = self.model.predict_proba(X)
+
+                if len(probabilities) == 0:
+                    return self._calculate_technical_score(df)
+
+                prob_buy = float(probabilities[0][2]) if len(probabilities[0]) > 2 else 0
+                prob_hold = float(probabilities[0][1]) if len(probabilities[0]) > 1 else 0
+                prob_sell = float(probabilities[0][0]) if len(probabilities[0]) > 0 else 0
+
+                logger.debug(f"ML probs: SELL={prob_sell:.3f} HOLD={prob_hold:.3f} BUY={prob_buy:.3f}")
+
+                if prob_buy > 0.1:
+                    return prob_buy
+
+                logger.debug("ML probability too low, using technical score")
+                return self._calculate_technical_score(df)
+
+            except Exception as e:
+                logger.debug(f"ML prediction failed: {e}")
+                return self._calculate_technical_score(df)
+
+        except Exception as e:
+            logger.debug(f"Momentum score calc failed: {e}")
+            return 0
+
+    def _calculate_technical_score(self, df: pd.DataFrame) -> float:
         if df.empty or len(df) < 20:
             return 0
 
@@ -226,7 +280,7 @@ class StockAnalyzer:
             return score / 100
 
         except Exception as e:
-            logger.debug(f"Momentum score calc failed: {e}")
+            logger.debug(f"Technical score calc failed: {e}")
             return 0
 
     def _calculate_targets(self, df: pd.DataFrame, current_price: float) -> tuple:

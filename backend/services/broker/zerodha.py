@@ -23,6 +23,62 @@ class ZerodhaBroker:
         self.session = requests.Session()
         self._connected = False
         self._instruments_cache: Dict[str, Any] = {}
+        self._name_to_symbol_cache: Dict[str, str] = {}
+        self._symbol_to_token_cache: Dict[str, str] = {}
+
+    def _map_chartink_to_zerodha(self, chartink_symbol: str) -> str:
+        if not self._name_to_symbol_cache:
+            self._load_name_mapping()
+
+        if chartink_symbol in self._instruments_cache:
+            return chartink_symbol
+
+        if chartink_symbol.startswith("NSE:"):
+            name = chartink_symbol[4:].upper().strip()
+        else:
+            name = chartink_symbol.upper().strip()
+
+        if name in self._name_to_symbol_cache:
+            zerodha_symbol = self._name_to_symbol_cache[name]
+            self._instruments_cache[chartink_symbol] = zerodha_symbol
+            return zerodha_symbol
+
+        name_words = set(name.split())
+        best_match = None
+        best_score = 0
+
+        for key, value in self._name_to_symbol_cache.items():
+            words = set(key.split())
+            common = name_words & words
+            if len(common) > best_score:
+                best_score = len(common)
+                best_match = (key, value)
+
+        if best_match and best_score >= 2:
+            self._instruments_cache[chartink_symbol] = best_match[1]
+            return best_match[1]
+
+        self._instruments_cache[chartink_symbol] = name.replace(" ", "")
+        return name.replace(" ", "")
+
+    def _load_name_mapping(self):
+        try:
+            url = f"{self.kite_url}/instruments"
+            response = self.session.get(url)
+            if response.status_code == 200:
+                for line in response.text.split("\n")[1:]:
+                    parts = line.split(",")
+                    if len(parts) >= 5:
+                        instrument_token = parts[0]
+                        symbol = parts[2].strip('"')
+                        name = parts[3].strip('"')
+                        exchange = parts[-1]
+                        instrument_type = parts[-3] if len(parts) >= 8 else ""
+                        if exchange == "NSE" and instrument_type == "EQ":
+                            self._name_to_symbol_cache[name.upper()] = symbol
+                            self._symbol_to_token_cache[symbol] = instrument_token
+        except Exception as e:
+            logger.error(f"Error loading name mapping: {e}")
 
     def connect(self) -> bool:
         try:
@@ -35,7 +91,7 @@ class ZerodhaBroker:
                 "X-Kite-Version": "3",
             })
 
-            profile = self.session.get(f"{self.kite_url}/api/v3/profile")
+            profile = self.session.get(f"{self.kite_url}/user/profile")
             if profile.status_code == 200:
                 self._connected = True
                 logger.info("Zerodha: Connected successfully")
@@ -56,7 +112,7 @@ class ZerodhaBroker:
             if not instrument:
                 return None
 
-            url = f"{self.kite_url}/api/v3/quote"
+            url = f"{self.kite_url}/quote"
             params = {"i": [instrument]}
             response = self.session.get(url, params=params)
 
@@ -77,16 +133,15 @@ class ZerodhaBroker:
         interval: str = "15minute",
     ) -> List[Dict]:
         try:
-            instrument = self._get_instrument_token(trading_symbol)
+            zerodha_symbol = self._map_chartink_to_zerodha(trading_symbol)
+            instrument = self._symbol_to_token_cache.get(zerodha_symbol)
             if not instrument:
                 return []
 
-            url = f"{self.kite_url}/api/v3/instruments/historical"
+            url = f"{self.kite_url}/instruments/historical/{instrument}/{interval}"
             params = {
-                "instrument_token": instrument,
                 "from": from_date.strftime("%Y-%m-%d %H:%M:%S"),
                 "to": to_date.strftime("%Y-%m-%d %H:%M:%S"),
-                "interval": interval,
             }
 
             response = self.session.get(url, params=params)
@@ -112,7 +167,7 @@ class ZerodhaBroker:
 
     def get_positions(self) -> List[Dict]:
         try:
-            url = f"{self.kite_url}/api/v3/positions"
+            url = f"{self.kite_url}/positions"
             response = self.session.get(url)
 
             if response.status_code == 200:
@@ -125,7 +180,7 @@ class ZerodhaBroker:
 
     def get_holdings(self) -> List[Dict]:
         try:
-            url = f"{self.kite_url}/api/v3/holdings"
+            url = f"{self.kite_url}/holdings"
             response = self.session.get(url)
 
             if response.status_code == 200:
@@ -138,7 +193,7 @@ class ZerodhaBroker:
 
     def get_margins(self) -> Optional[Dict]:
         try:
-            url = f"{self.kite_url}/api/v3/margins"
+            url = f"{self.kite_url}/user/margins"
             response = self.session.get(url)
 
             if response.status_code == 200:
@@ -175,7 +230,7 @@ class ZerodhaBroker:
             if order_type in [OrderType.LIMIT, OrderType.SL]:
                 order_data["price"] = price
 
-            url = f"{self.kite_url}/api/v3/orders"
+            url = f"{self.kite_url}/orders"
             response = self.session.post(url, json=order_data)
 
             if response.status_code == 200:
@@ -192,7 +247,7 @@ class ZerodhaBroker:
 
     def cancel_order(self, order_id: str) -> bool:
         try:
-            url = f"{self.kite_url}/api/v3/orders/{order_id}"
+            url = f"{self.kite_url}/orders/{order_id}"
             response = self.session.delete(url)
 
             if response.status_code == 200:
@@ -205,7 +260,7 @@ class ZerodhaBroker:
 
     def get_order_history(self) -> List[Dict]:
         try:
-            url = f"{self.kite_url}/api/v3/orders"
+            url = f"{self.kite_url}/orders"
             response = self.session.get(url)
 
             if response.status_code == 200:
@@ -221,17 +276,18 @@ class ZerodhaBroker:
             return self._instruments_cache[trading_symbol]
 
         try:
-            url = f"{self.kite_url}/api/v3/instruments"
+            url = f"{self.kite_url}/instruments"
             response = self.session.get(url)
 
             if response.status_code == 200:
-                lines = response.text.strip().split("\n")
-                for line in lines[1:]:
+                for line in response.text.strip().split("\n")[1:]:
                     parts = line.split(",")
-                    if len(parts) >= 3:
+                    if len(parts) >= 5:
+                        instrument_token = parts[0]
                         symbol = parts[2].strip('"')
-                        if symbol == trading_symbol:
-                            instrument_token = parts[0].strip('"')
+                        exchange = parts[-1]
+                        instrument_type = parts[-3] if len(parts) >= 8 else ""
+                        if symbol == trading_symbol and exchange == "NSE" and instrument_type == "EQ":
                             self._instruments_cache[trading_symbol] = instrument_token
                             return instrument_token
             return None

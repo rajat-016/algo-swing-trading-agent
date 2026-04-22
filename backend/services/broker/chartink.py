@@ -37,13 +37,11 @@ class ChartInkClient:
                 rows = await page.query_selector_all("table tbody tr")
                 for row in rows:
                     cells = await row.query_selector_all("td")
-                    if cells:
-                        symbol_cell = cells[1] if len(cells) > 1 else None
-                        if symbol_cell:
-                            symbol_text = await symbol_cell.inner_text()
-                            symbol = symbol_text.strip()
-                            if symbol and not symbol.startswith("-"):
-                                symbols.append(f"NSE:{symbol}")
+                    if len(cells) >= 2:
+                        symbol_text = (await cells[1].inner_text()).strip()
+                        if symbol_text and not symbol_text.startswith("-"):
+                            zerodha_symbol = symbol_text
+                            symbols.append(zerodha_symbol)
 
                 await browser.close()
 

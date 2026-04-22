@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 
 from services.broker.zerodha import ZerodhaBroker
 from services.broker.chartink import ChartInkClient
-from services.ai.analyzer import StockAnalyzer, StockAnalysis
 from models.stock import Stock, StockStatus, ExitReason
 from core.config import get_settings
 from core.database import SessionLocal
@@ -26,15 +25,23 @@ class TradingLoop:
         self,
         broker: ZerodhaBroker,
         chartink: ChartInkClient,
-        analyzer: StockAnalyzer,
         interval_seconds: int = 300,
     ):
         self.broker = broker
         self.chartink = chartink
-        self.analyzer = analyzer
         self.settings = get_settings()
         self.interval = interval_seconds
         self._running = False
+        self._analyzer = None
+
+    @property
+    def analyzer(self):
+        if self._analyzer is None:
+            from services.ai.analyzer import StockAnalyzer
+
+            model_path = self.settings.model_path if self.settings.model_path else None
+            self._analyzer = StockAnalyzer(self.broker, model_path)
+        return self._analyzer
 
     @property
     def is_paper_mode(self) -> bool:
@@ -49,13 +56,21 @@ class TradingLoop:
         mode = "PAPER" if self.is_paper_mode else "LIVE"
         logger.info(f"Trading loop started ({mode} mode)")
 
+        await self._run_cycle()
+
         while self._running:
             try:
-                await self._run_cycle()
+                await asyncio.sleep(self.interval)
+                if self._running:
+                    await self._run_cycle()
             except Exception as e:
                 logger.error(f"Trading cycle error: {e}")
 
-            await asyncio.sleep(self.interval)
+    async def start_now(self):
+        self._running = True
+        mode = "PAPER" if self.is_paper_mode else "LIVE"
+        logger.info(f"Trading loop started ({mode} mode)")
+        await self._run_cycle()
 
     def stop(self):
         self._running = False
@@ -95,7 +110,7 @@ class TradingLoop:
         try:
             margins = self.broker.get_margins()
             if margins:
-                available = float(margins.get("available", 0))
+                available = float(margins.get("available", {}).get("cash", 0))
                 logger.info(f"Live mode: Available cash ₹{available:,.0f}")
                 return available
         except Exception as e:
