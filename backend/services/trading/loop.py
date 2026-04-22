@@ -13,6 +13,14 @@ from core.logging import logger
 from core.enums import OrderSide, OrderType, ProductType
 
 
+def _broadcast_ws(data: dict):
+    try:
+        from api.routes.websocket import broadcast_update
+        asyncio.create_task(broadcast_update(data))
+    except Exception:
+        pass
+
+
 class TradingLoop:
     def __init__(
         self,
@@ -211,6 +219,16 @@ class TradingLoop:
         db.add(stock)
         db.commit()
 
+        _broadcast_ws({
+            "type": "entry",
+            "symbol": symbol,
+            "price": analysis.entry_price,
+            "quantity": analysis.position_size,
+            "target": analysis.target_price,
+            "sl": analysis.stop_loss,
+            "reason": analysis.reason,
+        })
+
         mode_prefix = "[PAPER]" if self.is_paper_mode else "[LIVE]"
         logger.info(f"{mode_prefix} ENTRY: {symbol} | Price: ₹{analysis.entry_price:.2f} | Qty: {analysis.position_size} | Target: ₹{analysis.target_price:.2f} | SL: ₹{analysis.stop_loss:.2f}")
 
@@ -241,6 +259,12 @@ class TradingLoop:
 
         else:
             logger.info(f"HOLDING: {symbol} | Price: ₹{current_price:.2f} | Target: ₹{target:.2f} | SL: ₹{sl:.2f} | P&L: {pnl_pct:+.2f}%")
+            _broadcast_ws({
+                "type": "price_update",
+                "symbol": symbol,
+                "current_price": current_price,
+                "pnl_pct": pnl_pct,
+            })
 
     async def _place_exit(
         self,
@@ -271,6 +295,7 @@ class TradingLoop:
             logger.info(f"[PAPER] Simulated SELL order: {symbol} | Qty: {quantity} | Price: ₹{exit_price:.2f} | P&L: ₹{pnl:.2f} ({pnl_pct:.2f}%)")
 
         stock = db.query(Stock).filter(Stock.id == stock_id).first()
+        pnl = 0.0
         if stock:
             stock.status = StockStatus.EXITED
             stock.exit_date = datetime.utcnow()
@@ -278,10 +303,20 @@ class TradingLoop:
             stock.exit_order_id = exit_order_id
             stock.pnl = (exit_price - entry_price) * quantity
             stock.pnl_percentage = ((exit_price - entry_price) / entry_price) * 100
+            pnl = stock.pnl
             db.commit()
 
+        _broadcast_ws({
+            "type": "exit",
+            "symbol": symbol,
+            "reason": exit_reason.value,
+            "exit_price": exit_price,
+            "pnl": pnl,
+            "pnl_pct": ((exit_price - entry_price) / entry_price) * 100,
+        })
+
         mode_prefix = "[PAPER]" if self.is_paper_mode else "[LIVE]"
-        logger.info(f"{mode_prefix} EXIT: {symbol} | Reason: {exit_reason.value} | P&L: ₹{stock.pnl if stock else 0:.2f}")
+        logger.info(f"{mode_prefix} EXIT: {symbol} | Reason: {exit_reason.value} | P&L: ₹{pnl:.2f}")
 
     def switch_mode(self, mode: str):
         old_mode = self.settings.trading_mode

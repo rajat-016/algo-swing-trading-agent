@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { stocksApi, tradingApi } from './api';
+import { stocksApi, tradingApi, wsManager } from './api';
 
 function App() {
   const [stocks, setStocks] = useState([]);
@@ -8,38 +8,84 @@ function App() {
   const [activeTab, setActiveTab] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [wsConnected, setWsConnected] = useState(false);
 
   const fetchData = async () => {
     try {
-      setLoading(true);
+      setLoading(false);
       setError(null);
 
-      const [stocksData, portfolioData, statusData] = await Promise.all([
+      const [stocksData, portfolioData] = await Promise.all([
         stocksApi.getAll(),
         stocksApi.getPortfolio(),
-        tradingApi.getStatus(),
-      ]);
+      ]).catch(() => ({ stocks: [], total: 0 }));
 
       setStocks(stocksData.stocks || []);
       setPortfolio(portfolioData);
+    } catch (err) {
+      console.error('Fetch error:', err);
+    }
+  };
+
+  const fetchStatus = async () => {
+    try {
+      const statusData = await tradingApi.getStatus();
       setTradingStatus(statusData);
     } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      console.error('Status error:', err);
     }
   };
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
+    fetchStatus();
+    wsManager.connect();
+
+    const unsubscribe = wsManager.subscribe((data) => {
+      console.log('Real-time update:', data);
+      setWsConnected(wsManager.isConnected());
+
+      if (data.type === 'entry') {
+        setStocks(prev => [{
+          symbol: data.symbol,
+          status: 'ENTERED',
+          entry_price: data.price,
+          target_price: data.target,
+          stop_loss: data.sl,
+          entry_quantity: data.quantity,
+          entry_reason: data.reason,
+          entry_date: new Date().toISOString(),
+          pnl: 0,
+          pnl_percentage: 0,
+        }, ...prev]);
+      } else if (data.type === 'exit') {
+        setStocks(prev => prev.map(s => 
+          s.symbol === data.symbol 
+            ? { ...s, status: 'EXITED', pnl: data.pnl, pnl_percentage: data.pnl_pct }
+            : s
+        ));
+      } else if (data.type === 'price_update') {
+        setStocks(prev => prev.map(s => 
+          s.symbol === data.symbol 
+            ? { ...s, current_price: data.current_price, pnl_pct: data.pnl_pct }
+            : s
+        ));
+      }
+    });
+
+    const statusInterval = setInterval(fetchStatus, 60000);
+
+    return () => {
+      unsubscribe();
+      wsManager.disconnect();
+      clearInterval(statusInterval);
+    };
   }, []);
 
   const handleSwitchMode = async (mode) => {
     try {
       await tradingApi.switchMode(mode);
-      await fetchData();
+      await fetchStatus();
     } catch (err) {
       setError(err.message);
     }
@@ -75,11 +121,14 @@ function App() {
     <div className="app">
       <header className="header">
         <h1>Algo Swing Trading Agent</h1>
-        {tradingStatus && (
-          <span className={`mode ${tradingStatus.mode}`}>
-            {tradingStatus.mode.toUpperCase()} TRADING
-          </span>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span className={`ws-indicator ${wsConnected ? 'connected' : ''}`}></span>
+          {tradingStatus && (
+            <span className={`mode ${tradingStatus.mode}`}>
+              {tradingStatus.mode.toUpperCase()} TRADING
+            </span>
+          )}
+        </div>
       </header>
 
       {error && <div className="error">{error}</div>}
@@ -159,8 +208,8 @@ function App() {
             </tr>
           </thead>
           <tbody>
-            {filteredStocks.map(stock => (
-              <tr key={stock.id || stock.symbol}>
+            {filteredStocks.map((stock, idx) => (
+              <tr key={stock.id || `${stock.symbol}-${idx}`}>
                 <td className="symbol">{stock.symbol}</td>
                 <td>
                   <span className={`status ${stock.status?.toLowerCase()}`}>
@@ -170,7 +219,7 @@ function App() {
                 <td>{formatCurrency(stock.entry_price)}</td>
                 <td>{formatCurrency(stock.target_price)}</td>
                 <td>{formatCurrency(stock.stop_loss)}</td>
-                <td className={`pnl ${stock.pnl >= 0 ? 'positive' : 'negative'}`}>
+                <td className={`pnl ${(stock.pnl || 0) >= 0 ? 'positive' : 'negative'}`}>
                   {formatCurrency(stock.pnl)} ({formatPercent(stock.pnl_percentage)})
                 </td>
                 <td className="reason">{stock.entry_reason || '-'}</td>

@@ -7,6 +7,7 @@ from core.config import get_settings
 from core.logging import logger
 from api.routes import router
 from api.routes.trading import set_trading_loop
+from api.routes.websocket import router as ws_router, get_manager
 from services.broker.zerodha import get_broker
 from services.broker.chartink import get_chartink_client
 from services.ai.analyzer import StockAnalyzer
@@ -72,6 +73,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(router)
+    app.include_router(ws_router)
 
     @app.get("/")
     async def root():
