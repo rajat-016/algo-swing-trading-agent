@@ -1,0 +1,8 @@
+{
+  "name": "Algo Swing Trading Agent",
+  "version": "1.0.0",
+  "description": "AI-powered swing trading for Indian stock market",
+  "private": true,
+  "homepage": ".",
+  "type": "module"
+}

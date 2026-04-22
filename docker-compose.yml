@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - TRADING_MODE=paper
+      - DATABASE_URL=sqlite:///trading.db
+    volumes:
+      - ./backend:/app
+      - backend-data:/app/logs
+    networks:
+      - trading-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - trading-network
+
+volumes:
+  backend-data:
+
+networks:
+  trading-network:
+    driver: bridge
