@@ -45,12 +45,12 @@ node_modules/
 build/
 npm-debug.log*
 
-# Graphify (regenerated)
-graphify-out/
-raw/
+# Graphify (regenerated - uncomment to regenerate on clone)
+# graphify-out/
+# raw/
 
-# OpenCode
-.opencode/
+# OpenCode (regenerated - uncomment to regenerate)
+# .opencode/
 
 # Secrets
 *.pem
