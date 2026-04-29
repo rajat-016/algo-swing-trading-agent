@@ -52,11 +52,17 @@ class ZerodhaConfig(BaseSettings):
 
 class Settings(BaseSettings):
     # Trading Parameters
-    target_profit_pct: float = Field(default=10.0)
+    target_profit_pct: float = Field(default=20.0)
     stop_loss_pct: float = Field(default=3.0)
-    max_positions: int = Field(default=10)
+    max_positions: int = Field(default=3)
     risk_per_trade: float = Field(default=1.0)
     min_momentum_score: float = Field(default=0.4)
+
+    # Risk Management Parameters
+    max_daily_loss: float = Field(default=5.0)
+    max_exposure: float = Field(default=60.0)
+    min_account_balance: float = Field(default=5000.0)
+    max_position_loss_pct: float = Field(default=3.0)
 
     # Market Protection (SL-M orders)
     use_market_protection: bool = Field(default=False)
@@ -79,7 +85,7 @@ class Settings(BaseSettings):
     chartink_url: str = Field(default="")
 
     # ML Model
-    model_path: str = Field(default="model.joblib")
+    model_path: str = Field(default="services/ai/model.joblib")
 
     # Trading Loop
     cycle_interval_seconds: int = Field(default=300)
@@ -106,12 +112,28 @@ class Settings(BaseSettings):
 
 _settings_instance = None
 
+STRATEGY_TARGETS = {
+    "trend_pullback": {"target": 0.25, "stop_loss": 0.03, "min_score": 0.6},
+    "breakout_retest": {"target": 0.20, "stop_loss": 0.03, "min_score": 0.6},
+    "stage_2": {"target": 0.30, "stop_loss": 0.04, "min_score": 0.6},
+    "relative_strength": {"target": 0.18, "stop_loss": 0.03, "min_score": 0.5},
+    "vcp": {"target": 0.35, "stop_loss": 0.04, "min_score": 0.7},
+    "gap_up": {"target": 0.15, "stop_loss": 0.02, "min_score": 0.6},
+    "support_zone": {"target": 0.20, "stop_loss": 0.03, "min_score": 0.5},
+    "sector_rotation": {"target": 0.25, "stop_loss": 0.03, "min_score": 0.6},
+    "multi_timeframe": {"target": 0.20, "stop_loss": 0.03, "min_score": 0.6},
+}
+
 
 def get_settings() -> Settings:
     global _settings_instance
     if _settings_instance is None:
         _settings_instance = Settings()
     return _settings_instance
+
+
+def get_strategy_target(strategy: str) -> dict:
+    return STRATEGY_TARGETS.get(strategy, {"target": 0.20, "stop_loss": 0.03, "min_score": 0.5})
 
 
 settings = get_settings()

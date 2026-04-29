@@ -71,18 +71,6 @@ if (-not (Test-Path ".env")) {
     Copy-Item ".env.example" ".env"
 }
 
-Write-Host ""
-Write-Host "Configuration:" -ForegroundColor Cyan
-Write-Host "  Mode: $displayMode" -ForegroundColor White
-Write-Host "  API: http://localhost:8000" -ForegroundColor White
-Write-Host "  Docs: http://localhost:8000/docs" -ForegroundColor White
-
-if ($Full) {
-    Write-Host "  Frontend: http://localhost:3000" -ForegroundColor White
-}
-
-$env:TRADING_MODE = $Mode
-
 if ($Full) {
     Write-Host ""
     Write-Host "Installing frontend dependencies..." -ForegroundColor Cyan
@@ -94,9 +82,12 @@ if ($Full) {
     }
 
     Write-Host "Starting frontend..." -ForegroundColor Green
-    Start-Process -FilePath "npm" -ArgumentList "start" -WindowStyle Normal
-
-    Set-Location "$scriptDir\backend"
+    
+    cd $scriptDir\frontend
+    npm start 2>&1 &
+    cd $scriptDir\backend
+    
+    Start-Sleep -Seconds 3
 }
 
 Write-Host ""
@@ -110,6 +101,11 @@ try {
 }
 
 Write-Host ""
+Write-Host "========================================" -ForegroundColor Green
+Write-Host "  Frontend URL: http://localhost:3000" -ForegroundColor Green
+Write-Host "  Backend URL: http://localhost:8000" -ForegroundColor Green
+Write-Host "  API Docs:    http://localhost:8000/docs" -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Green
 
 & ".\venv\Scripts\python.exe" main.py
 

@@ -24,35 +24,100 @@ class ChartInkClient:
         try:
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
-                context = await browser.new_context()
+                context = await browser.new_context(viewport={"width": 1920, "height": 1080})
 
                 for name, value in self.cookies.items():
                     await context.add_cookies([{"name": name, "value": value, "domain": ".chartink.com"}])
 
                 page = await context.new_page()
                 await page.goto(self.screener_url)
-                await page.wait_for_timeout(5000)
+                await page.wait_for_load_state("networkidle")
+                await page.wait_for_timeout(8000)
 
                 symbols = []
-                rows = await page.query_selector_all("table tbody tr")
-                for row in rows:
-                    cells = await row.query_selector_all("td")
-                    if len(cells) >= 3:
-                        c0 = (await cells[0].inner_text()).strip()
-                        c1 = (await cells[1].inner_text()).strip()
-                        c2 = (await cells[2].inner_text()).strip() if len(cells) > 2 else ""
-                        if c0 and not c0.startswith("-") and len(c0) < 20 and not c0.replace(" ", "").isdigit():
-                            symbols.append(c0)
-                        elif c2 and not c2.startswith("-") and len(c2) < 20 and not c2.replace(" ", "").isdigit():
-                            symbols.append(c2)
-                        elif c1 and not c1.startswith("-") and len(c1) < 20 and not c1.replace(" ", "").isdigit():
-                            symbols.append(c1)
+                
+                SYMBOL_BLOCKLIST = {
+                    "NAME", "SYMBOL", "LTP", "CHANGE", "VOLUME", "SCAN", "PRICE", "HIGH", "LOW", "OPEN", "CLOSE", "PREV", 
+                    "CO", "PCS", "RS", "AVG", "MEDIAN", "VALUE", "AT", "52W", "52W_LOW", "52W_HIGH",
+                    "BETA", "MCAP", "OID", "DOCTYPE", "NREUM", "LICENSE", "HTML", "HEAD", "BODY",
+                    "META", "LINK", "SCRIPT", "STYLE", "DIV", "SPAN", "TABLE", "THEAD", "TBODY",
+                    "TR", "TH", "TD", "A", "P", "BR", "IMG", "INPUT", "FONT", "B", "I",
+                }
+
+                link_selectors = [
+                    "table tbody tr td a[href*='/stocks/']",
+                    "table tbody tr td a[href*='/charts/']",
+                    "a[href*='/stocks/']",
+                    "a[href*='/charts/']",
+                    "[class*='stock'] a",
+                    "[data-symbol]",
+                    ".symbol-cell a",
+                    ".stock-symbol a",
+                ]
+                
+                for selector in link_selectors:
+                    elements = await page.query_selector_all(selector)
+                    if elements:
+                        logger.debug(f"ChartInk: Found {len(elements)} elements with selector '{selector}'")
+                        for el in elements[:40]:
+                            try:
+                                text = (await el.inner_text()).strip()
+                                href = await el.get_attribute("href") or ""
+                                
+                                if text and 2 <= len(text) <= 10 and text.replace("_", "").replace("-", "").isalpha():
+                                    if text.upper() not in SYMBOL_BLOCKLIST and text.upper() not in symbols:
+                                        symbols.append(text.upper())
+                                        logger.debug(f"ChartInk: Found symbol from link: {text}")
+                            except Exception:
+                                continue
+                        
+                        if len(symbols) >= 5:
+                            break
+
+                if not symbols:
+                    rows = await page.query_selector_all("table tbody tr")
+                    for row in rows[:50]:
+                        try:
+                            cells = await row.query_selector_all("td")
+                            if cells and len(cells) > 0:
+                                first_cell_text = (await cells[0].inner_text()).strip()
+                                
+                                if first_cell_text and 2 <= len(first_cell_text) <= 10:
+                                    if first_cell_text.upper() not in SYMBOL_BLOCKLIST:
+                                        anchors = await row.query_selector_all("a")
+                                        if anchors:
+                                            text = (await anchors[0].inner_text()).strip()
+                                            if text and text.upper() not in SYMBOL_BLOCKLIST and text.upper() not in symbols:
+                                                symbols.append(text.upper())
+                                                logger.debug(f"ChartInk: Found symbol from row: {text}")
+                        except Exception:
+                            continue
+
+                if not symbols:
+                    content = await page.content()
+                    import re
+                    patterns = [
+                        r'/stocks/([A-Z]{2,10})["\'/]',
+                        r'/charts/([A-Z]{2,10})["\'/]',
+                        r'"symbol"\s*:\s*"([A-Z]{2,10})"',
+                        r'data-symbol=["\']([A-Z]{2,10})["\']',
+                    ]
+                    for pattern in patterns:
+                        matches = re.findall(pattern, content, re.IGNORECASE)
+                        for m in matches:
+                            if m.upper() not in SYMBOL_BLOCKLIST and m.upper() not in symbols:
+                                symbols.append(m.upper())
+                    
+                    if len(symbols) >= 5:
+                        logger.debug(f"ChartInk: Found {len(symbols)} symbols from regex patterns")
 
                 await browser.close()
 
+                symbols = [s for s in symbols if s.isupper() and s.isalpha() and 2 <= len(s) <= 10 and s not in SYMBOL_BLOCKLIST]
+                symbols = list(dict.fromkeys(symbols))[:30]
                 self._symbols = symbols
                 self._last_fetch = asyncio.get_event_loop().time()
-                logger.info(f"ChartInk: Fetched {len(symbols)} stocks: {symbols}")
+                logger.info(f"ChartInk: Fetched {len(symbols)} stocks: {symbols[:10]}")
                 return symbols
 
         except Exception as e:

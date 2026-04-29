@@ -10,7 +10,7 @@ class OrderType(str, Enum):
     MARKET = "MARKET"
     LIMIT = "LIMIT"
     SL = "SL"
-    SLM = "SLM"
+    SL_M = "SL-M"
 
 
 class ProductType(str, Enum):
