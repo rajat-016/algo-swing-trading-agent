@@ -5,7 +5,7 @@ logger.remove()
 
 logger.add(
     sys.stdout,
-    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>",
+    format="{time:YYYY-MM-DD HH:mm:ss} - {level: <5} - {message}",
     level="INFO",
 )
 

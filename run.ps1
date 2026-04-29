@@ -4,10 +4,16 @@ param(
     [string]$Mode = "paper"
 )
 
-$ErrorActionPreference = "Continue"
-
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-Set-Location $scriptDir
+
+$envFile = Join-Path $scriptDir "backend\.env"
+$displayMode = "paper"
+if (Test-Path $envFile) {
+    $envContent = Get-Content $envFile -Raw
+    if ($envContent -match 'TRADING_MODE=(\w+)') {
+        $displayMode = $Matches[1]
+    }
+}
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
@@ -65,37 +71,41 @@ if (-not (Test-Path ".env")) {
     Copy-Item ".env.example" ".env"
 }
 
-Write-Host ""
-Write-Host "Configuration:" -ForegroundColor Cyan
-Write-Host "  Mode: $Mode" -ForegroundColor White
-Write-Host "  API: http://localhost:8000" -ForegroundColor White
-Write-Host "  Docs: http://localhost:8000/docs" -ForegroundColor White
-
-if ($Full) {
-    Write-Host "  Frontend: http://localhost:3000" -ForegroundColor White
-}
-
-$env:TRADING_MODE = $Mode
-
 if ($Full) {
     Write-Host ""
     Write-Host "Installing frontend dependencies..." -ForegroundColor Cyan
-    
+
     Set-Location "$scriptDir\frontend"
-    
+
     if (-not (Test-Path "node_modules")) {
         npm install
     }
-    
+
     Write-Host "Starting frontend..." -ForegroundColor Green
-    Start-Process -FilePath "npm" -ArgumentList "start" -WindowStyle Normal
     
-    Set-Location "$scriptDir\backend"
+    cd $scriptDir\frontend
+    npm start 2>&1 &
+    cd $scriptDir\backend
+    
+    Start-Sleep -Seconds 3
 }
 
 Write-Host ""
 Write-Host "Starting API server..." -ForegroundColor Green
+
+try {
+    $ip = (Invoke-WebRequest -URI "https://api.ipify.org" -UseBasicParsing -TimeoutSec 5).Content
+    Write-Host "  Your IP: $ip (allow in Kite console for live trading)" -ForegroundColor Yellow
+} catch {
+    Write-Host "  IP detection failed" -ForegroundColor Yellow
+}
+
 Write-Host ""
+Write-Host "========================================" -ForegroundColor Green
+Write-Host "  Frontend URL: http://localhost:3000" -ForegroundColor Green
+Write-Host "  Backend URL: http://localhost:8000" -ForegroundColor Green
+Write-Host "  API Docs:    http://localhost:8000/docs" -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Green
 
 & ".\venv\Scripts\python.exe" main.py
 

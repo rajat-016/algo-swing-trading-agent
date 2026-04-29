@@ -56,3 +56,10 @@ npm-debug.log*
 *.pem
 *.key
 credentials.json
+
+# OpenCode chat history
+.git/opencode/
+opencode-chat-history.txt
+
+# Local build artifacts
+venv/.packagesInstalled

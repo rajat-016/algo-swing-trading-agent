@@ -24,6 +24,7 @@ export const stocksApi = {
   getBySymbol: (symbol) => api.get(`/stocks/${symbol}`),
   getByStatus: (status) => api.get(`/stocks/status/${status}`),
   getPortfolio: () => api.get('/stocks/summary/portfolio'),
+  getAnalytics: () => api.get('/stocks/summary/analytics'),
   exitStock: (symbol, reason) => api.post(`/stocks/${symbol}/exit`, { reason }),
 };
 

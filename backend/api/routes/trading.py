@@ -19,6 +19,7 @@ class TradingStatus(BaseModel):
     target_profit_pct: float
     stop_loss_pct: float
     max_positions: int
+    cycle_interval_seconds: int = 60
 
 
 class SwitchModeRequest(BaseModel):

@@ -20,6 +20,8 @@ numpy>=1.26.0
 # Machine Learning
 scikit-learn>=1.3.0
 joblib>=1.3.0
+xgboost>=2.0.0
+tensorflow>=2.14.0
 
 # Broker Integration
 kiteconnect>=4.1.0

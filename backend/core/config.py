@@ -1,7 +1,8 @@
 from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic import Field, ConfigDict
 from typing import Optional
 import enum
+import os
 
 
 class TradingMode(str, enum.Enum):
@@ -9,7 +10,35 @@ class TradingMode(str, enum.Enum):
     LIVE = "live"
 
 
+def _read_env_file_value(key: str, default: str = None) -> Optional[str]:
+    try:
+        env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+        if os.path.exists(env_path):
+            with open(env_path, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#"):
+                        if "=" in line:
+                            k, v = line.split("=", 1)
+                            if k.strip() == key:
+                                return v.strip()
+        return default
+    except Exception:
+        return default
+
+
+_TRADING_MODE_FROM_ENV = _read_env_file_value("TRADING_MODE", "paper")
+if _TRADING_MODE_FROM_ENV:
+    os.environ["TRADING_MODE"] = _TRADING_MODE_FROM_ENV
+
+
 class ZerodhaConfig(BaseSettings):
+    model_config = ConfigDict(
+        extra="ignore",
+        env_file=".env",
+        env_nested_delimiter="__",
+    )
+
     api_key: str = Field(default="")
     api_secret: str = Field(default="")
     access_token: str = Field(default="")
@@ -17,21 +46,27 @@ class ZerodhaConfig(BaseSettings):
     username: str = Field(default="")
     password: str = Field(default="")
     two_factor: str = Field(default="")
-    kite_url: str = Field(default="https://kite.zerodha.com")
+    kite_url: str = Field(default="https://api.kite.trade")
     enviro: str = Field(default="prod")
-
-    class Config:
-        env_file = ".env"
-        env_nested_delimiter = "__"
 
 
 class Settings(BaseSettings):
     # Trading Parameters
-    target_profit_pct: float = Field(default=10.0)
+    target_profit_pct: float = Field(default=20.0)
     stop_loss_pct: float = Field(default=3.0)
-    max_positions: int = Field(default=10)
+    max_positions: int = Field(default=3)
     risk_per_trade: float = Field(default=1.0)
-    min_confidence: float = Field(default=70.0)
+    min_momentum_score: float = Field(default=0.4)
+
+    # Risk Management Parameters
+    max_daily_loss: float = Field(default=5.0)
+    max_exposure: float = Field(default=60.0)
+    min_account_balance: float = Field(default=5000.0)
+    max_position_loss_pct: float = Field(default=3.0)
+
+    # Market Protection (SL-M orders)
+    use_market_protection: bool = Field(default=False)
+    market_protection_pct: float = Field(default=0.5)
 
     # Database
     database_url: str = Field(default="sqlite:///trading.db")
@@ -41,7 +76,7 @@ class Settings(BaseSettings):
     api_port: int = Field(default=8000)
 
     # Trading Mode: 'paper' or 'live'
-    trading_mode: str = Field(default="paper")
+    trading_mode: str = Field(default=_TRADING_MODE_FROM_ENV)
 
     # Paper Trading
     paper_trading_capital: float = Field(default=100000.0)
@@ -49,13 +84,22 @@ class Settings(BaseSettings):
     # ChartInk
     chartink_url: str = Field(default="")
 
+    # ML Model
+    model_path: str = Field(default="services/ai/model.joblib")
+
+    # Trading Loop
+    cycle_interval_seconds: int = Field(default=300)
+    auto_start_trading: bool = Field(default=False)
+
     # Zerodha
     zerodha: ZerodhaConfig = Field(default_factory=ZerodhaConfig)
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        env_nested_delimiter = "__"
+    model_config = ConfigDict(
+        extra="ignore",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_nested_delimiter="__",
+    )
 
     @property
     def is_paper_trading(self) -> bool:
@@ -66,8 +110,30 @@ class Settings(BaseSettings):
         return self.trading_mode.lower() == "live"
 
 
-settings = Settings()
+_settings_instance = None
+
+STRATEGY_TARGETS = {
+    "trend_pullback": {"target": 0.25, "stop_loss": 0.03, "min_score": 0.6},
+    "breakout_retest": {"target": 0.20, "stop_loss": 0.03, "min_score": 0.6},
+    "stage_2": {"target": 0.30, "stop_loss": 0.04, "min_score": 0.6},
+    "relative_strength": {"target": 0.18, "stop_loss": 0.03, "min_score": 0.5},
+    "vcp": {"target": 0.35, "stop_loss": 0.04, "min_score": 0.7},
+    "gap_up": {"target": 0.15, "stop_loss": 0.02, "min_score": 0.6},
+    "support_zone": {"target": 0.20, "stop_loss": 0.03, "min_score": 0.5},
+    "sector_rotation": {"target": 0.25, "stop_loss": 0.03, "min_score": 0.6},
+    "multi_timeframe": {"target": 0.20, "stop_loss": 0.03, "min_score": 0.6},
+}
 
 
 def get_settings() -> Settings:
-    return settings
+    global _settings_instance
+    if _settings_instance is None:
+        _settings_instance = Settings()
+    return _settings_instance
+
+
+def get_strategy_target(strategy: str) -> dict:
+    return STRATEGY_TARGETS.get(strategy, {"target": 0.20, "stop_loss": 0.03, "min_score": 0.5})
+
+
+settings = get_settings()
