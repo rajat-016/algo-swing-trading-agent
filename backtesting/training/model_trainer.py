@@ -36,11 +36,13 @@ class ModelTrainer:
             data = joblib.load(self.model_path)
             loaded_model = data["model"]
 
-            self.scaler = data.get("scaler", None)
-            self.feature_names = data.get("feature_names", [])
+            # Don't load old scaler - it was fitted on different number of features
+            self.scaler = None
+            self.feature_names = []
 
-            logger.info(f"Loaded model metadata (scaler, feature_names) from {self.model_path}")
+            logger.info(f"Loaded model metadata from {self.model_path}")
             logger.info(f"Will train fresh XGBoost model (loaded model was {type(loaded_model).__name__})")
+            logger.info("Scaler reset - will fit fresh scaler on current features")
             return True
         except FileNotFoundError:
             logger.warning(f"No existing model found at {self.model_path}. Will train from scratch.")
@@ -53,27 +55,30 @@ class ModelTrainer:
         try:
             import xgboost as xgb
             self.model = xgb.XGBClassifier(
-                max_depth=self.parameters.get("max_depth", 5),
-                learning_rate=self.parameters.get("learning_rate", 0.05),
-                n_estimators=self.parameters.get("n_estimators", 200),
-                subsample=self.parameters.get("subsample", 0.8),
-                colsample_bytree=self.parameters.get("colsample_bytree", 0.8),
-                min_child_weight=self.parameters.get("min_child_weight", 3),
-                gamma=self.parameters.get("gamma", 0.1),
+                max_depth=self.parameters.get("max_depth", 3),
+                learning_rate=self.parameters.get("learning_rate", 0.1),
+                n_estimators=self.parameters.get("n_estimators", 100),
+                subsample=self.parameters.get("subsample", 0.7),
+                colsample_bytree=self.parameters.get("colsample_bytree", 0.7),
+                min_child_weight=self.parameters.get("min_child_weight", 5),
+                gamma=self.parameters.get("gamma", 0.2),
+                reg_alpha=self.parameters.get("reg_alpha", 0.1),
+                reg_lambda=self.parameters.get("reg_lambda", 1.0),
                 random_state=self.parameters.get("random_state", 42),
                 n_jobs=1,
                 eval_metric="mlogloss",
                 objective="multi:softprob",
                 num_class=3,
             )
-            logger.info("Created fresh XGBoostClassifier model (3-class)")
+            logger.info("Created fresh XGBoostClassifier model (3-class, regularized)")
         except ImportError:
             from sklearn.ensemble import GradientBoostingClassifier
             self.model = GradientBoostingClassifier(
                 n_estimators=self.parameters.get("n_estimators", 100),
                 learning_rate=self.parameters.get("learning_rate", 0.1),
-                max_depth=self.parameters.get("max_depth", 5),
-                subsample=self.parameters.get("subsample", 0.8),
+                max_depth=self.parameters.get("max_depth", 3),
+                subsample=self.parameters.get("subsample", 0.7),
+                min_samples_split=20,
                 random_state=42,
             )
             logger.info("Created fresh GradientBoostingClassifier model (XGBoost not available)")
@@ -98,9 +103,9 @@ class ModelTrainer:
 
         if self.scaler is None:
             self.scaler = StandardScaler()
-            X_scaled = self.scaler.fit_transform(X)
+            X_scaled = self.scaler.fit_transform(X.values)
         else:
-            X_scaled = self.scaler.transform(X)
+            X_scaled = self.scaler.transform(X.values)
 
         if self.model is None:
             self._create_model()

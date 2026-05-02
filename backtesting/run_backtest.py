@@ -325,7 +325,6 @@ def run_full_pipeline(args=None):
         lookahead=label_cfg["lookahead_periods"],
         threshold=label_cfg["return_threshold"],
         stop_loss=label_cfg.get("stop_loss", 0.03),
-        num_classes=label_cfg.get("num_classes", 3),
         atr_target_multiplier=label_cfg.get("atr_target_multiplier", 1.5),
         atr_stop_multiplier=label_cfg.get("atr_stop_multiplier", 1.0),
     )
@@ -604,6 +603,8 @@ def run_full_pipeline(args=None):
                         f"Window {window_label}: Optimal threshold = {optimal_threshold['optimal_threshold']:.2f} "
                         f"(trades={optimal_threshold['trade_count']}, exp_return={optimal_threshold['expected_return']:.2f})"
                     )
+                    if optimal_threshold.get("all_negative_expectancy", False):
+                        logger.warning(f"Window {window_label}: All confidence thresholds have negative expectancy")
 
                     metrics["prediction_counts"] = prediction_counts
                     metrics["window_index"] = idx
@@ -634,7 +635,6 @@ def run_full_pipeline(args=None):
     selector = ModelSelector(
         min_sharpe=selection_cfg["min_sharpe"],
         max_drawdown=selection_cfg["max_drawdown"],
-        min_accuracy=selection_cfg["min_accuracy"],
         primary_metric=selection_cfg["primary_metric"],
     )
 
@@ -705,17 +705,17 @@ def run_full_pipeline(args=None):
 
     # Step 9: Auto-deploy to backend
     deploy_enabled = output_cfg.get("deploy_to_backend", False)
-    deploy_forced = args is not None and getattr(args, "no_deploy", False)
-    if deploy_enabled and not deploy_forced:
+    deploy_skipped = args is not None and getattr(args, "no_deploy", False)
+    if deploy_enabled and not deploy_skipped:
         logger.info("STEP 9: Deploying model to backend")
         backend_model = BACKEND_DIR / "services" / "ai" / "model.joblib"
         deploy_path = _deploy_to_backend(model_path, backend_model, logger)
         if deploy_path:
             logger.info(f"Model deployed to {deploy_path}")
         else:
-            logger.warning("Model deployment skipped")
+            logger.warning("Model deployment failed - check logs above")
     else:
-        logger.info("STEP 9: Skipped (deploy_to_backend disabled)")
+        logger.info("STEP 9: Skipped (deploy_to_backend disabled or --no-deploy flag set)")
 
     logger.info("=" * 60)
     logger.info("PIPELINE COMPLETE")
@@ -730,24 +730,36 @@ def run_full_pipeline(args=None):
 def _deploy_to_backend(source: str, dest: Path, logger) -> str | None:
     import shutil
 
-    if not Path(source).exists():
+    source_path = Path(source)
+    if not source_path.exists():
         logger.error(f"Deploy failed: source model not found at {source}")
         return None
 
     try:
         dest.parent.mkdir(parents=True, exist_ok=True)
 
+        # Backup existing backend model
         if dest.exists():
             backup = dest.with_suffix(f".joblib.backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
             shutil.copy2(str(dest), str(backup))
-            logger.info(f"Existing model backed up to {backup}")
+            logger.info(f"Existing backend model backed up to {backup}")
 
-        shutil.copy2(source, str(dest))
-        logger.info(f"Model deployed: {source} -> {dest}")
-        return str(dest)
+        # Copy new model (latest_model.pkl) to backend as model.joblib
+        shutil.copy2(str(source_path), str(dest))
+        logger.info(f"Model deployed: {source_path.name} -> {dest}")
+
+        # Verify deployment
+        if dest.exists():
+            logger.info(f"Verification: Deployed model size = {dest.stat().st_size} bytes")
+            return str(dest)
+        else:
+            logger.error("Verification failed: Deployed model not found after copy")
+            return None
 
     except Exception as e:
         logger.error(f"Deployment failed: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 

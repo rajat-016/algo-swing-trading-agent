@@ -149,14 +149,14 @@ class PerformanceMetrics:
     @staticmethod
     def find_optimal_confidence_threshold(
         trade_log: List[Dict],
-        min_trades: int = 20,
+        min_trades: int = 5,
         threshold_step: float = 0.05,
         min_confidence: float = 0.50,
         max_confidence: float = 1.0,
     ) -> Dict:
         """
         Find optimal confidence threshold by iterating through buckets.
-        Returns the LOWEST threshold where expectancy > 0 and trades >= min_trades.
+        Returns the LOWEST threshold where expectancy >0 and trades >= min_trades.
         """
         if not trade_log:
             return {"optimal_threshold": min_confidence, "expected_return": 0, "trade_count": 0}
@@ -185,12 +185,20 @@ class PerformanceMetrics:
                 best_trade_count = len(filtered_trades)
 
         if best_threshold is None:
+            # Return actual trade count for logging, not 0
             return {
                 "optimal_threshold": min_confidence,
                 "expected_return": 0,
-                "trade_count": 0,
+                "trade_count": len(trade_log),
                 "all_negative_expectancy": True,
             }
+
+        return {
+            "optimal_threshold": float(best_threshold),
+            "expected_return": float(best_expectancy),
+            "trade_count": int(best_trade_count),
+            "all_negative_expectancy": False,
+        }
 
         return {
             "optimal_threshold": float(best_threshold),

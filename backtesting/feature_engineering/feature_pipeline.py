@@ -36,13 +36,17 @@ class FeaturePipeline:
         result = self.engineer.generate_features(df.copy())
         self.validate_no_future_data(result)
         
+        # Preserve critical OHLCV columns needed by labeler and simulator
+        critical_cols = ["open", "high", "low", "close", "volume", "datetime", "symbol"]
+        preserved = [col for col in critical_cols if col in result.columns]
+        
         # Filter to live-aligned features if available
         if self.selected_features is not None:
             available = [f for f in self.selected_features if f in result.columns]
             unavailable = [f for f in self.selected_features if f not in result.columns]
             if unavailable:
                 logger.debug(f"Unavailable selected features: {len(unavailable)}")
-            result = result[available].copy()
+            result = result[preserved + available].copy()
         
         return result
 
