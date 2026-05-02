@@ -55,6 +55,6 @@
   "window_index": 0,
   "total_windows_evaluated": 112,
   "model_type": "XGBClassifier",
-  "model_file": "model_window_0_2026_05_02_145715.pkl",
-  "saved_at": "2026-05-02T14:57:15.269052"
+  "model_file": "model_window_0_2026_05_02_144704.pkl",
+  "saved_at": "2026-05-02T14:47:04.705705"
 }

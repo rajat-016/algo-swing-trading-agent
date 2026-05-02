@@ -73,7 +73,9 @@ model_selection:
   primary_metric: sharpe_ratio
   min_sharpe: 1.2
   max_drawdown: 0.20
-  min_accuracy: 0.55
+  min_trades: 5
+  min_precision_buy: 0.55
+  min_expectancy: 0.0
 
 output:
   models_dir: models

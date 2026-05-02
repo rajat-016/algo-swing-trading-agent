@@ -12,10 +12,14 @@ class LabelGenerator:
         lookahead: int = 5,
         threshold: float = 0.10,
         stop_loss: float = 0.03,
+        atr_target_multiplier: float = 1.5,
+        atr_stop_multiplier: float = 1.0,
     ):
         self.lookahead = lookahead
         self.threshold = threshold
         self.stop_loss = stop_loss
+        self.atr_target_multiplier = atr_target_multiplier
+        self.atr_stop_multiplier = atr_stop_multiplier
 
     def _calculate_atr(self, df: pd.DataFrame, period: int = 14) -> pd.Series:
         high = df["high"]
@@ -43,10 +47,10 @@ class LabelGenerator:
 
         atr_pct = df[atr_col] / df["close"]
 
-        # Updated: target = atr_pct * 1.5 (clip 2%-5%)
-        # Updated: stop = atr_pct * 1.0 (clip 1%-3%)
-        adaptive_target = (atr_pct * 1.5).clip(lower=0.02, upper=0.05)
-        adaptive_stop = (atr_pct * 1.0).clip(lower=0.01, upper=0.03)
+        # target = atr_pct * multiplier (clip 2%-5%)
+        # stop = atr_pct * multiplier (clip 1%-3%)
+        adaptive_target = (atr_pct * self.atr_target_multiplier).clip(lower=0.02, upper=0.05)
+        adaptive_stop = (atr_pct * self.atr_stop_multiplier).clip(lower=0.01, upper=0.03)
 
         labels = pd.Series(1, index=df.index, name="signal")
         labels[df["future_return"] < -adaptive_stop] = 0

@@ -37,6 +37,7 @@ class ExitReason(str, enum.Enum):
     ORDER_REJECTED = "ORDER_REJECTED"
     ORDER_FILLED = "ORDER_FILLED"
     DUPLICATE = "DUPLICATE"
+    ML_SIGNAL = "ML_SIGNAL"
 
 
 class Stock(Base):

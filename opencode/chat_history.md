@@ -728,6 +728,68 @@ labeling:
 
 ## 2026-05-02
 
+### Session: Backtesting Fixes & Auto-Deployment
+
+**User Request:** Fix persistent backtest errors and create automatic model deployment to backend.
+
+**Issues Fixed:**
+
+1. **`LabelGenerator.__init__() got unexpected keyword 'num_classes'`**
+   - Root Cause: `run_backtest.py` passed `num_classes` but refactored `LabelGenerator` only supports 3-class (SELL=0, HOLD=1, BUY=2)
+   - Fix: Removed `num_classes` from `run_backtest.py:324-331`, added `atr_target_multiplier` and `atr_stop_multiplier` params to `label_generator.py`
+
+2. **`ValueError: DataFrame must contain 'close' column`**
+   - Root Cause: `FeaturePipeline.generate_features()` filtered to 60 selected features, dropping OHLCV columns needed by labeler
+   - Fix: Modified `feature_pipeline.py` to preserve `open, high, low, close, volume, datetime, symbol` columns
+
+3. **`StandardScaler expecting 173 features, got 58`**
+   - Root Cause: `load_existing_model()` loaded old scaler fitted on 173 features
+   - Fix: `model_trainer.py` now sets `self.scaler = None` to fit fresh scaler on current features
+
+4. **Overfitting (Train Acc: 1.0000)**
+   - Root Cause: No regularization, max_depth too high
+   - Fix: Added `reg_alpha=0.1`, `reg_lambda=1.0`, reduced `max_depth=3`, `min_child_weight=5`
+
+5. **`ModelSelector.__init__() got unexpected keyword 'min_accuracy'`**
+   - Root Cause: `run_backtest.py` passed `min_accuracy` but refactored `ModelSelector` uses trading metrics only
+   - Fix: Removed `min_accuracy`, updated config to use `min_trades`, `min_precision_buy`, `min_expectancy`
+
+6. **Misleading `trades=0` log when trades existed**
+   - Root Cause: `find_optimal_confidence_threshold` required `min_trades=20`
+   - Fix: Lowered to `min_trades=5`, now returns actual trade count
+
+**Auto-Deployment System:**
+
+| Step | Description |
+|------|-------------|
+| 1 | Backtest completes, best model selected |
+| 2 | Model exported to `backtesting/models/model_window_X_*.pkl` |
+| 3 | `latest_model.pkl` updated with best model |
+| 4 | If `deploy_to_backend: true` in config, model copies to `backend/services/ai/model.joblib` |
+| 5 | Old backend model backed up with timestamp before overwrite |
+| 6 | Verification check confirms deployment succeeded |
+
+**Files Modified:**
+| File | Change |
+|------|--------|
+| `backtesting/labeling/label_generator.py` | Added `atr_target_multiplier`, `atr_stop_multiplier` params |
+| `backtesting/feature_engineering/feature_pipeline.py` | Preserve OHLCV columns |
+| `backtesting/training/model_trainer.py` | Reset scaler, add regularization |
+| `backtesting/metrics/performance_metrics.py` | Lowered `min_trades` to 5 |
+| `backtesting/run_backtest.py` | Remove `num_classes`, fix `ModelSelector` call, improve `_deploy_to_backend()` |
+| `backtesting/config/backtest_config.yaml` | Remove `min_accuracy`, add trading metrics |
+
+**Commit:** `48481ac` - "feat: ML-first architecture refactor + backtesting fixes"
+
+**Architecture Status:**
+- Old model (`backend/services/ai/model.joblib`): `VotingClassifier`, 5-class, 174 features (obsolete)
+- New architecture: ML-first, 3-class, 60 features, `DecisionEngine` + `ExitEngine`
+- Auto-deployment: Enabled via `deploy_to_backend: true` in config
+
+---
+
+## 2026-05-02
+
 ### Session: System Refactor — ML-First Algo Trading Platform
 
 **User Request:** Refactor the entire system from rule-based + ML hybrid to a clean ML-first architecture where ML is the primary decision-maker, rule-based logic is fallback only, and backtesting pipeline is the single source of truth for training.

@@ -232,19 +232,25 @@ class FeatureEngineer:
         result = df.copy()
 
         stock_return = result["close"].pct_change(20)
-        nifty_return = 0.0
+        result["vs_nifty_return"] = 0.0
+        result["nifty_correlation"] = 0.0
+        result["outperform_days"] = 15  # neutral default
+        result["relative_strength"] = 0
 
         if self._nifty_data is not None and not self._nifty_data.empty:
-            nifty_close = self._nifty_data["close"]
-            nifty_return = nifty_close.pct_change(20)
+            nifty = self._nifty_data.copy()
+            nifty_close = nifty["close"]
 
-        result["vs_nifty_return"] = stock_return - nifty_return
-        result["nifty_correlation"] = result["close"].rolling(window=20).corr(pd.Series(0, index=result.index)) if nifty_return == 0 else result["close"].rolling(window=20).corr(nifty_return)
+            nifty_aligned = nifty_close.reindex(result.index, method='nearest')
+            nifty_aligned = nifty_aligned.pct_change(20)
 
-        stock_above = stock_return > 0
-        result["outperform_days"] = stock_above.rolling(20).sum()
+            result["vs_nifty_return"] = stock_return - nifty_aligned
+            result["nifty_correlation"] = result["close"].rolling(window=20).corr(nifty_aligned)
 
-        result["relative_strength"] = (stock_return > 0.02).astype(int)
+            stock_above = stock_return > nifty_aligned
+            result["outperform_days"] = stock_above.rolling(20).sum()
+
+            result["relative_strength"] = (stock_return > nifty_aligned + 0.02).astype(int)
 
         return result
 
@@ -537,19 +543,18 @@ class FeatureEngineer:
 
         result["nifty_bias"] = 0
         if self._nifty_data is not None and not self._nifty_data.empty:
-            nifty = self._nifty_data
-            nifty_ema_20 = nifty["close"].ewm(span=20, adjust=False).mean()
-            nifty_ema_50 = nifty["close"].ewm(span=50, adjust=False).mean()
+            nifty = self._nifty_data.copy()
+            nifty_close = nifty["close"].reindex(result.index, method='nearest')
+
+            nifty_ema_20 = nifty_close.ewm(span=20, adjust=False).mean()
+            nifty_ema_50 = nifty_close.ewm(span=50, adjust=False).mean()
 
             result["nifty_bias"] = np.where(nifty_ema_20 > nifty_ema_50, 1, -1)
 
-            nifty_return = nifty["close"].pct_change(5)
-            result["nifty_momentum"] = nifty_return
+            result["nifty_momentum"] = nifty_close.pct_change(5)
+            result["nifty_volatility"] = nifty_close.pct_change().rolling(10).std()
 
-            nifty_vol = nifty["close"].pct_change().rolling(10).std()
-            result["nifty_volatility"] = nifty_vol
-
-        result["market_correlation"] = result["close"].rolling(20).corr(result["close"].shift(1)) if len(result) > 20 else 0
+        result["market_correlation"] = result["close"].rolling(20).corr(result["close"].shift(1)) if len(result) > 20 else 0.0
 
         result["relative_volume"] = (
             result["volume"] / result["volume"].rolling(20).mean()

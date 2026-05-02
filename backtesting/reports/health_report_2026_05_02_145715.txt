@@ -1,0 +1,175 @@
+
+=============================================================
+  BACKTESTING HEALTH REPORT
+  Generated: 2026-05-02 02:57 PM
+  Report analyzed: C:\Users\asus\Documents\Projects\trading\algo-swing-trading-agent\backtesting\reports\full_report_2026_05_02_145715.json
+=============================================================
+
+-------------------------------------------------------------
+  EXECUTIVE SUMMARY
+-------------------------------------------------------------
+
+Overall Verdict: [FAIL] NOT WORKING AS EXPECTED
+  [PASS] Walk-Forward Time Splits
+  [PASS] Lookahead Bias
+  [PASS] Trade Activity
+  [PASS] Prediction Distribution
+  [PASS] Simulator Signal Handling
+
+What's Broken:
+  [?] Overfitting Detection (SUSPECTED)
+
+
+-------------------------------------------------------------
+  WALK-FORWARD VALIDATION
+-------------------------------------------------------------
+
+[PASS] TIME SPLITS: PASS
+
+   What this means: The backtest never uses future data to make decisions.
+
+   How it works (simple version):
+   - Take 3 years of data -> Train the model
+   - Take next 6 months -> Test the model (without retraining)
+   - Slide forward 6 months -> Repeat
+
+   This is like: Study 2019-2021, take a test on Jan-Jun 2022,
+   then study 2020-2022, take a test on Jul-Dec 2022, etc.
+
+   Verdict: Time splits are correct, no future peeking
+
+-------------------------------------------------------------
+  LOOKAHEAD BIAS CHECK
+-------------------------------------------------------------
+
+[PASS] NO LOOKAHEAD BIAS: PASS
+
+   What this means: The model doesn't "cheat" by seeing future prices.
+
+   The labels (BUY/SELL/HOLD) are created using future returns:
+   "If price goes up 10% in 5 days -> BUY signal"
+
+   But this label creation happens AFTER the train/test split,
+   so the model never sees these future returns during training.
+
+   Verdict: No future data leakage detected
+
+-------------------------------------------------------------
+  TRADE ACTIVITY (THE PROBLEM)
+-------------------------------------------------------------
+
+[PASS] TRADE ACTIVITY: PASS
+
+   Numbers:
+   - Total windows tested: 112
+   - Windows with trades: 98
+   - Windows without trades: 14
+   - Total trades: 176
+
+   Verdict: Trades executed during backtest
+
+-------------------------------------------------------------
+  MODEL PREDICTION ANALYSIS
+-------------------------------------------------------------
+
+[PASS] PREDICTION DISTRIBUTION: PASS
+
+   Prediction breakdown:
+   +----------------+----------+--------------------------+
+   | Prediction      | Count    | What it means            |
+   +----------------+----------+--------------------------+
+   | Strong Sell    | 0        | Never predicted          |
+   | Sell           | 0        | Never predicted          |
+   | HOLD           | 36       | Most predictions!         |
+   | Buy            | 77       | Rarely predicted         |
+   | Strong Buy     | 10       | Never predicted          |
+   +----------------+----------+--------------------------+
+
+   Verdict: Model uses all prediction classes appropriately
+
+-------------------------------------------------------------
+  SIMULATOR SIGNAL HANDLING
+-------------------------------------------------------------
+
+[PASS] SIMULATOR SIGNAL HANDLING: PASS
+
+   Verdict: Simulator handles multiple prediction classes
+
+-------------------------------------------------------------
+  OVERFITTING CHECK
+-------------------------------------------------------------
+
+[?] OVERFITTING: SUSPECTED
+
+   Accuracy across windows:
+   - Min: 0.18
+   - Max: 0.74
+   - Average: 0.49
+   - Variance: 0.56
+
+   What is overfitting?
+   Like a student who memorizes that the answer to every question 
+   is "C" -- they get 25% right by luck, but haven't learned anything.
+   
+   True test: Does the model make correct BUY/SELL decisions?
+
+   Cannot fully confirm without training metrics.
+   Need to compare train accuracy vs test accuracy:
+   - If train acc = 99% but test acc = 82% -> Overfitting
+   - If both are 82% but only predicting HOLD -> Different problem
+
+   Issues:
+   [FAIL] High accuracy variance (0.56) - possible overfitting
+
+   Verdict: Cannot fully verify - need training metrics
+
+-------------------------------------------------------------
+  PER-STOCK BREAKDOWN
+-------------------------------------------------------------
+
+   Stock           | Windows | Trades | Avg Accuracy | Verdict
+   ---------------|---------|---------|--------------|----------
+   ADANIPORTS.NS   |    8    |    13    |     45.5%    | [PASS]
+   BAJAJ-AUTO.NS   |    8    |     9    |     52.3%    | [PASS]
+   BHARTIARTL.NS   |    8    |    15    |     53.4%    | [PASS]
+   HDFCBANK.NS     |    8    |    15    |     42.3%    | [PASS]
+   ICICIBANK.NS    |    8    |    14    |     50.1%    | [PASS]
+   INFY.NS         |    8    |    13    |     46.9%    | [PASS]
+   KOTAKBANK.NS    |    8    |    13    |     54.0%    | [PASS]
+   NESTLEIND.NS    |    8    |    11    |     58.6%    | [PASS]
+   RELIANCE.NS     |    8    |    15    |     43.4%    | [PASS]
+   SBIN.NS         |    8    |    11    |     46.8%    | [PASS]
+   SUNPHARMA.NS    |    8    |    12    |     56.4%    | [PASS]
+   TCS.NS          |    8    |    13    |     49.2%    | [PASS]
+   TECHM.NS        |    8    |    13    |     44.5%    | [PASS]
+   WIPRO.NS        |    8    |     9    |     44.4%    | [PASS]
+
+-------------------------------------------------------------
+  RECOMMENDED FIXES
+-------------------------------------------------------------
+
+[FIX 4] Log training metrics for overfitting detection
+
+   Current: Only test metrics are logged
+   Fix: Log training accuracy/loss during model training
+
+   File: backtesting/training/model_trainer.py (after model.fit())
+
+-------------------------------------------------------------
+  SUMMARY FOR NON-TECHNICAL STAKEHOLDERS
+-------------------------------------------------------------
+
+The backtesting system has good architecture (correct time splits,
+no future peeking), but it's not testing anything useful because:
+
+1. The AI never makes trades (predicts "do nothing" 100% of the time)
+2. The accuracy numbers look good but are misleading
+3. The simulator ignores most of the AI's predictions
+
+Think of it like a self-driving car that's "100% safe" because it
+never moves. The code works, but it's not doing the job.
+
+After fixing the threshold and simulator, re-run the backtest to get
+meaningful results.
+
+=============================================================
