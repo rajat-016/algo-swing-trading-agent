@@ -762,9 +762,15 @@ class AdaptiveModel:
             self.stop_loss = data.get("stop_loss", self.stop_loss)
             self._is_trained = True
 
-            logger.info(f"Model loaded from {path}")
+            model_type = type(self.model).__name__
+            if hasattr(self.model, "estimators"):
+                est_names = [f"{name}({type(est).__name__})" for name, est in self.model.estimators]
+                logger.info(f"ML Model loaded: {model_type} [{', '.join(est_names)}]")
+            else:
+                logger.info(f"ML Model loaded: {model_type} ({type(self.model).__name__})")
+            logger.info(f"  Features: {len(self.feature_names)} | Trained at: {data.get('trained_at', 'unknown')}")
             if self._performance_metrics:
-                logger.info(f"Model performance: {self._performance_metrics}")
+                logger.info(f"  Performance: {self._performance_metrics}")
 
             return True
 

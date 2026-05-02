@@ -1,0 +1,91 @@
+{
+  "generated_at": "2026-05-02T14:47:04.751863",
+  "total_windows": 112,
+  "per_symbol_stats": {
+    "RELIANCE.NS": {
+      "trades": 15,
+      "avg_sharpe": -4.6651228357271854,
+      "avg_precision_buy": 0.1573253930764559
+    },
+    "TCS.NS": {
+      "trades": 13,
+      "avg_sharpe": -2.2189974327407183,
+      "avg_precision_buy": 0.28337842712842715
+    },
+    "INFY.NS": {
+      "trades": 13,
+      "avg_sharpe": -9.237653499837311,
+      "avg_precision_buy": 0.38484848484848483
+    },
+    "HDFCBANK.NS": {
+      "trades": 15,
+      "avg_sharpe": -3.6416481559080003,
+      "avg_precision_buy": 0.21203366379996813
+    },
+    "ICICIBANK.NS": {
+      "trades": 14,
+      "avg_sharpe": -1.2276771056302234,
+      "avg_precision_buy": 0.2484472049689441
+    },
+    "WIPRO.NS": {
+      "trades": 9,
+      "avg_sharpe": -3.2669922336490314,
+      "avg_precision_buy": 0.19342785843920146
+    },
+    "SBIN.NS": {
+      "trades": 11,
+      "avg_sharpe": -3.178481358490206,
+      "avg_precision_buy": 0.22134284906024038
+    },
+    "BHARTIARTL.NS": {
+      "trades": 15,
+      "avg_sharpe": -2.445827031004778,
+      "avg_precision_buy": 0.3016166514280738
+    },
+    "BAJAJ-AUTO.NS": {
+      "trades": 9,
+      "avg_sharpe": -2.9478408018053948,
+      "avg_precision_buy": 0.21036570804962312
+    },
+    "SUNPHARMA.NS": {
+      "trades": 12,
+      "avg_sharpe": -2.0096579390267593,
+      "avg_precision_buy": 0.20833333333333334
+    },
+    "TECHM.NS": {
+      "trades": 13,
+      "avg_sharpe": -3.409628551195949,
+      "avg_precision_buy": 0.23552562422537812
+    },
+    "KOTAKBANK.NS": {
+      "trades": 13,
+      "avg_sharpe": -1.5845969429668256,
+      "avg_precision_buy": 0.32230820649938297
+    },
+    "ADANIPORTS.NS": {
+      "trades": 13,
+      "avg_sharpe": -8.565795661747405,
+      "avg_precision_buy": 0.37978365384615387
+    },
+    "NESTLEIND.NS": {
+      "trades": 11,
+      "avg_sharpe": -3.0908754779832917,
+      "avg_precision_buy": 0.25830176767676766
+    }
+  },
+  "confidence_bucket_analysis": {
+    "low": {
+      "count": 19,
+      "correct": 0
+    },
+    "medium": {
+      "count": 38,
+      "correct": 0
+    },
+    "high": {
+      "count": 66,
+      "correct": 0
+    }
+  },
+  "alpha_validated": false
+}

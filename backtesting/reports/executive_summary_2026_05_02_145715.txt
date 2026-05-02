@@ -1,0 +1,29 @@
+============================================================
+EXECUTIVE SUMMARY - WALK-FORWARD BACKTEST
+============================================================
+Generated: 2026-05-02T14:57:15.340824
+Total Windows: 112
+Total Trades: 176
+
+--- Strategy Metrics ---
+Avg Sharpe Ratio: -3.68 (Target: >= 1.0)
+Avg Max Drawdown: 0.97% (Target: <= 25%)
+Avg Precision(BUY): 25.84%
+
+--- Optimal Confidence Threshold ---
+Average Optimal Threshold: 0.50
+Windows with Valid Threshold: 98/112
+
+--- Trade Expectancy ---
+Expectancy: 1259.75
+Avg Win: 1259.75
+Avg Loss: 0.00
+Win Rate: 100.00%
+
+--- Best Model (Selected) ---
+Symbol: ICICIBANK.NS
+Window: 0
+Sharpe: 0.50
+DD: 0.24%
+Precision(BUY): 21.43%
+============================================================
