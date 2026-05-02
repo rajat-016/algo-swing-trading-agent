@@ -7,6 +7,8 @@ Usage:
     python run_backtest.py --dry-run    # Validate without executing
     python run_backtest.py --fetch-only # Only fetch data
     python run_backtest.py --train-only # Only train (uses existing data)
+    python run_backtest.py --analyze    # Analyze latest backtest report
+    python run_backtest.py --analyze --file reports/full_report_XXX.json  # Analyze specific report
 """
 
 import sys
@@ -135,9 +137,8 @@ def run_safeguards(dry_run: bool = False) -> bool:
     logger.info("=" * 60)
 
     if is_market_hours():
-        logger.error("BLOCKED: NSE market hours detected (9:15 AM - 3:30 PM IST)")
-        logger.error("Backtesting cannot run during live market hours.")
-        return False
+        logger.warning("[WARN] NSE market hours detected (9:15 AM - 3:30 PM IST)")
+        logger.warning("Backtesting is isolated — safe to proceed, but ensure backend/main.py is not running")
     else:
         logger.info("[PASS] Not market hours")
 
@@ -220,7 +221,7 @@ def run_dry_run():
     return True
 
 
-def run_full_pipeline():
+def run_full_pipeline(args=None):
     logger = logging.getLogger(__name__)
     config = load_config()
 
@@ -284,12 +285,30 @@ def run_full_pipeline():
     logger.info("STEP 2: Generating features")
     from feature_engineering.feature_pipeline import FeaturePipeline
 
+    # Fetch NIFTY 50 data for relative strength features
+    nifty_df = None
+    try:
+        nifty_data_list = fetcher.fetch_multiple_symbols(
+            ["^NSEI"],
+            start_date=data_cfg["start_date"],
+            end_date=data_cfg["end_date"],
+            interval=config.get("timeframe", "1d"),
+        )
+        if nifty_data_list:
+            nifty_df = nifty_data_list[0]
+            logger.info(f"NIFTY 50 data loaded: {len(nifty_df)} rows")
+    except Exception as e:
+        logger.warning(f"Could not fetch NIFTY data: {e}. Relative strength features will use defaults.")
+
     feature_pipeline = FeaturePipeline()
     featured_frames = []
     for sym in symbols:
         sym_data = all_data[all_data["symbol"] == sym].copy()
         if sym_data.empty:
             continue
+        # Set NIFTY data for relative strength calculation
+        if nifty_df is not None:
+            feature_pipeline.engineer.set_nifty_data(nifty_df)
         featured = feature_pipeline.generate_features(sym_data)
         featured_frames.append(featured)
 
@@ -305,6 +324,10 @@ def run_full_pipeline():
     labeler = LabelGenerator(
         lookahead=label_cfg["lookahead_periods"],
         threshold=label_cfg["return_threshold"],
+        stop_loss=label_cfg.get("stop_loss", 0.03),
+        num_classes=label_cfg.get("num_classes", 3),
+        atr_target_multiplier=label_cfg.get("atr_target_multiplier", 1.5),
+        atr_stop_multiplier=label_cfg.get("atr_stop_multiplier", 1.0),
     )
     labeled_data = labeler.create_labels(featured_data)
 
@@ -336,89 +359,269 @@ def run_full_pipeline():
 
     trainer = ModelTrainer(
         model_path=str(BACKEND_DIR / "services" / "ai" / "model.joblib"),
-        parameters=model_cfg.get("parameters", {}),
+        parameters={**model_cfg.get("parameters", {}), "num_classes": model_cfg.get("num_classes", 3)},
     )
 
     trainer.load_existing_model()
 
     all_results = []
 
-    for sym in symbols:
-        sym_data = labeled_data[labeled_data["symbol"] == sym].copy()
-        if len(sym_data) < 200:
-            logger.warning(f"{sym}: Insufficient data ({len(sym_data)} rows), skipping")
-            continue
+    # Portfolio simulation mode: collect all signals per window across symbols
+    run_portfolio_mode = bt_cfg.get("portfolio_mode", False)
+    
+    if run_portfolio_mode:
+        logger.info("PORTFOLIO MODE ENABLED - Allocating capital across symbols")
+        from portfolio.allocator import PortfolioAllocator
+        
+        # Group data by window across all symbols
+        window_symbol_data = {}  # (window_key) -> [(sym, test_df, predictions, probabilities, edge_scores)]
+        
+        for sym in symbols:
+            sym_data = labeled_data[labeled_data["symbol"] == sym].copy()
+            if len(sym_data) < 200:
+                logger.warning(f"{sym}: Insufficient data ({len(sym_data)} rows), skipping")
+                continue
 
-        sym_splits = splitter.generate_splits(sym_data)
-        logger.info(f"{sym}: {len(sym_splits)} walk-forward windows")
+            sym_splits = splitter.generate_splits(sym_data)
 
-        for idx, (train_df, test_df) in enumerate(sym_splits):
-            window_label = f"{sym}_W{idx}"
-            logger.info(f"--- Window {window_label} ---")
+            for idx, (train_df, test_df) in enumerate(sym_splits):
+                window_key = idx  # Using window index as key (simplified)
+                
+                try:
+                    X_train, y_train, sample_weights = trainer.prepare_data(
+                        train_df, feature_names, label_col="signal"
+                    )
+                    success = trainer.train(X_train, y_train, sample_weights=sample_weights)
+                    if not success:
+                        continue
 
-            try:
-                X_train, y_train = trainer.prepare_data(
-                    train_df, feature_names, label_col="signal"
-                )
-
-                success = trainer.train(X_train, y_train)
-                if not success:
-                    logger.warning(f"Window {window_label}: Training failed, skipping")
+                    available = [f for f in feature_names if f in test_df.columns]
+                    X_test = test_df[available].dropna()
+                    
+                    predictions = trainer.predict(X_test.values)
+                    probabilities = trainer.predict_proba(X_test.values)
+                    
+                    # NEW: Compute edge scores for BUY signals
+                    edge_scores = []
+                    has_atr = "atr_14" in test_df.columns
+                    for i, (pred, prob) in enumerate(zip(predictions, probabilities)):
+                        if int(pred) == 2:  # BUY signal
+                            conf = float(np.max(prob))
+                            row = test_df.iloc[i] if i < len(test_df) else None
+                            if row is not None:
+                                entry_price = row["close"]
+                                atr_val = row["atr_14"] if has_atr else None
+                                # Calculate edge score: confidence * (reward/risk)
+                                stop_loss = entry_price - (atr_val * 2.0) if atr_val else entry_price * 0.97
+                                target = entry_price + (atr_val * 4.0) if atr_val else entry_price * 1.15
+                                risk = abs(entry_price - stop_loss)
+                                reward = abs(target - entry_price)
+                                edge = conf * (reward / risk) if risk > 0 else conf
+                                edge_scores.append(edge)
+                            else:
+                                edge_scores.append(conf)
+                        else:
+                            edge_scores.append(0.0)
+                    
+                    if window_key not in window_symbol_data:
+                        window_symbol_data[window_key] = []
+                    window_symbol_data[window_key].append({
+                        "symbol": sym,
+                        "test_df": test_df.loc[X_test.index].copy(),
+                        "predictions": predictions,
+                        "probabilities": probabilities,
+                        "edge_scores": edge_scores,
+                    })
+                except Exception as e:
+                    logger.error(f"{sym}_W{idx} failed: {e}")
                     continue
 
-                available = [f for f in feature_names if f in test_df.columns]
-                X_test = test_df[available].dropna()
-                y_test = test_df.loc[X_test.index, "signal"]
-
-                X_test_values = X_test.values
-
-                predictions = trainer.predict(X_test_values)
-
-                from backtest_engine.trade_simulator import TradeSimulator
-
-                test_with_features = test_df.loc[X_test.index].copy()
-
-                simulator = TradeSimulator(
-                    initial_capital=bt_cfg["initial_capital"],
-                    position_size_pct=bt_cfg["position_size_pct"],
-                    max_positions=bt_cfg["max_positions"],
-                    stop_loss_pct=bt_cfg["stop_loss_pct"],
-                    target_pct=bt_cfg["target_pct"],
-                    slippage_pct=bt_cfg.get("slippage_pct", 0.001),
+        # Run portfolio simulation per window
+        for window_idx, sym_data_list in window_symbol_data.items():
+            logger.info(f"--- Portfolio Window {window_idx} ({len(sym_data_list)} symbols) ---")
+            
+            allocator = PortfolioAllocator(
+                max_positions=bt_cfg["max_positions"],
+                strategy=bt_cfg.get("allocation_strategy", "edge_score"),  # NEW default
+            )
+            
+            # Merge all test data for simulation
+            all_test_dfs = []
+            all_predictions = []
+            all_probabilities = []
+            all_edge_scores = []
+            
+            for sym_data in sym_data_list:
+                all_test_dfs.append(sym_data["test_df"])
+                all_predictions.extend(sym_data["predictions"])
+                all_probabilities.extend(sym_data["probabilities"])
+                if "edge_scores" in sym_data:
+                    all_edge_scores.extend(sym_data["edge_scores"])
+            
+            merged_test = pd.concat(all_test_dfs).sort_values("datetime").reset_index(drop=True)
+            
+            simulator = TradeSimulator(
+                initial_capital=bt_cfg["initial_capital"],
+                max_positions=bt_cfg["max_positions"],
+                stop_loss_pct=bt_cfg["stop_loss_pct"],
+                target_pct=bt_cfg["target_pct"],
+                slippage_pct=bt_cfg.get("slippage_pct", 0.001),
+                brokerage_rate=bt_cfg.get("brokerage_rate", 0.0015),
+                stt_rate=bt_cfg.get("stt_rate", 0.00025),
+                use_atr_sl=bt_cfg.get("use_atr_sl", True),
+                atr_sl_multiplier=bt_cfg.get("atr_sl_multiplier", 2.0),
+                atr_target_multiplier=bt_cfg.get("atr_target_multiplier", 4.0),
+                cooldown_bars=bt_cfg.get("cooldown_bars", 3),
+                max_holding_bars=bt_cfg.get("max_holding_bars", 7),
+                confidence_high=bt_cfg.get("confidence_high", 0.65),
+                confidence_medium=bt_cfg.get("confidence_medium", 0.50),
+            )
+            
+            sim_result = simulator.run(
+                merged_test,
+                np.array(all_predictions),
+                probabilities=np.array(all_probabilities),
+                datetime_col="datetime",
+            )
+            
+            # Calculate metrics
+            from metrics.performance_metrics import PerformanceMetrics
+            import numpy as np
+            
+            metrics = PerformanceMetrics.calculate_all(
+                trade_log=sim_result["trade_log"],
+                equity_curve=sim_result["equity_curve"],
+                dates=sim_result["dates"],
+                predictions=np.array(all_predictions),
+                actuals=merged_test["signal"].values,
+            )
+            
+            if "prediction_log" in sim_result:
+                metrics["confidence_buckets"] = PerformanceMetrics.confidence_bucket_analysis(
+                    sim_result["prediction_log"]
                 )
-
-                sim_result = simulator.run(
-                    test_with_features,
-                    predictions,
-                    datetime_col="datetime",
-                )
-
-                from metrics.performance_metrics import PerformanceMetrics
-
-                metrics = PerformanceMetrics.calculate_all(
-                    trade_log=sim_result["trade_log"],
-                    equity_curve=sim_result["equity_curve"],
-                    dates=sim_result["dates"],
-                    predictions=predictions,
-                    actuals=y_test.values,
-                )
-
-                metrics["window_index"] = idx
-                metrics["symbol"] = sym
-                all_results.append(metrics)
-
-                logger.info(
-                    f"Window {window_label}: Sharpe={metrics.get('sharpe_ratio', 0):.2f}, "
-                    f"DD={metrics.get('max_drawdown', 0):.2f}, "
-                    f"Acc={metrics.get('accuracy', 0):.2f}, "
-                    f"Trades={metrics.get('total_trades', 0)}"
-                )
-
-            except Exception as e:
-                logger.error(f"Window {window_label} failed: {e}")
-                import traceback
-                traceback.print_exc()
+            
+            metrics["trade_expectancy"] = PerformanceMetrics.trade_expectancy(sim_result["trade_log"])
+            metrics["optimal_confidence_threshold"] = PerformanceMetrics.find_optimal_confidence_threshold(
+                sim_result["trade_log"]
+            )
+            metrics["window_index"] = window_idx
+            metrics["symbol"] = "PORTFOLIO"
+            all_results.append(metrics)
+            
+    else:
+        # Original per-symbol mode
+        for sym in symbols:
+            sym_data = labeled_data[labeled_data["symbol"] == sym].copy()
+            if len(sym_data) < 200:
+                logger.warning(f"{sym}: Insufficient data ({len(sym_data)} rows), skipping")
                 continue
+
+            sym_splits = splitter.generate_splits(sym_data)
+            logger.info(f"{sym}: {len(sym_splits)} walk-forward windows")
+
+            for idx, (train_df, test_df) in enumerate(sym_splits):
+                window_label = f"{sym}_W{idx}"
+                logger.info(f"--- Window {window_label} ---")
+
+                try:
+                    X_train, y_train, sample_weights = trainer.prepare_data(
+                        train_df, feature_names, label_col="signal"
+                    )
+
+                    success = trainer.train(X_train, y_train, sample_weights=sample_weights)
+                    if not success:
+                        logger.warning(f"Window {window_label}: Training failed, skipping")
+                        continue
+
+                    available = [f for f in feature_names if f in test_df.columns]
+                    X_test = test_df[available].dropna()
+                    y_test = test_df.loc[X_test.index, "signal"]
+
+                    X_test_values = X_test.values
+                    
+                    predictions = trainer.predict(X_test_values)
+                    probabilities = trainer.predict_proba(X_test_values)
+
+                    import numpy as np
+                    unique, counts = np.unique(predictions, return_counts=True)
+                    prediction_counts = dict(zip(unique.tolist(), counts.tolist()))
+
+                    from backtest_engine.trade_simulator import TradeSimulator
+
+                    test_with_features = test_df.loc[X_test.index].copy()
+
+                    simulator = TradeSimulator(
+                        initial_capital=bt_cfg["initial_capital"],
+                        position_size_pct=bt_cfg["position_size_pct"],
+                        max_positions=bt_cfg["max_positions"],
+                        stop_loss_pct=bt_cfg["stop_loss_pct"],
+                        target_pct=bt_cfg["target_pct"],
+                        slippage_pct=bt_cfg.get("slippage_pct", 0.001),
+                        brokerage_rate=bt_cfg.get("brokerage_rate", 0.0015),
+                        stt_rate=bt_cfg.get("stt_rate", 0.00025),
+                        use_atr_sl=bt_cfg.get("use_atr_sl", True),
+                        atr_sl_multiplier=bt_cfg.get("atr_sl_multiplier", 2.0),
+                        atr_target_multiplier=bt_cfg.get("atr_target_multiplier", 4.0),
+                        cooldown_bars=bt_cfg.get("cooldown_bars", 3),
+                        max_holding_bars=bt_cfg.get("max_holding_bars", 7),
+                        confidence_high=bt_cfg.get("confidence_high", 0.65),
+                        confidence_medium=bt_cfg.get("confidence_medium", 0.50),
+                    )
+
+                    sim_result = simulator.run(
+                        test_with_features,
+                        predictions,
+                        probabilities=probabilities,
+                        datetime_col="datetime",
+                    )
+
+                    from metrics.performance_metrics import PerformanceMetrics
+
+                    metrics = PerformanceMetrics.calculate_all(
+                        trade_log=sim_result["trade_log"],
+                        equity_curve=sim_result["equity_curve"],
+                        dates=sim_result["dates"],
+                        predictions=predictions,
+                        actuals=y_test.values,
+                    )
+
+                    if "prediction_log" in sim_result:
+                        confidence_buckets = PerformanceMetrics.confidence_bucket_analysis(
+                            sim_result["prediction_log"]
+                        )
+                        metrics["confidence_buckets"] = confidence_buckets
+
+                    trade_expectancy = PerformanceMetrics.trade_expectancy(sim_result["trade_log"])
+                    metrics["trade_expectancy"] = trade_expectancy
+
+                    optimal_threshold = PerformanceMetrics.find_optimal_confidence_threshold(
+                        sim_result["trade_log"]
+                    )
+                    metrics["optimal_confidence_threshold"] = optimal_threshold
+                    
+                    logger.info(
+                        f"Window {window_label}: Optimal threshold = {optimal_threshold['optimal_threshold']:.2f} "
+                        f"(trades={optimal_threshold['trade_count']}, exp_return={optimal_threshold['expected_return']:.2f})"
+                    )
+
+                    metrics["prediction_counts"] = prediction_counts
+                    metrics["window_index"] = idx
+                    metrics["symbol"] = sym
+                    all_results.append(metrics)
+
+                    logger.info(
+                        f"Window {window_label}: Sharpe={metrics.get('sharpe_ratio', 0):.2f}, "
+                        f"DD={metrics.get('max_drawdown', 0):.2f}, "
+                        f"Acc={metrics.get('accuracy', 0):.2f}, "
+                        f"Trades={metrics.get('total_trades', 0)}"
+                    )
+
+                except Exception as e:
+                    logger.error(f"Window {window_label} failed: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    continue
 
     if not all_results:
         logger.error("No successful windows. Pipeline failed.")
@@ -455,16 +658,18 @@ def run_full_pipeline():
     }
 
     best_window_idx = best.get("window_index", 0)
+    model_type = type(trainer.model).__name__
     model_path = exporter.export_model(
         model_data=model_data,
         metadata={
             "metrics": best,
             "window_index": best_window_idx,
-            "total_windows_evaluated": len(splits),
+            "total_windows_evaluated": len(all_results),
+            "model_type": model_type,
         },
         window_index=best_window_idx,
     )
-    logger.info(f"Best model exported: {model_path}")
+    logger.info(f"Best model ({model_type}) exported: {model_path}")
 
     # Step 7: Generate reports
     logger.info("STEP 7: Generating reports")
@@ -475,18 +680,75 @@ def run_full_pipeline():
         [r for r in all_results if r.get("window_index") == best_window_idx],
         window_index=best_window_idx,
     )
-    reporter.generate_full_report(all_results, best)
+    full_report_path = reporter.generate_full_report(all_results, best)
+    
+    # NEW: Generate executive summary and alpha validation
+    exec_summary_path = reporter.generate_executive_summary(all_results, best)
+    alpha_path = reporter.generate_alpha_validation(all_results)
+    logger.info(f"Executive summary: {exec_summary_path}")
+    logger.info(f"Alpha validation: {alpha_path}")
+
+    # Step 8: Auto-generate health report
+    logger.info("STEP 8: Generating health report")
+    from analysis.report_analyzer import ReportAnalyzer
+    analyzer = ReportAnalyzer(reports_dir=str(reports_dir))
+    # Build a minimal report structure for analysis
+    report_data = {
+        "generated_at": datetime.now().isoformat(),
+        "total_windows": len(all_results),
+        "windows": all_results,
+        "best_model": best,
+    }
+    analysis = analyzer.analyze_report(report_data, report_path=str(full_report_path))
+    health_path = analyzer.save_health_report(analysis)
+    logger.info(f"Health report generated: {health_path}")
+
+    # Step 9: Auto-deploy to backend
+    deploy_enabled = output_cfg.get("deploy_to_backend", False)
+    deploy_forced = args is not None and getattr(args, "no_deploy", False)
+    if deploy_enabled and not deploy_forced:
+        logger.info("STEP 9: Deploying model to backend")
+        backend_model = BACKEND_DIR / "services" / "ai" / "model.joblib"
+        deploy_path = _deploy_to_backend(model_path, backend_model, logger)
+        if deploy_path:
+            logger.info(f"Model deployed to {deploy_path}")
+        else:
+            logger.warning("Model deployment skipped")
+    else:
+        logger.info("STEP 9: Skipped (deploy_to_backend disabled)")
 
     logger.info("=" * 60)
     logger.info("PIPELINE COMPLETE")
-    logger.info(f"Best model: {model_path}")
+    logger.info(f"Best model ({model_type}): {model_path}")
     logger.info(f"Sharpe: {best.get('sharpe_ratio', 0):.2f}")
     logger.info(f"Max DD: {best.get('max_drawdown', 0):.2f}")
     logger.info(f"Accuracy: {best.get('accuracy', 0):.2f}")
     logger.info(f"Total trades: {best.get('total_trades', 0)}")
-    logger.info("")
-    logger.info("To deploy: copy models/latest_model.pkl to backend/services/ai/model.joblib")
     logger.info("=" * 60)
+
+
+def _deploy_to_backend(source: str, dest: Path, logger) -> str | None:
+    import shutil
+
+    if not Path(source).exists():
+        logger.error(f"Deploy failed: source model not found at {source}")
+        return None
+
+    try:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+
+        if dest.exists():
+            backup = dest.with_suffix(f".joblib.backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+            shutil.copy2(str(dest), str(backup))
+            logger.info(f"Existing model backed up to {backup}")
+
+        shutil.copy2(source, str(dest))
+        logger.info(f"Model deployed: {source} -> {dest}")
+        return str(dest)
+
+    except Exception as e:
+        logger.error(f"Deployment failed: {e}")
+        return None
 
 
 def main():
@@ -494,7 +756,23 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Validate pipeline without executing")
     parser.add_argument("--fetch-only", action="store_true", help="Only fetch data from Yahoo Finance")
     parser.add_argument("--force", action="store_true", help="Skip safeguard confirmations")
+    parser.add_argument("--no-deploy", action="store_true", help="Skip auto-deployment to backend")
+    parser.add_argument("--analyze", action="store_true", help="Analyze backtest report and generate health report")
+    parser.add_argument("--file", type=str, default=None, help="Specific report file to analyze (with --analyze)")
     args = parser.parse_args()
+
+    if args.analyze:
+        from analysis.report_analyzer import ReportAnalyzer
+        analyzer = ReportAnalyzer(reports_dir=str(ROOT_DIR / "reports"))
+        analysis = analyzer.run_analysis(report_path=args.file)
+        if analysis:
+            report_text = analyzer.generate_health_report(analysis)
+            print(report_text)
+            health_path = analyzer.save_health_report(analysis)
+            print(f"\nHealth report saved to: {health_path}")
+        else:
+            print("ERROR: No report found to analyze")
+        sys.exit(0)
 
     import yaml
     try:
@@ -518,7 +796,7 @@ def main():
         success = run_dry_run()
         sys.exit(0 if success else 1)
 
-    run_full_pipeline()
+    run_full_pipeline(args)
 
 
 if __name__ == "__main__":

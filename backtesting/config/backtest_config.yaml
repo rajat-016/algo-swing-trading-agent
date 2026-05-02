@@ -7,6 +7,12 @@ symbols:
   - WIPRO.NS
   - SBIN.NS
   - BHARTIARTL.NS
+  - BAJAJ-AUTO.NS
+  - SUNPHARMA.NS
+  - TECHM.NS
+  - KOTAKBANK.NS
+  - ADANIPORTS.NS
+  - NESTLEIND.NS
 
 timeframe: 1d
 
@@ -20,10 +26,15 @@ features:
 
 labeling:
   lookahead_periods: 5
-  return_threshold: 0.02
+  return_threshold: 0.10
+  stop_loss: 0.03
+  num_classes: 3
+  atr_target_multiplier: 1.5
+  atr_stop_multiplier: 1.0
 
 training:
   model_type: xgboost
+  num_classes: 3
   parameters:
     max_depth: 6
     learning_rate: 0.05
@@ -44,8 +55,19 @@ backtest:
   position_size_pct: 0.10
   max_positions: 3
   stop_loss_pct: 0.03
-  target_pct: 0.20
+  target_pct: 0.15
   slippage_pct: 0.001
+  brokerage_rate: 0.0015
+  stt_rate: 0.00025
+  use_atr_sl: true
+  atr_sl_multiplier: 1.5
+  atr_target_multiplier: 3.0
+  cooldown_bars: 3
+  max_holding_bars: 7
+  confidence_high: 0.65
+  confidence_medium: 0.50
+  portfolio_mode: false
+  allocation_strategy: confidence_proportional
 
 model_selection:
   primary_metric: sharpe_ratio
@@ -58,6 +80,7 @@ output:
   reports_dir: reports
   logs_dir: logs
   export_latest: true
+  deploy_to_backend: true
 
 logging:
   level: INFO

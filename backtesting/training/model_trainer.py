@@ -6,6 +6,7 @@ from pathlib import Path
 import logging
 import sys
 from sklearn.preprocessing import StandardScaler
+from sklearn.utils.class_weight import compute_sample_weight
 
 logger = logging.getLogger(__name__)
 
@@ -33,26 +34,13 @@ class ModelTrainer:
     def load_existing_model(self) -> bool:
         try:
             data = joblib.load(self.model_path)
-            self.model = data["model"]
-            
-            # Disable parallel processing to avoid joblib KeyboardInterrupt issues
-            if hasattr(self.model, 'n_jobs'):
-                self.model.n_jobs = 1
-            
-            # Handle VotingClassifier or similar ensemble models
-            if hasattr(self.model, 'estimators'):
-                for name, estimator in self.model.estimators:
-                    if hasattr(estimator, 'n_jobs'):
-                        estimator.n_jobs = 1
-            if hasattr(self.model, 'estimators_'):
-                for estimator in self.model.estimators_:
-                    if hasattr(estimator, 'n_jobs'):
-                        estimator.n_jobs = 1
-            
+            loaded_model = data["model"]
+
             self.scaler = data.get("scaler", None)
             self.feature_names = data.get("feature_names", [])
-            self._is_trained = True
-            logger.info(f"Loaded existing model from {self.model_path} (parallel processing disabled)")
+
+            logger.info(f"Loaded model metadata (scaler, feature_names) from {self.model_path}")
+            logger.info(f"Will train fresh XGBoost model (loaded model was {type(loaded_model).__name__})")
             return True
         except FileNotFoundError:
             logger.warning(f"No existing model found at {self.model_path}. Will train from scratch.")
@@ -61,14 +49,41 @@ class ModelTrainer:
             logger.error(f"Failed to load model: {e}")
             return False
 
+    def _create_model(self):
+        try:
+            import xgboost as xgb
+            self.model = xgb.XGBClassifier(
+                max_depth=self.parameters.get("max_depth", 5),
+                learning_rate=self.parameters.get("learning_rate", 0.05),
+                n_estimators=self.parameters.get("n_estimators", 200),
+                subsample=self.parameters.get("subsample", 0.8),
+                colsample_bytree=self.parameters.get("colsample_bytree", 0.8),
+                min_child_weight=self.parameters.get("min_child_weight", 3),
+                gamma=self.parameters.get("gamma", 0.1),
+                random_state=self.parameters.get("random_state", 42),
+                n_jobs=1,
+                eval_metric="mlogloss",
+                objective="multi:softprob",
+                num_class=3,
+            )
+            logger.info("Created fresh XGBoostClassifier model (3-class)")
+        except ImportError:
+            from sklearn.ensemble import GradientBoostingClassifier
+            self.model = GradientBoostingClassifier(
+                n_estimators=self.parameters.get("n_estimators", 100),
+                learning_rate=self.parameters.get("learning_rate", 0.1),
+                max_depth=self.parameters.get("max_depth", 5),
+                subsample=self.parameters.get("subsample", 0.8),
+                random_state=42,
+            )
+            logger.info("Created fresh GradientBoostingClassifier model (XGBoost not available)")
+
     def prepare_data(
         self,
         train_df: pd.DataFrame,
         feature_names: list,
         label_col: str = "signal",
     ):
-        from sklearn.ensemble import GradientBoostingClassifier
-
         available_features = [f for f in feature_names if f in train_df.columns]
         if not available_features:
             raise ValueError("No matching feature columns found in DataFrame")
@@ -88,21 +103,40 @@ class ModelTrainer:
             X_scaled = self.scaler.transform(X)
 
         if self.model is None:
-            self.model = GradientBoostingClassifier(
-                n_estimators=self.parameters.get("n_estimators", 100),
-                learning_rate=self.parameters.get("learning_rate", 0.1),
-                max_depth=self.parameters.get("max_depth", 5),
-                subsample=self.parameters.get("subsample", 0.8),
-                random_state=42,
-            )
+            self._create_model()
 
-        return X_scaled, y
+        y = y.astype(int)
 
-    def train(self, X_train: np.ndarray, y_train: np.ndarray) -> bool:
+        sample_weights = compute_sample_weight("balanced", y)
+
+        return X_scaled, y, sample_weights
+
+    def train(self, X_train: np.ndarray, y_train: np.ndarray, sample_weights: np.ndarray = None) -> bool:
+        model_name = type(self.model).__name__
+        n_samples = len(X_train)
+        n_features = X_train.shape[1]
         try:
-            self.model.fit(X_train, y_train)
+            if sample_weights is not None:
+                self.model.fit(X_train, y_train, sample_weight=sample_weights)
+            else:
+                self.model.fit(X_train, y_train)
+
+            train_predictions = self.model.predict(X_train)
+            train_accuracy = (train_predictions == y_train).mean()
+
+            unique, counts = np.unique(y_train, return_counts=True)
+            label_dist = dict(zip(unique.tolist(), counts.tolist()))
+
+            if hasattr(self.model, 'train_score_'):
+                final_train_loss = self.model.train_score_[-1]
+                logger.info(f"Model {model_name} trained ({n_samples} samples, {n_features} features) | "
+                           f"Train Acc: {train_accuracy:.4f} | Loss: {final_train_loss:.4f} | "
+                           f"Label dist: {label_dist}")
+            else:
+                logger.info(f"Model {model_name} trained ({n_samples} samples, {n_features} features) | "
+                           f"Train Acc: {train_accuracy:.4f} | Label dist: {label_dist}")
+
             self._is_trained = True
-            logger.info("Model trained successfully")
             return True
         except KeyboardInterrupt:
             logger.warning("Model training interrupted by user")

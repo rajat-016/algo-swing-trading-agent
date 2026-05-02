@@ -304,4 +304,489 @@ python run_backtest.py             # Full pipeline
 
 ---
 
+## 2026-05-01
+
+### Session: Backtesting Analysis & Stock List Update
+
+**Analysis & Answers:**
+
+1. **Which stocks are backtested?**
+   - Original 8 stocks in `backtesting/config/backtest_config.yaml:1-9`: RELIANCE.NS, TCS.NS, INFY.NS, HDFCBANK.NS, ICICIBANK.NS, WIPRO.NS, SBIN.NS, BHARTIARTL.NS
+   - Added 6 new stocks: BAJAJ-AUTO.NS, SUNPHARMA.NS, TECHM.NS, KOTAKBANK.NS, ADANIPORTS.NS, NESTLEIND.NS (total 14 stocks)
+   - Verify via: `backtesting/config/backtest_config.yaml`, DuckDB `market_data.duckdb`, or `backtesting/reports/`
+
+2. **How to check model performance post-backtest?**
+   - Metrics in `backtesting/metrics/performance_metrics.py`: Sharpe ratio (≥1.2), Max Drawdown (≤20%), Accuracy (≥55%), CAGR, Win Rate
+   - Analyzed user's actual backtest results (64 windows):
+     - 56% of windows had 0 trades
+     - Sharpe ratio varied from -6.89 to 1.43 (overfitting signal)
+     - Best model (SBIN.NS Window 7) had accuracy 0.312 (below 0.55 threshold)
+   - Validation steps: Check `full_report_*.json` for window consistency, `trades_window_*.csv` for P&L sanity, `backtest.log` for date ranges
+
+3. **How to validate walk-forward backtesting (no lookahead bias)?**
+   - Confirmed no lookahead bias: Train end date < Test start date for all windows (verified via `backtesting/logs/backtest.log`)
+   - Walk-forward splits use sequential time-based masks (`walkforward_split.py:44-48`), no overlapping data between train/test
+   - Manual check: Ensure test window dates are always after train window dates
+
+**Actions Taken:**
+- Edited `backtesting/config/backtest_config.yaml` to add 6 new stocks (lines 10-15)
+- Verified config changes successfully
+
+**Recommendations:**
+- Lower `labeling.return_threshold` from 0.10 to 0.03-0.05 to generate more trades
+- Investigate low accuracy (0.312) of best model
+- Re-run backtest with updated stock list: `cd backtesting && python run_backtest.py`
+
+---
+
+## 2026-05-01
+
+### Session: Backtest Report Analyzer Implementation
+
+**User Request:** Create a mechanism to analyze backtest reports and generate a health report for non-technical stakeholders. Must include verification of what's working (walk-forward splits, no lookahead bias) and what's broken (zero trades, overfitting, simulator issues). Should auto-generate after each backtest run.
+
+**Implementation Completed:**
+
+Created `backtesting/analysis/` module with:
+
+| File | Purpose |
+|------|---------|
+| `analysis/__init__.py` | Package init |
+| `analysis/report_analyzer.py` | Core orchestrator - runs all checks, generates health report |
+| `analysis/checks/__init__.py` | Checks package init |
+| `analysis/checks/walkforward_check.py` | Verifies time splits are correct (train < test dates) |
+| `analysis/checks/lookahead_check.py` | Verifies no future data leakage |
+| `analysis/checks/trade_activity.py` | Checks if trades actually happened |
+| `analysis/checks/prediction_dist.py` | Analyzes what model predicts (HOLD vs BUY/SELL) |
+| `analysis/checks/overfit_check.py` | Detects overfitting (high acc but zero trades) |
+| `analysis/checks/simulator_check.py` | Checks if simulator handles all 5 prediction classes |
+| `analysis/templates/health_report.md` | Documentation template |
+
+**Modifications to Existing Files:**
+
+| File | Change |
+|------|-------|
+| `backtesting/run_backtest.py` | Added `--analyze` flag; Added prediction logging; Auto-generates health report after backtest (Step 8) |
+
+**Health Report Features:**
+- Plain English explanations for non-technical stakeholders
+- Uses analogies (self-driving car, weather forecaster, student memorizing answers)
+- ASCII-only output (no Unicode issues on Windows)
+- Executive summary with `[PASS]`/`[FAIL]` verdicts
+- Per-stock breakdown showing trades per window
+- Recommended fixes with exact file/line references
+
+**Usage:**
+```bash
+cd backtesting
+python run_backtest.py                    # Full pipeline + auto-generates health report
+python run_backtest.py --analyze            # Analyze latest report
+python run_backtest.py --analyze --file reports/full_report_XXX.json  # Specific report
+```
+
+**Test Results:**
+- Successfully analyzed `full_report_2026_04_30_175422.json`
+- Correctly identified: 64 windows, 0 trades, high accuracy (88%) but misleading
+- Correctly flagged: simulator only handles 1/5 prediction classes
+- Correctly verified: walk-forward splits and no lookahead bias
+
+**Sample Output Sections:**
+- `[PASS] Walk-Forward Time Splits: PASS`
+- `[FAIL] Trade Activity: FAIL (64 windows, 0 trades)`
+- `[FAIL] Simulator Signal Handling: FAIL (ignores 4/5 signals)`
+- `[FAIL] Overfitting Detection: FAIL (high acc but zero trades)`
+
+---
+
+---
+
+## 2026-05-01
+
+### Session: Backtest Health Report Fixes (Zero Trades, Simulator, Overfitting)
+
+**User Request:** Fix the backtest health report failures:
+1. Zero trades across 64 windows (return threshold too high)
+2. Simulator ignores 4/5 prediction signals
+3. Overfitting (high accuracy but useless predictions)
+
+**Fix 1: Lower Return Threshold** (`backtesting/config/backtest_config.yaml:29`)
+- Changed: `labeling.return_threshold: 0.10` → `0.03`
+- Reason: 10% daily moves over 5 days are extremely rare; 3% creates more realistic BUY/SELL signals
+
+**Fix 2: Fix Simulator to Handle All 5 Classes** (`backtesting/backtest_engine/trade_simulator.py:75-91`)
+- Added `exit_position_by_symbol()` method to `PositionManager` (`position_manager.py:131-148`)
+- Updated simulator logic:
+  - Class 1 or 2 (Buy/Strong Buy) → Enter LONG position
+  - Class -1 or -2 (Sell/Strong Sell) → Exit position if open
+  - Class 0 (Hold) → No action
+
+**Fix 3: Log Training Metrics for Overfitting Detection** (`backtesting/training/model_trainer.py`)
+- Added `train_score_` logging after model.fit() for GradientBoostingClassifier
+- Logs training accuracy by evaluating on training data
+- Added `get_train_metrics()` method to expose training metrics
+
+**Files Modified:**
+- `backtesting/config/backtest_config.yaml` - Threshold 0.10 → 0.03
+- `backtesting/backtest_engine/position_manager.py` - Added exit by symbol method
+- `backtesting/backtest_engine/trade_simulator.py` - Handle all 5 classes
+- `backtesting/training/model_trainer.py` - Log training metrics
+
+**Testing:**
+- Run: `cd backtesting && python run_backtest.py`
+
+---
+
+## 2026-05-01 (Continued)
+
+### Session: Backtest Run - UnboundLocalError Fix
+
+**Issue Fixed:**
+
+1. **UnboundLocalError in run_backtest.py**
+   - Error: `cannot access local variable 'metrics' where it is not associated with a value` at line 384
+   - Root cause: `metrics["prediction_counts"] = prediction_counts` executed before `metrics = PerformanceMetrics.calculate_all(...)` at line 407
+   - Fix in `backtesting/run_backtest.py`:
+     - Moved `prediction_counts` calculation before simulator run (line 383)
+     - Added `metrics["prediction_counts"] = prediction_counts` AFTER `metrics` dict is created (line 414)
+   - Result: `prediction_counts` now correctly added to metrics after initialization
+
+**Files Modified:**
+- `backtesting/run_backtest.py` - Fixed variable scope error (lines 383-414)
+
+**Status:**
+- Syntax verified: `python -c "import run_backtest; print('Syntax OK')"` passed
+- Ready to re-run: `cd backtesting && python run_backtest.py`
+
+---
+
+## 2026-05-01 (Continued)
+
+### Session: Backtesting Zero Trades Root Cause Analysis & Strategy Overhaul
+
+**User Request:** Understand why there haven't been any trades in backtesting, identify issues, change strategy if needed to get more success rate, fix the code.
+
+**Root Cause Analysis:**
+
+1. **Model Predicts 100% HOLD (Class 0)** — The loaded `VotingClassifier` from `backend/services/ai/model.joblib` had severe class imbalance (56% HOLD). With no class weights, the model learned to always predict the majority class.
+
+2. **Fixed 3% Stop Loss Too Tight for Daily Data** — NSE stocks regularly move 2-4% daily from normal volatility. Fixed 3% SL triggered on nearly every entry. Labels used ATR-adaptive thresholds but position manager used fixed percentages.
+
+3. **Rapid Re-Entry After Stop Loss (Death Spiral)** — Simulator re-entered immediately on next bar after SL hit, causing cascading losses (WIPRO.NS_W0 had 53 trades, all hitting SL).
+
+4. **Label Thresholds Too Wide** — Adaptive targets used ATR × 3.0 multiplier, making BUY/SELL labels extremely rare on daily data.
+
+5. **XGBoost Label Encoding Issue** — XGBoost requires classes [0,1,2,3,4] but labels were [-2,-1,0,1,2].
+
+**Fix 1: Replace Loaded Model with Fresh XGBoost + Balanced Class Weights**
+- File: `backtesting/training/model_trainer.py`
+  - `load_existing_model()` now only loads scaler/feature_names metadata, not the model itself
+  - Added `_create_model()` to create fresh XGBoostClassifier with XGBoost import + sklearn GradientBoosting fallback
+  - `prepare_data()` encodes labels: `{-2: 0, -1: 1, 0: 2, 1: 3, 2: 4}` for XGBoost compatibility
+  - Added `compute_sample_weight("balanced", y)` to counter class imbalance
+  - `train()` now accepts `sample_weights` parameter
+  - `predict()` decodes predictions back to original label space `[-2,-1,0,1,2]`
+  - Training log now shows real accuracy (decoded) and label distribution
+
+**Fix 2: ATR-Based Stop Loss & Target**
+- File: `backtesting/backtest_engine/position_manager.py`
+  - Added `use_atr_sl`, `atr_sl_multiplier` (2.0), `atr_target_multiplier` (4.0) params
+  - Added `_calculate_sl_target()` method: when ATR available, SL = entry - (ATR × 2.0), Target = entry + (ATR × 4.0); falls back to fixed % if no ATR
+  - Added `cooldown_bars` (default 3) — prevents re-entry for N bars after any exit
+  - `enter_position()` accepts optional `atr_value` parameter
+  - `update_positions()` tracks `_last_exit_bar` for cooldown logic
+  - `can_enter()` checks cooldown before allowing entry
+
+**Fix 3: Trade Simulator Updates**
+- File: `backtesting/backtest_engine/trade_simulator.py`
+  - Added `use_atr_sl`, `atr_sl_multiplier`, `atr_target_multiplier`, `cooldown_bars` params
+  - Passes `atr_value` from DataFrame column to position manager
+  - Passes `current_bar` index to `update_positions()` and `can_enter()` for cooldown
+  - Fixed `close_all` trade log deduplication (was using broken `exited` variable reference)
+
+**Fix 4: Label Generator Threshold Tuning**
+- File: `backtesting/labeling/label_generator.py`
+  - ATR multiplier for adaptive target: `× 3` → `× 2` (easier to hit BUY)
+  - ATR multiplier for adaptive stop: `× 1.5` → `× 1.0` (easier to hit SELL)
+  - Strong multiplier: `× 1.5` → `× 1.3`
+  - Changed `>` to `>=` for boundary conditions to include edge cases
+
+**Fix 5: Config Updates**
+- File: `backtesting/config/backtest_config.yaml`
+  - `training.parameters.max_depth: 6` → `4` (reduce overfitting)
+  - `training.parameters.n_estimators: 300` → `200`
+  - `training.parameters.min_child_weight: 3` → `2`
+  - `training.parameters.gamma: 0.1` → `0.05`
+  - `training.parameters.colsample_bytree: 0.8` → `0.7`
+  - `labeling.return_threshold: 0.03` → `0.02`
+  - `backtest.stop_loss_pct: 0.03` → `0.05` (fallback if ATR unavailable)
+  - `backtest.target_pct: 0.20` → `0.15`
+  - Added: `use_atr_sl: true`, `atr_sl_multiplier: 2.0`, `atr_target_multiplier: 4.0`, `cooldown_bars: 3`
+
+**Fix 6: Pipeline Integration**
+- File: `backtesting/run_backtest.py`
+  - Updated `trainer.prepare_data()` call to unpack `(X_train, y_train, sample_weights)`
+  - Updated `trainer.train()` call to pass `sample_weights=sample_weights`
+  - Updated `TradeSimulator()` to pass `use_atr_sl`, `atr_sl_multiplier`, `atr_target_multiplier`, `cooldown_bars` from config
+
+**Fix 7: XGBoost Installation**
+- Installed xgboost 3.2.0 in backtesting environment via pip
+
+**Results After Fixes:**
+- Dry run: ALL CHECKS PASSED
+- Full backtest runs without errors across 14 symbols × 8 windows = 112 windows
+- Trades now happen in most windows (previously 56% had 0 trades)
+- ATR-based SL ranges from -2% to -6% (adaptive to volatility) instead of fixed -3%
+- Cooldown prevents death spiral re-entries
+- XGBoost trains with balanced weights (train accuracy 96-99%)
+- Model predicts all 5 classes in test data, not just HOLD
+
+**Remaining Observations:**
+- Class imbalance still present (~75% HOLD in training data) despite balanced weights
+- Model still overfits (train acc 96-99% vs test acc 35-80%)
+- Some windows still have 0 trades when model predicts only HOLD for that test period
+- Stop losses still hit frequently when market moves against position
+
+**Files Modified:**
+- `backtesting/training/model_trainer.py` - Fresh XGBoost, balanced weights, label encoding/decoding
+- `backtesting/backtest_engine/position_manager.py` - ATR-based SL/Target, cooldown bars
+- `backtesting/backtest_engine/trade_simulator.py` - ATR passthrough, cooldown integration, bug fix
+- `backtesting/labeling/label_generator.py` - Tighter ATR multipliers for more BUY/SELL labels
+- `backtesting/config/backtest_config.yaml` - Tuned XGBoost params, ATR SL config
+- `backtesting/run_backtest.py` - Sample weights, new simulator params
+
+---
+
+## 2026-05-02
+
+### Session: Walk-Forward Backtesting System Refactor — Edge Score, Regime Detection, Portfolio Allocation, Decision Reports
+
+**User Request:** Refactor the walk-forward backtesting system into an institution-grade framework with:
+1. Feature alignment (60 features matching live system)
+2. Probability-based decisions (predict_proba + confidence gating)
+3. Risk-based position sizing (1% risk per trade)
+4. Time-based exits (7-day max holding)
+5. Brokerage + STT simulation (0.15% + 0.025%)
+6. Model selection without accuracy (uses Sharpe/expectancy/DD/precision_buy)
+7. Edge score system (confidence × reward/risk)
+8. Portfolio allocation (edge_score strategy)
+9. Regime detection (EMA50/200 + ATR volatility)
+10. Decision-focused reporting
+
+**Files Created:**
+| File | Purpose |
+|------|---------|
+| `backtesting/portfolio/__init__.py` | Package init |
+| `backtesting/portfolio/allocator.py` | PortfolioAllocator + edge score allocation |
+| `backtesting/regime/__init__.py` | Package init |
+| `backtesting/regime/regime_detector.py` | RegimeDetector (trending/sideways, volatility) |
+| `backtesting/test_edge_score.py` | Edge score test script |
+| `backtesting/test_final.py` | Final validation test |
+| `backtesting/validate_system.py` | System validation script |
+
+**Files Modified:**
+| File | Change |
+|------|--------|
+| `backtesting/feature_engineering/feature_pipeline.py` | Aligned with live (60 features via SELECTED_FEATURES) |
+| `backtesting/labeling/label_generator.py` | ATR fix (1.5 target, 1.0 stop multipliers) |
+| `backtesting/backtest_engine/trade_simulator.py` | Probability-based + edge score + regime + brokerage |
+| `backtesting/backtest_engine/position_manager.py` | Time exit + confidence tracking + edge_score |
+| `backtesting/metrics/performance_metrics.py` | precision_buy + expectancy + threshold finder + buckets |
+| `backtesting/model_selection/selector.py` | Removed accuracy, trading metrics only |
+| `backtesting/export/report_generator.py` | Executive + alpha + decision reports |
+| `backtesting/portfolio/allocator.py` | Edge score allocation + weak signal filtering |
+| `backtesting/config/backtest_config.yaml` | New params (brokerage, regime, edge_score) |
+| `backtesting/run_backtest.py` | Full integration (portfolio mode + edge scores) |
+
+**Key Changes:**
+1. **Edge Score System:** `edge_score = confidence * (reward / risk)` — computed for each BUY signal, logged to prediction_log, used in PortfolioAllocator
+2. **Regime Detection:** EMA50 > EMA200 = TRENDING, within 2% = SIDEWAYS; ATR% → HIGH/LOW volatility
+3. **Regime-Based Adjustments:** Sideways → +0.05 confidence threshold, 50% position size reduction
+4. **Portfolio Allocation:** New `edge_score` strategy (default), allocates proportional to edge scores, filters weak signals (< min_edge_score)
+5. **Decision-Focused Reports:** New `generate_decision_report()` with sections:
+   - A. Where Edge Exists (best confidence range, highest expectancy)
+   - B. Symbol Performance (per-symbol stats, top/worst 3)
+   - C. Trade Quality (avg win/loss, expectancy)
+   - D. System Health (trade frequency, high-confidence %, drawdown)
+
+**Validation Results:**
+- All modules import successfully ✅
+- Syntax checks pass ✅
+- Dry-run passes all safeguard checks ✅
+- Edge score allocation test passed ✅
+- Regime detection test passed ✅
+- System validation: 9/9 modules PASSED
+
+**Configuration Updates (backtest_config.yaml):**
+```yaml
+backtest:
+  brokerage_rate: 0.0015
+  stt_rate: 0.00025
+  max_holding_bars: 7
+  confidence_high: 0.65
+  confidence_medium: 0.50
+  portfolio_mode: false
+  allocation_strategy: edge_score
+labeling:
+  atr_target_multiplier: 1.5
+  atr_stop_multiplier: 1.0
+```
+
+**Critical Note:** Backtesting now matches live system architecture:
+- Same 60 features (via SELECTED_FEATURES)
+- Same confidence gating (≥65% high, ≥50% medium)
+- Same risk-based position sizing (1% risk per trade)
+- No accuracy metric in model selection
+
+---
+
+## 2026-05-02
+
+### Session: Walk-Forward Backtesting Refactor — Edge Score, Regime Detection, Portfolio Allocation, Decision Reports
+
+**User Request:** Refactor walk-forward backtesting into institution-grade framework:
+1. Feature alignment (60 features matching live)
+2. Probability-based decisions (predict_proba + confidence gating)
+3. Risk-based position sizing (1% risk per trade)
+4. Time-based exits (7-day max holding)
+5. Brokerage + STT simulation (0.15% + 0.025%)
+6. Model selection without accuracy (Sharpe/expectancy/DD/precision_buy)
+7. Edge score system (confidence × reward/risk)
+8. Portfolio allocation (edge_score strategy)
+9. Regime detection (EMA50/200 + ATR volatility)
+10. Decision-focused reporting
+
+**Files Created:**
+| File | Purpose |
+|------|---------|
+| `backtesting/portfolio/__init__.py` | Package init |
+| `backtesting/portfolio/allocator.py` | PortfolioAllocator + edge score allocation |
+| `backtesting/regime/__init__.py` | Package init |
+| `backtesting/regime/regime_detector.py` | RegimeDetector (trending/sideways, volatility) |
+| `backtesting/test_edge_score.py` | Edge score test script |
+| `backtesting/test_final.py` | Final validation test |
+| `backtesting/validate_system.py` | System validation script |
+
+**Files Modified:**
+| File | Change |
+|------|--------|
+| `backtesting/feature_engineering/feature_pipeline.py` | Aligned with live (60 features via SELECTED_FEATURES) |
+| `backtesting/labeling/label_generator.py` | ATR fix (1.5 target, 1.0 stop multipliers) |
+| `backtesting/backtest_engine/trade_simulator.py` | Probability + edge score + regime + brokerage |
+| `backtesting/backtest_engine/position_manager.py` | Time exit + confidence tracking + edge_score |
+| `backtesting/metrics/performance_metrics.py` | precision_buy + expectancy + threshold finder + buckets |
+| `backtesting/model_selection/selector.py` | Removed accuracy, trading metrics only |
+| `backtesting/export/report_generator.py` | Executive + alpha + decision reports |
+| `backtesting/portfolio/allocator.py` | Edge score allocation + weak signal filtering |
+| `backtesting/config/backtest_config.yaml` | New params (brokerage, regime, edge_score) |
+| `backtesting/run_backtest.py` | Full integration (portfolio mode + edge scores) |
+
+**Key Changes:**
+1. **Edge Score System:** `edge_score = confidence * (reward / risk)` — computed for each BUY signal, logged to prediction_log, used in PortfolioAllocator
+2. **Regime Detection:** EMA50 > EMA200 = TRENDING, within 2% = SIDEWAYS; ATR% → HIGH/LOW volatility
+3. **Regime-Based Adjustments:** Sideways → +0.05 confidence threshold, 50% position size reduction
+4. **Portfolio Allocation:** New `edge_score` strategy (default), allocates proportional to edge scores, filters weak signals (< min_edge_score)
+5. **Decision-Focused Reports:** New `generate_decision_report()` with sections:
+   - A. Where Edge Exists (best confidence range, highest expectancy)
+   - B. Symbol Performance (per-symbol stats, top/worst 3)
+   - C. Trade Quality (avg win/loss, expectancy)
+   - D. System Health (trade frequency, high-confidence %, drawdown)
+
+**Validation Results:**
+- All modules import successfully ✅
+- Syntax checks pass ✅
+- Dry-run passes all safeguard checks ✅
+- Edge score allocation test passed ✅
+- Regime detection test passed ✅
+- System validation: 9/9 modules PASSED ✅
+
+**Configuration Updates (backtest_config.yaml):**
+```yaml
+backtest:
+  brokerage_rate: 0.0015
+  stt_rate: 0.00025
+  max_holding_bars: 7
+  confidence_high: 0.65
+  confidence_medium: 0.50
+  portfolio_mode: false
+  allocation_strategy: edge_score
+labeling:
+  atr_target_multiplier: 1.5
+  atr_stop_multiplier: 1.0
+```
+
+**Critical Note:** Backtesting now matches live system architecture:
+- Same 60 features (via SELECTED_FEATURES)
+- Same confidence gating (≥65% high, ≥50% medium)
+- Same risk-based position sizing (1% risk per trade)
+- No accuracy metric in model selection
+
+---
+
 *End of chat history*
+
+---
+
+## 2026-05-02
+
+### Session: System Refactor — ML-First Algo Trading Platform
+
+**User Request:** Refactor the entire system from rule-based + ML hybrid to a clean ML-first architecture where ML is the primary decision-maker, rule-based logic is fallback only, and backtesting pipeline is the single source of truth for training.
+
+**Architecture Changes:**
+
+Created new module structure under `backend/core/`:
+
+| Module | Purpose |
+|--------|---------|
+| `core/pipeline/feature_pipeline.py` | Reduces 174 features → 60 curated features |
+| `core/pipeline/label_pipeline.py` | 3-class labels: SELL=0, HOLD=1, BUY=2 |
+| `core/pipeline/dataset_builder.py` | Unifies feature + label pipelines |
+| `core/model/model.py` | XGBoost 3-class (multi:softprob) |
+| `core/model/trainer.py` | Walk-forward training with CV and isotonic calibration |
+| `core/model/calibrator.py` | `CalibratedClassifierCV` with isotonic method |
+| `core/model/registry.py` | Model save/load/versioning |
+| `core/decision/decision_engine.py` | Confidence-gated entry (>=0.65 high, >=0.50 medium + fallback) |
+| `core/decision/exit_engine.py` | ML + SL + target exit decisions |
+| `core/risk/position_sizer.py` | Correct 1% risk-based sizing: `(capital * 0.01) / abs(entry - sl)` |
+| `core/execution/trade_executor.py` | Order placement abstraction |
+
+**Key Files Refactored:**
+
+| File | Change |
+|------|--------|
+| `backend/services/ai/analyzer.py` | Replaced entire logic: removed strategy scores, technical scores, momentum ranking. Now uses FeaturePipeline → TradingModel → DecisionEngine |
+| `backend/services/trading/loop.py` | Integrated ExitEngine for ML exits, PositionSizer for correct sizing |
+| `backend/models/stock.py` | Added `ML_SIGNAL` to ExitReason enum |
+| `backtesting/labeling/label_generator.py` | Converted to 3-class (SELL=0, HOLD=1, BUY=2) |
+| `backtesting/training/model_trainer.py` | Updated for 3-class, removed label encoding map |
+| `backtesting/backtest_engine/trade_simulator.py` | Updated prediction logic: 0=SELL (exit), 1=HOLD, 2=BUY (enter) |
+| `backtesting/config/backtest_config.yaml` | `num_classes: 5` → `3`, `return_threshold: 0.02` → `0.10` |
+
+**Decision Logic:**
+- **High confidence (>=65%)** + `p_buy > 60%` = BUY
+- **Medium confidence (>=50%)** + `p_buy > p_sell` and `p_hold` by >10% = BUY (fallback)
+- Otherwise = NO_TRADE
+
+**Position Sizing (Fixed):**
+- Old: `int(cash / entry_price)` — risked entire capital per trade
+- New: `int((capital * 0.01) / abs(entry - stop_loss))` — 1% risk per trade
+
+**Bug Fix: NIFTY Index Misalignment in `features.py`**
+
+- **Error:** `ValueError: Can only compare identically-labeled Series objects` in `_add_relative_strength_features`
+- **Root Cause:** NIFTY data computed on its own datetime index, then compared to stock's different datetime index. `nifty_aligned` was created but never used for the comparison on line 253.
+- **Fix:** Reindex NIFTY data to stock's index BEFORE computing any indicators:
+  ```python
+  nifty_aligned = nifty_close.reindex(result.index, method='nearest')
+  nifty_aligned_return = nifty_aligned.pct_change(20)
+  stock_above = stock_return > nifty_aligned_return  # Same index now
+  ```
+- **Also Fixed:** Same bug in `_add_market_context_features` — nifty EMA/momentum/volatility now aligned before assignment
+
+**Verification:**
+- All new modules compile and import successfully
+- DecisionEngine, PositionSizer, ExitEngine tested with synthetic data — all work correctly
+- Full pipeline (features → labels → train → save) verified end-to-end
+- NIFTY alignment bug fix verified syntax
+
+**Critical Note:** Existing `model.joblib` was trained with old pipeline (174 features, 5-class, VotingClassifier). Must retrain via `cd backtesting && python run_backtest.py` before live trading.

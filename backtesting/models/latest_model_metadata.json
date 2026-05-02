@@ -1,0 +1,32 @@
+{
+  "metrics": {
+    "total_trades": 3,
+    "win_count": 3,
+    "loss_count": 0,
+    "win_rate": 1.0,
+    "avg_pnl": 1153.531914184571,
+    "avg_pnl_pct": 0.1287566788585273,
+    "gross_profit": 3460.595742553713,
+    "gross_loss": 1,
+    "profit_factor": 3460.595742553713,
+    "cagr": 0.07188545401785995,
+    "sharpe_ratio": 0.27968650041318993,
+    "max_drawdown": 0.017226130921261268,
+    "accuracy": 0.7049180327868853,
+    "precision": 0.5590729225551159,
+    "recall": 0.7049180327868853,
+    "f1_score": 0.6235813366960907,
+    "prediction_counts": {
+      "0": 116,
+      "1": 3,
+      "2": 3
+    },
+    "window_index": 2,
+    "symbol": "ADANIPORTS.NS"
+  },
+  "window_index": 2,
+  "total_windows_evaluated": 112,
+  "model_type": "XGBClassifier",
+  "model_file": "model_window_2_2026_05_01_183547.pkl",
+  "saved_at": "2026-05-01T18:35:47.503274"
+}

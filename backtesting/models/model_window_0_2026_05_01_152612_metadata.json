@@ -1,0 +1,25 @@
+{
+  "metrics": {
+    "total_trades": 0,
+    "win_rate": 0,
+    "avg_pnl": 0,
+    "cagr": 0,
+    "sharpe_ratio": 0,
+    "max_drawdown": 0,
+    "profit_factor": 0,
+    "accuracy": 0.7967479674796748,
+    "precision": 0.6348073236829929,
+    "recall": 0.7967479674796748,
+    "f1_score": 0.7066181069050509,
+    "prediction_counts": {
+      "0": 123
+    },
+    "window_index": 0,
+    "symbol": "RELIANCE.NS"
+  },
+  "window_index": 0,
+  "total_windows_evaluated": 112,
+  "model_type": "VotingClassifier",
+  "model_file": "model_window_0_2026_05_01_152612.pkl",
+  "saved_at": "2026-05-01T15:26:12.457684"
+}
