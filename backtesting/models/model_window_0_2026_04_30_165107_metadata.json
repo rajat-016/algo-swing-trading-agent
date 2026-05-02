@@ -1,0 +1,22 @@
+{
+  "metrics": {
+    "total_trades": 0,
+    "win_rate": 0,
+    "avg_pnl": 0,
+    "cagr": 0,
+    "sharpe_ratio": 0,
+    "max_drawdown": 0,
+    "profit_factor": 0,
+    "accuracy": 0.8211382113821138,
+    "precision": 0.6742679621918171,
+    "recall": 0.8211382113821138,
+    "f1_score": 0.7404907084785133,
+    "window_index": 0,
+    "symbol": "RELIANCE.NS"
+  },
+  "window_index": 0,
+  "total_windows_evaluated": 64,
+  "model_type": "VotingClassifier",
+  "model_file": "model_window_0_2026_04_30_165107.pkl",
+  "saved_at": "2026-04-30T16:51:07.152246"
+}

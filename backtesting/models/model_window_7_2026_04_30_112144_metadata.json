@@ -1,0 +1,27 @@
+{
+  "metrics": {
+    "total_trades": 6,
+    "win_count": 6,
+    "loss_count": 0,
+    "win_rate": 1.0,
+    "avg_pnl": 1754.819399108888,
+    "avg_pnl_pct": 0.20269826896122098,
+    "gross_profit": 10528.916394653328,
+    "gross_loss": 1,
+    "profit_factor": 10528.916394653328,
+    "cagr": 0.10845113645484306,
+    "sharpe_ratio": 1.4255733563888549,
+    "max_drawdown": 0.011986444520284741,
+    "accuracy": 0.312,
+    "precision": 0.6119848484848485,
+    "recall": 0.312,
+    "f1_score": 0.37077594037634515,
+    "window_index": 7,
+    "symbol": "SBIN.NS"
+  },
+  "window_index": 7,
+  "total_windows_evaluated": 64,
+  "model_type": "VotingClassifier",
+  "model_file": "model_window_7_2026_04_30_112144.pkl",
+  "saved_at": "2026-04-30T11:21:44.432981"
+}
