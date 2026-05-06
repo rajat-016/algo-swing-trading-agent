@@ -298,6 +298,7 @@ class StockAnalyzer:
         p_sell: float = 0.0,
         p_hold: float = 0.0,
         p_buy: float = 0.0,
+        prediction_id: Optional[int] = None,
     ) -> StockAnalysis:
         logger.info(f"{symbol}: NO_TRADE - {reason} (conf={confidence:.0%}, p_buy={p_buy:.0%}, p_sell={p_sell:.0%}, p_hold={p_hold:.0%})")
         return StockAnalysis(
@@ -314,4 +315,5 @@ class StockAnalyzer:
             p_sell=p_sell,
             p_hold=p_hold,
             p_buy=p_buy,
+            prediction_id=prediction_id,
         )
