@@ -8,6 +8,7 @@ from services.broker.kite import KiteBroker
 from services.broker.chartink import ChartInkClient
 from services.risk import RiskManager
 from models.stock import Stock, StockStatus, ExitReason
+from models.prediction_log import PredictionLog
 from core.config import get_settings
 from core.database import SessionLocal
 from core.logging import logger
@@ -58,6 +59,15 @@ class TradingLoop:
             self._analyzer = StockAnalyzer(self.broker, model_path)
         return self._analyzer
 
+    def set_analyzer_db(self, db_session):
+        if self._analyzer is None:
+            # Force creation with db session
+            from services.ai.analyzer import StockAnalyzer
+            model_path = self.settings.model_path if self.settings.model_path else None
+            self._analyzer = StockAnalyzer(self.broker, model_path, db_session)
+        else:
+            self._analyzer.set_db(db_session)
+
     @property
     def is_paper_mode(self) -> bool:
         return self.settings.is_paper_trading
@@ -106,6 +116,9 @@ class TradingLoop:
 
         db = SessionLocal()
         try:
+            # Set DB session on analyzer for prediction logging
+            self.set_analyzer_db(db)
+
             if self.is_live_mode:
                 logger.info("Syncing broker data to database...")
                 sync_result = self.broker.sync_all_to_db(db)
@@ -168,7 +181,8 @@ class TradingLoop:
     def _get_open_positions(self, db: Session) -> Dict:
         positions = {}
         stocks = db.query(Stock).filter(
-            Stock.broker_status.in_(["HOLDING", "OPEN", "TRIGGER_PENDING", "PENDING"])
+            Stock.broker_status.in_(["HOLDING", "OPEN", "TRIGGER_PENDING", "PENDING"]),
+            Stock.status != StockStatus.EXITED,
         ).all()
         for stock in stocks:
             positions[stock.symbol] = {
@@ -223,6 +237,7 @@ class TradingLoop:
         entries_placed = 0
         for analysis in analysis_results:
             if analysis.symbol in open_positions:
+                logger.debug(f"Skipping {analysis.symbol}: already has open position")
                 continue
 
             existing_with_order = db.query(Stock).filter(
@@ -234,14 +249,19 @@ class TradingLoop:
                 continue
 
             if not analysis.should_enter:
+                reason = getattr(analysis, 'reason', 'unknown')
+                conf = getattr(analysis, 'confidence', 0)
+                signal = getattr(analysis, 'signal', 'N/A')
+                logger.info(f"Skipping {analysis.symbol}: should_enter=False | Confidence: {conf:.1%} | Signal: {signal} | Reason: {reason}")
                 continue
 
             if analysis.position_size < 1:
+                logger.warning(f"Skipping {analysis.symbol}: position_size={analysis.position_size} (entry_price={analysis.entry_price}, cash={remaining_cash:,.2f})")
                 continue
 
             cost = analysis.entry_price * analysis.position_size
             if cost > remaining_cash:
-                logger.warning(f"Insufficient funds for {analysis.symbol}: need ₹{cost:,.0f}, have ₹{remaining_cash:,.0f}")
+                logger.warning(f"Insufficient funds for {analysis.symbol}: need ₹{cost:,.0f}, have ₹{remaining_cash:,.2f}")
                 continue
 
             await self._place_entry(db, analysis)
@@ -249,7 +269,7 @@ class TradingLoop:
             entries_placed += 1
 
         if entries_placed == 0:
-            logger.info("No entries placed")
+            logger.info(f"No entries placed (analyzed {len(analysis_results)} stocks)")
 
     async def _place_entry(self, db: Session, analysis):
         zerodha_symbol = analysis.trading_symbol
@@ -301,6 +321,7 @@ class TradingLoop:
             entry_reason=analysis.reason,
             ai_confidence=analysis.confidence,
             broker_status="PENDING",
+            prediction_id=analysis.prediction_id,
         )
         db.add(stock)
         db.commit()
@@ -382,7 +403,7 @@ class TradingLoop:
             current_price=current_price,
         )
 
-        ml_exit = self._get_ml_exit_signal(symbol)
+        ml_exit = await self._get_ml_exit_signal(symbol)
         exit_decision = self.exit_engine.decide(ml_exit, position)
 
         if exit_decision == "EXIT_SL":
@@ -409,7 +430,36 @@ class TradingLoop:
                 "pnl_pct": pnl_pct,
             })
 
-    def _get_ml_exit_signal(self, symbol: str) -> Optional[np.ndarray]:
+    async def _get_ml_exit_signal(self, symbol: str) -> Optional[np.ndarray]:
+        """Fetch ML prediction for exit decision."""
+        try:
+            if self._analyzer is None or not hasattr(self._analyzer, 'model'):
+                return None
+
+            # Get trading symbol
+            trading_symbol = self._analyzer.broker._map_chartink_to_zerodha(symbol)
+
+            # Fetch recent data
+            df = await self._analyzer._fetch_data(trading_symbol)
+
+            if df.empty or len(df) < 30:
+                return None
+
+            # Generate features
+            features = self._analyzer.feature_pipeline.transform(df, self._analyzer._nifty_data)
+            if features.empty:
+                return None
+
+            # Get prediction
+            X = features.iloc[-1:].values
+            X = np.nan_to_num(X, nan=0.0, posinf=0.0, neginf=0.0)
+
+            if self._analyzer.model and self._analyzer.model.is_trained():
+                probs = self._analyzer.model.predict_proba(X)[0]
+                return probs
+
+        except Exception as e:
+            logger.debug(f"ML exit signal failed for {symbol}: {e}")
         return None
 
     async def _place_exit(
@@ -452,10 +502,24 @@ class TradingLoop:
             stock.exit_date = datetime.utcnow()
             stock.exit_reason = exit_reason
             stock.exit_order_id = exit_order_id
+            stock.broker_status = "COMPLETE"
             stock.pnl = (exit_price - entry_price) * quantity
             stock.pnl_percentage = ((exit_price - entry_price) / entry_price) * 100
             pnl = stock.pnl
             db.commit()
+
+            # Update prediction outcome
+            if stock.prediction_id:
+                try:
+                    log = db.query(PredictionLog).filter(PredictionLog.id == stock.prediction_id).first()
+                    if log:
+                        log.actual_outcome = "WIN" if pnl > 0 else "LOSS"
+                        log.actual_return = stock.pnl_percentage
+                        log.closed_at = datetime.utcnow()
+                        db.commit()
+                        logger.debug(f"Updated prediction {log.id} outcome: {log.actual_outcome}")
+                except Exception as e:
+                    logger.error(f"Failed to update prediction outcome: {e}")
 
         _broadcast_ws({
             "type": "exit",

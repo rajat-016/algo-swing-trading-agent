@@ -41,21 +41,15 @@ def init_db():
 Base = declarative_base()
 
 
-class _SessionLocalCallable:
-    def __call__(self):
-        return get_session_local()()
-
-    def __iter__(self):
-        return iter(get_session_local()())
+def SessionLocal():
+    return get_session_local()()
 
 
-SessionLocal = _SessionLocalCallable()
+engine = None
 
 
-class _EngineProperty:
-    @property
-    def url(self):
-        return get_engine().url
-
-
-engine = _EngineProperty()
+def get_engine_property():
+    global engine
+    if engine is None:
+        engine = get_engine()
+    return engine
