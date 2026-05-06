@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Float, DateTime, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Float, DateTime, Enum as SQLEnum, ForeignKey
 from sqlalchemy.orm import relationship
 import enum
 
@@ -72,8 +72,16 @@ class Stock(Base):
     average_price = Column(Float, nullable=True)
     realized_pnl = Column(Float, default=0.0)
 
+    prediction_id = Column(Integer, ForeignKey("prediction_logs.id"), nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationship to PredictionLog - one Stock has many PredictionLogs (historical)
+    # Use PredictionLog.stock_id as the foreign key (in PredictionLog table)
+    predictions = relationship("PredictionLog", back_populates="stock", foreign_keys="PredictionLog.stock_id")
+    # Relationship to entry PredictionLog - one Stock has one entry_prediction
+    entry_prediction = relationship("PredictionLog", foreign_keys=[prediction_id], post_update=True, overlaps="predictions")
 
     def __repr__(self):
         return f"<Stock {self.symbol} - {self.status.value}>"

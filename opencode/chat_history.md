@@ -852,3 +852,42 @@ Created new module structure under `backend/core/`:
 - NIFTY alignment bug fix verified syntax
 
 **Critical Note:** Existing `model.joblib` was trained with old pipeline (174 features, 5-class, VotingClassifier). Must retrain via `cd backtesting && python run_backtest.py` before live trading.
+
+---
+
+## 2026-05-06
+
+### Session: SQLAlchemy Relationship Fix (Live Trading Crash)
+
+**User Request:** Review logs, analyze project, find root cause, develop fix plan, fix issue, test changes.
+
+**Log Analysis:**
+- Error: `Stock.predictions and back-reference PredictionLog.stock are both of the same direction MANYTOONE`
+- Exception: `sqlalchemy.exc.InvalidRequestError: One or more mappers failed to initialize`
+- Impact: Live trading loop crashed immediately, holdings/positions sync failed
+
+**Root Cause:**
+- `Stock.predictions` relationship incorrectly specified `foreign_keys=[prediction_id]`
+- `prediction_id` is a column in `Stock` table, not `PredictionLog` table
+- Both `Stock.predictions` and `PredictionLog.stock` were configured as many-to-one relationships
+- Should be: one-to-many (Stock → many PredictionLogs) and many-to-one (PredictionLog → one Stock)
+
+**Fix Applied (`backend/models/stock.py:82`):**
+```python
+# Before (broken):
+predictions = relationship("PredictionLog", back_populates="stock", foreign_keys=[prediction_id])
+
+# After (fixed):
+predictions = relationship("PredictionLog", back_populates="stock", foreign_keys="PredictionLog.stock_id")
+```
+
+**Testing:**
+- SQLAlchemy mappers initialize correctly ✅
+- Database queries work (4 stocks, 36 predictions found) ✅
+- Full application imports successfully ✅
+- Relationship navigation works ✅
+
+**Files Modified:**
+- `backend/models/stock.py` - Fixed predictions relationship foreign_keys specification
+
+---
