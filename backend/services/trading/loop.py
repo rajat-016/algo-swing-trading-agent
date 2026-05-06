@@ -15,6 +15,8 @@ from core.logging import logger
 from core.enums import OrderSide, OrderType, ProductType
 from core.decision.exit_engine import ExitEngine, Position as ExitPosition
 from core.risk.position_sizer import PositionSizer
+from core.circuit_breaker import CircuitBreaker, CircuitState
+from core.exceptions import TradingLoopError, CircuitBreakerError, ZerodhaError, IPRestrictionError
 
 
 def _broadcast_ws(data: dict):
@@ -49,6 +51,15 @@ class TradingLoop:
 
         self.exit_engine = ExitEngine()
         self.position_sizer = PositionSizer(risk_pct=self.settings.risk_per_trade / 100)
+        
+        # Circuit breaker for trading loop
+        self._circuit_breaker = CircuitBreaker(
+            failure_threshold=5,
+            recovery_timeout=300,  # 5 minutes
+            name="TradingLoop"
+        )
+        self._consecutive_failures = 0
+        self._max_consecutive_failures = 5
 
     @property
     def analyzer(self):
@@ -86,10 +97,54 @@ class TradingLoop:
         while self._running:
             try:
                 await asyncio.sleep(self.interval)
-                if self._running:
-                    await self._run_cycle()
+                if not self._running:
+                    break
+                
+                # Check circuit breaker before running cycle
+                if self._circuit_breaker.is_open:
+                    try:
+                        # Test if circuit should attempt reset
+                        if self._circuit_breaker.state == CircuitState.OPEN:
+                            logger.warning("Circuit breaker is OPEN - skipping cycle")
+                            continue
+                    except CircuitBreakerError:
+                        continue
+                
+                await self._run_cycle()
+                self._consecutive_failures = 0  # Reset on success
+                
+            except IPRestrictionError as e:
+                logger.critical(f"IP restriction detected - stopping trading loop: {e}")
+                self._running = False
+                _broadcast_ws({"type": "error", "message": f"IP Restriction: {e.message}"})
+                break
+                
+            except AuthenticationError as e:
+                logger.error(f"Authentication error in trading loop: {e}")
+                self._consecutive_failures += 1
+                if self._consecutive_failures >= self._max_consecutive_failures:
+                    logger.critical("Too many auth failures - stopping trading loop")
+                    self._running = False
+                    break
+                await asyncio.sleep(60)  # Wait before retry
+                
             except Exception as e:
-                logger.error(f"Trading cycle error: {e}")
+                self._consecutive_failures += 1
+                logger.error(f"Trading cycle error ({self._consecutive_failures}/{self._max_consecutive_failures}): {e}")
+                
+                if self._consecutive_failures >= self._max_consecutive_failures:
+                    logger.critical(f"Trading loop stopped after {self._consecutive_failures} consecutive failures")
+                    self._running = False
+                    _broadcast_ws({
+                        "type": "error", 
+                        "message": f"Trading loop stopped after multiple failures: {str(e)[:100]}"
+                    })
+                    break
+                
+                # Exponential backoff
+                backoff = min(300, 2 ** self._consecutive_failures)
+                logger.info(f"Backing off for {backoff} seconds...")
+                await asyncio.sleep(backoff)
 
     async def start_now(self):
         self._running = True
@@ -121,8 +176,12 @@ class TradingLoop:
 
             if self.is_live_mode:
                 logger.info("Syncing broker data to database...")
-                sync_result = self.broker.sync_all_to_db(db)
-                logger.info(f"Sync complete: holdings={sync_result.get('holdings', {}).get('synced', 0)}, positions={sync_result.get('positions', {}).get('synced', 0)}")
+                try:
+                    sync_result = self.broker.sync_all_to_db(db)
+                    logger.info(f"Sync complete: holdings={sync_result.get('holdings', {}).get('synced', 0)}, positions={sync_result.get('positions', {}).get('synced', 0)}")
+                except Exception as sync_error:
+                    logger.error(f"Sync failed: {sync_error}")
+                    # Continue with local DB data
 
             cash = self._get_available_cash(db)
             open_positions = self._get_open_positions(db)
@@ -130,25 +189,47 @@ class TradingLoop:
             logger.info(f"Open positions from DB: {list(open_positions.keys())}")
 
             for symbol, pos_data in open_positions.items():
-                await self._check_exit(db, symbol, pos_data)
+                try:
+                    await self._check_exit(db, symbol, pos_data)
+                except Exception as exit_error:
+                    logger.error(f"Error checking exit for {symbol}: {exit_error}")
 
             await self._process_entries(db, cash, open_positions)
 
             if self.is_live_mode:
                 logger.info("Syncing order status back to database...")
-                self.broker.sync_order_status_to_db(db)
+                try:
+                    self.broker.sync_order_status_to_db(db)
+                except Exception as sync_error:
+                    logger.error(f"Order status sync failed: {sync_error}")
 
+        except Exception as cycle_error:
+            logger.error(f"Cycle error: {cycle_error}")
+            raise
         finally:
             db.close()
+            logger.debug("DB session closed")
 
-        self._trigger_retraining(db)
+        # Call retraining outside of DB session
+        try:
+            self._trigger_retraining()
+        except Exception as retrain_error:
+            logger.error(f"Retraining trigger failed: {retrain_error}")
 
         next_cycle_time = (datetime.now() + timedelta(seconds=self.settings.cycle_interval_seconds)).strftime("%H:%M:%S")
         interval_mins = self.settings.cycle_interval_seconds // 60
         logger.info(f"=== Cycle Complete (next: {next_cycle_time}, {interval_mins} Min) ===")
 
-    def _trigger_retraining(self, db: Session):
-        pass
+    def _trigger_retraining(self):
+        """Trigger model retraining if needed. Creates own DB session."""
+        db = SessionLocal()
+        try:
+            # Add retraining logic here if needed
+            pass
+        except Exception as e:
+            logger.error(f"Trigger retraining error: {e}")
+        finally:
+            db.close()
 
     def _get_available_cash(self, db: Session) -> float:
         if self.is_paper_mode:

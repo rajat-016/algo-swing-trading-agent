@@ -3,9 +3,14 @@ import hashlib
 from typing import Optional, Dict, List, Any
 from datetime import datetime
 from kiteconnect import KiteConnect
+from kiteconnect.exceptions import TokenException, OrderException, NetworkException
 from core.config import get_settings
 from core.enums import OrderSide, OrderType, ProductType
 from core.logging import logger
+from core.exceptions import (
+    ZerodhaError, IPRestrictionError, AuthenticationError, 
+    RateLimitError, OrderError, InsufficientFundsError, DataFetchError
+)
 import os
 
 
@@ -39,6 +44,16 @@ class KiteBroker:
                 self.kite.set_access_token(self.access_token)
 
     def _map_chartink_to_zerodha(self, chartink_symbol: str) -> str:
+        from services.broker.symbol_mapper import SymbolMapper
+
+        symbol_mapper = SymbolMapper.get_instance()
+        kite_symbol = symbol_mapper.get_kite_symbol(chartink_symbol)
+        if kite_symbol:
+            logger.debug(f"SymbolMapper: Mapped '{chartink_symbol}' -> '{kite_symbol}'")
+            return kite_symbol
+
+        logger.warning(f"SymbolMapper: '{chartink_symbol}' not in mapping table, falling back to Zerodha instruments")
+
         if not self._name_to_symbol_cache:
             self._load_name_mapping()
 
@@ -55,6 +70,7 @@ class KiteBroker:
             if key_clean == clean or clean.startswith(key_clean[:len(key_clean)//2+1]):
                 return value
 
+        logger.warning(f"SymbolMapper: No mapping found for '{chartink_symbol}', using raw symbol")
         return clean
 
     def _load_name_mapping(self):
@@ -90,9 +106,28 @@ class KiteBroker:
             logger.warning("Zerodha: No access token or request token available")
             return False
 
+        except TokenException as e:
+            error_msg = str(e)
+            if "IP" in error_msg or "403" in error_msg:
+                logger.critical(f"Zerodha: IP restriction detected - {e}")
+                raise IPRestrictionError(f"IP not allowed: {e}", ip_address=self.settings.zerodha.api_key)
+            else:
+                logger.error(f"Zerodha: Token error - {e}")
+                raise AuthenticationError(f"Token error: {e}")
+        except NetworkException as e:
+            logger.error(f"Zerodha: Network error - {e}")
+            raise ZerodhaError(f"Network error: {e}", error_type="NETWORK_ERROR")
         except Exception as e:
-            logger.error(f"Zerodha: Connection error - {e}")
-            return False
+            error_msg = str(e)
+            if "IP" in error_msg or "403" in error_msg:
+                logger.critical(f"Zerodha: IP restriction detected - {e}")
+                raise IPRestrictionError(f"IP not allowed: {e}")
+            elif "403" in error_msg or "unauthorized" in error_msg.lower():
+                logger.error(f"Zerodha: Authentication failed - {e}")
+                raise AuthenticationError(f"Authentication failed: {e}")
+            else:
+                logger.error(f"Zerodha: Connection error - {e}")
+                return False
 
     def _validate_connection(self) -> bool:
         if not self.kite:
@@ -231,8 +266,19 @@ class KiteBroker:
             
             ltp = self.kite.ltp(f"NSE:{trading_symbol}")
             return float(ltp.get(f"NSE:{trading_symbol}", {}).get("last_price", 0))
+        except TokenException as e:
+            logger.error(f"Zerodha: Authentication error getting LTP for {trading_symbol} - {e}")
+            raise AuthenticationError(f"Auth error: {e}")
+        except NetworkException as e:
+            logger.error(f"Zerodha: Network error getting LTP for {trading_symbol} - {e}")
+            return None
         except Exception as e:
-            logger.error(f"Zerodha: Error getting LTP for {trading_symbol} - {e}")
+            error_msg = str(e)
+            if "429" in error_msg or "rate limit" in error_msg.lower():
+                logger.error(f"Zerodha: Rate limit getting LTP for {trading_symbol}")
+                raise RateLimitError("Rate limit exceeded")
+            else:
+                logger.error(f"Zerodha: Error getting LTP for {trading_symbol} - {e}")
             return None
 
     def get_historical_data(
@@ -248,7 +294,7 @@ class KiteBroker:
             instrument_token = self._get_instrument_token(zerodha_symbol)
             if not instrument_token:
                 return []
-
+            
             candles = self.kite.historical_data(
                 instrument_token=int(instrument_token),
                 from_date=from_date.strftime("%Y-%m-%d %H:%M:%S"),
@@ -267,8 +313,19 @@ class KiteBroker:
                 }
                 for c in candles
             ]
+        except TokenException as e:
+            logger.error(f"Zerodha: Authentication error getting historical data for {trading_symbol} - {e}")
+            raise AuthenticationError(f"Auth error: {e}")
+        except NetworkException as e:
+            logger.error(f"Zerodha: Network error getting historical data for {trading_symbol} - {e}")
+            raise DataFetchError(f"Network error: {e}")
         except Exception as e:
-            logger.error(f"Zerodha: Error getting historical data for {trading_symbol} - {e}")
+            error_msg = str(e)
+            if "429" in error_msg or "rate limit" in error_msg.lower():
+                logger.error(f"Zerodha: Rate limit getting historical data for {trading_symbol}")
+                raise RateLimitError("Rate limit exceeded")
+            else:
+                logger.error(f"Zerodha: Error getting historical data for {trading_symbol} - {e}")
             return []
 
     def get_nifty_data(
@@ -397,10 +454,36 @@ class KiteBroker:
             logger.info(f"Zerodha: Order placed - {order_id} | {trading_symbol} | {side.value} | Qty: {quantity} @ ₹{price} | Type: {kite_order_type}")
             return OrderResponse(order_id=str(order_id), status="SUCCESS")
             
+        except TokenException as e:
+            error_msg = str(e)
+            if "IP" in error_msg or "403" in error_msg:
+                logger.critical(f"Zerodha: IP restriction detected - {e}")
+                raise IPRestrictionError(f"IP not allowed to place orders: {e}", ip_address=self.settings.zerodha.api_key)
+            else:
+                logger.error(f"Zerodha: Authentication error - {e}")
+                raise AuthenticationError(f"Authentication failed: {e}")
+        except OrderException as e:
+            error_msg = str(e)
+            if "insufficient" in error_msg.lower() or "funds" in error_msg.lower():
+                logger.error(f"Zerodha: Insufficient funds - {e}")
+                raise InsufficientFundsError(f"Insufficient funds: {e}")
+            else:
+                logger.error(f"Zerodha: Order rejected - {e}")
+                raise OrderError(f"Order rejected: {e}", trading_symbol, rejection_reason=str(e))
+        except NetworkException as e:
+            logger.error(f"Zerodha: Network error placing order - {e}")
+            raise ZerodhaError(f"Network error: {e}", error_type="NETWORK_ERROR")
         except Exception as e:
-            logger.error(f"Zerodha: Order error - {e}")
-            return None
-            return None
+            error_msg = str(e)
+            if "IP" in error_msg or "not allowed" in error_msg:
+                logger.critical(f"Zerodha: IP restriction detected - {e}")
+                raise IPRestrictionError(f"IP not allowed: {e}")
+            elif "429" in error_msg or "rate limit" in error_msg.lower():
+                logger.error(f"Zerodha: Rate limit exceeded - {e}")
+                raise RateLimitError(f"Rate limit exceeded: {e}")
+            else:
+                logger.error(f"Zerodha: Order error - {e}")
+                return None
 
     def cancel_order(self, order_id: str) -> bool:
         try:
@@ -682,10 +765,19 @@ class KiteBroker:
 
                 stock = db.query(Stock).filter(Stock.broker_order_id == order_id).first()
                 
+                # Don't match exited records by symbol (loose fallback)
                 if not stock:
-                    stock = db.query(Stock).filter(Stock.symbol == symbol).first()
+                    stock = db.query(Stock).filter(
+                        Stock.symbol == symbol,
+                        Stock.status != StockStatus.EXITED
+                    ).first()
                 
                 if stock:
+                    # Don't overwrite broker_status for already-exited positions
+                    if stock.status == StockStatus.EXITED:
+                        logger.debug(f"Skipping order sync for exited position: {symbol} (exit_order_id: {stock.exit_order_id})")
+                        continue
+                    
                     stock.broker_status = status
                     stock.broker_order_id = order_id
                     
