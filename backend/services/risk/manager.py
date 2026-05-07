@@ -116,7 +116,7 @@ class RiskManager:
             if account_balance < self.min_account_balance:
                 return RiskCheckResult(
                     approved=False,
-                    message=f"Account balance too low: ₹{account_balance:,.2f}",
+                    message=f"Account balance too low: Rs.{account_balance:,.2f}",
                     rejection=RiskRejection.INSUFFICIENT_BALANCE,
                     risk_metrics=risk_metrics,
                 )
@@ -124,12 +124,12 @@ class RiskManager:
             loss_threshold = account_balance * (self.max_daily_loss / 100)
             if self._daily_pnl < -loss_threshold:
                 logger.warning(
-                    f"Daily loss limit exceeded: PnL=₹{self._daily_pnl:,.2f}, "
-                    f"limit=₹{loss_threshold:,.2f}"
+                    f"Daily loss limit exceeded: PnL=Rs.{self._daily_pnl:,.2f}, "
+                    f"limit=Rs.{loss_threshold:,.2f}"
                 )
                 return RiskCheckResult(
                     approved=False,
-                    message=f"Daily loss limit exceeded: ₹{self._daily_pnl:,.2f}",
+                    message=f"Daily loss limit exceeded: Rs.{self._daily_pnl:,.2f}",
                     rejection=RiskRejection.DAILY_LOSS_LIMIT,
                     risk_metrics=risk_metrics,
                 )
@@ -158,7 +158,7 @@ class RiskManager:
             if required_margin > self._available_margin:
                 return RiskCheckResult(
                     approved=False,
-                    message=f"Insufficient margin: need ₹{required_margin:,.2f}, have ₹{self._available_margin:,.2f}",
+                    message=f"Insufficient margin: need Rs.{required_margin:,.2f}, have Rs.{self._available_margin:,.2f}",
                     rejection=RiskRejection.INSUFFICIENT_MARGIN,
                     risk_metrics=risk_metrics,
                 )
@@ -184,8 +184,8 @@ class RiskManager:
         })
 
         logger.info(
-            f"Risk check PASSED: {symbol} {side} {quantity} @ ₹{price:,.2f} "
-            f"(value=₹{position_value:,.2f})"
+            f"Risk check PASSED: {symbol} {side} {quantity} @ Rs.{price:,.2f} "
+            f"(value=Rs.{position_value:,.2f})"
         )
 
         return RiskCheckResult(
@@ -208,11 +208,11 @@ class RiskManager:
         """
         if side.upper() == "BUY":
             if stop_loss >= entry_price:
-                return False, f"Stop loss must be below entry for BUY: SL=₹{stop_loss}, Entry=₹{entry_price}"
+                return False, f"Stop loss must be below entry for BUY: SL=Rs.{stop_loss}, Entry=Rs.{entry_price}"
             loss_pct = ((entry_price - stop_loss) / entry_price) * 100
         else:
             if stop_loss <= entry_price:
-                return False, f"Stop loss must be above entry for SELL: SL=₹{stop_loss}, Entry=₹{entry_price}"
+                return False, f"Stop loss must be above entry for SELL: SL=Rs.{stop_loss}, Entry=Rs.{entry_price}"
             loss_pct = ((stop_loss - entry_price) / entry_price) * 100
 
         risk_metrics = {
@@ -237,7 +237,7 @@ class RiskManager:
         self._daily_pnl += pnl
         self._daily_trades += 1
         
-        logger.info(f"Daily PnL updated: ₹{self._daily_pnl:,.2f} (trades: {self._daily_trades})")
+        logger.info(f"Daily PnL updated: Rs.{self._daily_pnl:,.2f} (trades: {self._daily_trades})")
 
     def get_daily_stats(self) -> dict[str, Any]:
         return {

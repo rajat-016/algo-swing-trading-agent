@@ -26,6 +26,7 @@ tensorflow>=2.14.0
 # Broker Integration
 kiteconnect>=4.1.0
 playwright>=1.40.0
+scrapling[fetchers]>=0.4.7
 
 # HTTP Client
 requests>=2.31.0

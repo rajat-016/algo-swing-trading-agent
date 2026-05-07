@@ -451,7 +451,7 @@ class KiteBroker:
                 market_protection=market_protection_val,
             )
 
-            logger.info(f"Zerodha: Order placed - {order_id} | {trading_symbol} | {side.value} | Qty: {quantity} @ ₹{price} | Type: {kite_order_type}")
+            logger.info(f"Zerodha: Order placed - {order_id} | {trading_symbol} | {side.value} | Qty: {quantity} @ Rs.{price} | Type: {kite_order_type}")
             return OrderResponse(order_id=str(order_id), status="SUCCESS")
             
         except TokenException as e:

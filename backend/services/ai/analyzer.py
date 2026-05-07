@@ -243,7 +243,7 @@ class StockAnalyzer:
                     f"p_buy={a.p_buy:.0%} price={a.current_price:.2f} qty={a.position_size}"
                 )
         else:
-            logger.info(f"No valid entries from {len(symbols)} analyzed stocks (available_cash=₹{available_cash:,.2f})")
+            logger.info(f"No valid entries from {len(symbols)} analyzed stocks (available_cash=Rs.{available_cash:,.2f})")
 
         return top
 
