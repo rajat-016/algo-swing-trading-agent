@@ -5,7 +5,7 @@ import numpy as np
 from sqlalchemy.orm import Session
 
 from services.broker.kite import KiteBroker
-from services.broker.chartink import ChartInkClient
+from services.broker.chartink_scrapling import ScraplingChartinkClient as ChartInkClient
 from services.risk import RiskManager
 from models.stock import Stock, StockStatus, ExitReason, ExitLog, SLBreachSeverity
 from models.prediction_log import PredictionLog
@@ -250,7 +250,7 @@ class TradingLoop:
 
     def _get_available_cash(self, db: Session) -> float:
         if self.is_paper_mode:
-            logger.info(f"Paper mode: Using simulated capital ₹{self.settings.paper_trading_capital:,.0f}")
+            logger.info(f"Paper mode: Using simulated capital Rs.{self.settings.paper_trading_capital:,.0f}")
             return self.settings.paper_trading_capital
 
         try:
@@ -262,15 +262,15 @@ class TradingLoop:
                 if isinstance(available, dict):
                     live_balance = available.get("live_balance", 0)
                     if live_balance and live_balance > 0:
-                        logger.info(f"Live mode: Available cash ₹{live_balance:,.2f} (live_balance)")
+                        logger.info(f"Live mode: Available cash Rs.{live_balance:,.2f} (live_balance)")
                         return float(live_balance)
 
                     cash = available.get("cash", 0)
                     if cash:
-                        logger.info(f"Live mode: Available cash ₹{cash:,.2f}")
+                        logger.info(f"Live mode: Available cash Rs.{cash:,.2f}")
                         return float(cash)
                 else:
-                    logger.info(f"Live mode: Available cash ₹{available:,.2f}")
+                    logger.info(f"Live mode: Available cash Rs.{available:,.2f}")
                     return float(available)
         except Exception as e:
             logger.error(f"Error getting funds: {e}")
@@ -300,7 +300,7 @@ class TradingLoop:
         return positions
 
     async def _process_entries(self, db: Session, cash: float, open_positions: Dict):
-        logger.info(f"Available cash: ₹{cash:,.2f}")
+        logger.info(f"Available cash: Rs.{cash:,.2f}")
 
         if cash < 500:
             logger.warning("Insufficient cash")
@@ -329,13 +329,13 @@ class TradingLoop:
             if pos_data.get("broker_status") in ["PENDING", "OPEN", "TRIGGER_PENDING"]:
                 cost = pos_data["entry_price"] * pos_data["quantity"]
                 pending_order_cost += cost
-                pending_symbols.append(f"{symbol}(₹{cost:,.0f})")
+                pending_symbols.append(f"{symbol}(Rs.{cost:,.0f})")
 
         remaining_cash = cash - pending_order_cost
 
         if pending_order_cost > 0:
-            logger.info(f"Pending orders reserved: {', '.join(pending_symbols)} = ₹{pending_order_cost:,.2f}")
-            logger.info(f"Effective cash for new orders: ₹{remaining_cash:,.2f}")
+            logger.info(f"Pending orders reserved: {', '.join(pending_symbols)} = Rs.{pending_order_cost:,.2f}")
+            logger.info(f"Effective cash for new orders: Rs.{remaining_cash:,.2f}")
 
         entries_placed = 0
         for analysis in analysis_results:
@@ -364,7 +364,7 @@ class TradingLoop:
 
             cost = analysis.entry_price * analysis.position_size
             if cost > remaining_cash:
-                logger.warning(f"Insufficient funds for {analysis.symbol}: need ₹{cost:,.0f}, have ₹{remaining_cash:,.2f}")
+                logger.warning(f"Insufficient funds for {analysis.symbol}: need Rs.{cost:,.0f}, have Rs.{remaining_cash:,.2f}")
                 continue
 
             await self._place_entry(db, analysis)
@@ -409,7 +409,7 @@ class TradingLoop:
 
         order_cost = analysis.entry_price * analysis.position_size
         if cash < order_cost:
-            logger.warning(f"Insufficient cash for {zerodha_symbol}: need ₹{order_cost:,.2f}, have ₹{cash:,.2f}")
+            logger.warning(f"Insufficient cash for {zerodha_symbol}: need Rs.{order_cost:,.2f}, have Rs.{cash:,.2f}")
             return
 
         stock = Stock(
@@ -465,7 +465,7 @@ class TradingLoop:
             stock.broker_order_id = broker_order_id
             stock.broker_status = "COMPLETE"
             stock.status = StockStatus.ENTERED
-            logger.info(f"[PAPER] Simulated BUY order: {zerodha_symbol} | Qty: {analysis.position_size} | Price: ₹{analysis.entry_price:.2f}")
+            logger.info(f"[PAPER] Simulated BUY order: {zerodha_symbol} | Qty: {analysis.position_size} | Price: Rs.{analysis.entry_price:.2f}")
 
         stock.entry_date = datetime.utcnow()
         db.commit()
@@ -481,7 +481,7 @@ class TradingLoop:
         })
 
         mode_prefix = "[PAPER]" if self.is_paper_mode else "[LIVE]"
-        logger.info(f"{mode_prefix} ENTRY: {zerodha_symbol} | Price: ₹{analysis.entry_price:.2f} | Qty: {analysis.position_size} | Target: ₹{analysis.target_price:.2f} | SL: ₹{analysis.stop_loss:.2f}")
+        logger.info(f"{mode_prefix} ENTRY: {zerodha_symbol} | Price: Rs.{analysis.entry_price:.2f} | Qty: {analysis.position_size} | Target: Rs.{analysis.target_price:.2f} | SL: Rs.{analysis.stop_loss:.2f}")
 
     async def _check_exit(self, db: Session, symbol: str, pos_data: Dict):
         if self.is_paper_mode:
@@ -523,7 +523,7 @@ class TradingLoop:
         sl_breach = self.tiered_exit_engine.track_sl_breach(tiered_position)
         if sl_breach["status"] == "BREACHED":
             severity = sl_breach["severity"]
-            logger.warning(f"SL BREACH [{severity.value}]: {symbol} | SL: ₹{sl:.2f} | Current: ₹{current_price:.2f} | Below SL: {sl_breach['breach_pct']:.1f}%")
+            logger.warning(f"SL BREACH [{severity.value}]: {symbol} | SL: Rs.{sl:.2f} | Current: Rs.{current_price:.2f} | Below SL: {sl_breach['breach_pct']:.1f}%")
 
         ml_exit = await self._get_ml_exit_signal(symbol)
         decision, qty, exit_price, reason = self.tiered_exit_engine.decide(ml_exit, tiered_position)
@@ -545,7 +545,7 @@ class TradingLoop:
         else:
             next_info = self.tiered_exit_engine.get_next_tier_info(tiered_position)
             tier_label = f"T{current_tier}" if next_info else "DONE"
-            logger.info(f"HOLDING: {symbol} | Price: ₹{current_price:.2f} | Target: ₹{target:.2f} | SL: ₹{sl:.2f} | P&L: {pnl_pct:+.2f}% | Tier: {tier_label} | SL: {sl_breach['severity'].value}")
+            logger.info(f"HOLDING: {symbol} | Price: Rs.{current_price:.2f} | Target: Rs.{target:.2f} | SL: Rs.{sl:.2f} | P&L: {pnl_pct:+.2f}% | Tier: {tier_label} | SL: {sl_breach['severity'].value}")
             _broadcast_ws({
                 "type": "price_update",
                 "symbol": symbol,
@@ -620,7 +620,7 @@ class TradingLoop:
             exit_order_id = f"PAPER_{int(datetime.utcnow().timestamp())}"
             pnl = (exit_price - entry_price) * quantity
             pnl_pct = ((exit_price - entry_price) / entry_price) * 100
-            logger.info(f"[PAPER] Simulated SELL order: {symbol} | Qty: {quantity} | Price: ₹{exit_price:.2f} | P&L: ₹{pnl:.2f} ({pnl_pct:.2f}%)")
+            logger.info(f"[PAPER] Simulated SELL order: {symbol} | Qty: {quantity} | Price: Rs.{exit_price:.2f} | P&L: Rs.{pnl:.2f} ({pnl_pct:.2f}%)")
 
         stock = db.query(Stock).filter(Stock.id == stock_id).first()
         pnl = 0.0
@@ -658,7 +658,7 @@ class TradingLoop:
         })
 
         mode_prefix = "[PAPER]" if self.is_paper_mode else "[LIVE]"
-        logger.info(f"{mode_prefix} EXIT: {symbol} | Reason: {exit_reason.value} | P&L: ₹{pnl:.2f}")
+        logger.info(f"{mode_prefix} EXIT: {symbol} | Reason: {exit_reason.value} | P&L: Rs.{pnl:.2f}")
 
     async def _place_partial_exit(
         self,
@@ -695,7 +695,7 @@ class TradingLoop:
             exit_order_id = f"PAPER_T{tier}_{int(datetime.utcnow().timestamp())}"
             pnl = (exit_price - entry_price) * quantity
             pnl_pct = ((exit_price - entry_price) / entry_price) * 100
-            logger.info(f"[PAPER] Tier {tier} SELL: {symbol} | Qty: {quantity} | Price: ₹{exit_price:.2f} | P&L: ₹{pnl:.2f} ({pnl_pct:.2f}%)")
+            logger.info(f"[PAPER] Tier {tier} SELL: {symbol} | Qty: {quantity} | Price: Rs.{exit_price:.2f} | P&L: Rs.{pnl:.2f} ({pnl_pct:.2f}%)")
 
         tier_pnl = (exit_price - entry_price) * quantity
         tier_pnl_pct = ((exit_price - entry_price) / entry_price) * 100
@@ -767,7 +767,7 @@ class TradingLoop:
         })
 
         mode_prefix = "[PAPER]" if self.is_paper_mode else "[LIVE]"
-        logger.info(f"{mode_prefix} TIER {tier} EXIT: {symbol} | Qty: {quantity}/{original_quantity} | P&L: ₹{tier_pnl:.2f} | Remaining: {new_remaining}")
+        logger.info(f"{mode_prefix} TIER {tier} EXIT: {symbol} | Qty: {quantity}/{original_quantity} | P&L: Rs.{tier_pnl:.2f} | Remaining: {new_remaining}")
 
     def switch_mode(self, mode: str):
         old_mode = self.settings.trading_mode

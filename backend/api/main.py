@@ -18,7 +18,7 @@ from api.routes.monitoring import router as monitoring_router
 from api.routes.stress_test import router as stress_router
 from api.routes.websocket import router as ws_router, get_manager
 from services.broker.kite import get_broker
-from services.broker.chartink import get_chartink_client
+from services.broker.chartink_scrapling import get_scrapling_chartink_client as get_chartink_client
 from services.trading.loop import TradingLoop
 
 
