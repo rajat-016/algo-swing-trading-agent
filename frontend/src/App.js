@@ -88,10 +88,15 @@ function App() {
           target_price: data.target,
           stop_loss: data.sl,
           entry_quantity: data.quantity,
+          original_quantity: data.quantity,
+          remaining_quantity: data.quantity,
+          current_tier: 1,
           entry_reason: data.reason,
           entry_date: new Date().toISOString(),
           pnl: 0,
           pnl_percentage: 0,
+          realized_pnl: 0,
+          sl_breach_severity: 'SAFE',
         }, ...prev]);
       } else if (data.type === 'exit') {
         setStocks(prev => prev.map(s =>
@@ -99,10 +104,31 @@ function App() {
             ? { ...s, status: 'EXITED', pnl: data.pnl, pnl_percentage: data.pnl_pct }
             : s
         ));
+      } else if (data.type === 'tier_exit') {
+        setStocks(prev => prev.map(s =>
+          s.symbol === data.symbol
+            ? {
+                ...s,
+                remaining_quantity: data.remaining,
+                current_tier: data.tier + 1,
+                realized_pnl: data.realized_pnl,
+                pnl: data.pnl,
+                pnl_percentage: data.pnl_pct,
+                ...(data.remaining <= 0 ? { status: 'EXITED' } : {}),
+              }
+            : s
+        ));
       } else if (data.type === 'price_update') {
         setStocks(prev => prev.map(s =>
           s.symbol === data.symbol
-            ? { ...s, current_price: data.current_price, pnl_pct: data.pnl_pct }
+            ? {
+                ...s,
+                current_price: data.current_price,
+                pnl_pct: data.pnl_pct,
+                ...(data.tier ? { current_tier: data.tier } : {}),
+                ...(data.remaining !== undefined ? { remaining_quantity: data.remaining } : {}),
+                ...(data.sl_severity ? { sl_breach_severity: data.sl_severity } : {}),
+              }
             : s
         ));
       }
@@ -357,10 +383,14 @@ function App() {
                     <th>Symbol</th>
                     <th>Status</th>
                     <th>Qty</th>
+                    <th>Remaining</th>
+                    <th>Tier</th>
                     <th>Entry</th>
                     <th>Current</th>
                     <th>Target</th>
                     <th>SL</th>
+                    <th>SL Status</th>
+                    <th>Realized P&L</th>
                     <th>P&L</th>
                     <th>P&L %</th>
                     <th>Reason</th>
@@ -376,6 +406,15 @@ function App() {
                     const pnlPct = stock.pnl_percentage !== undefined && stock.pnl_percentage !== null && stock.pnl_percentage !== 0
                       ? stock.pnl_percentage
                       : livePnlPct;
+                    const originalQty = stock.original_quantity || stock.entry_quantity;
+                    const remaining = stock.remaining_quantity || stock.entry_quantity;
+                    const tier = stock.current_tier || 1;
+                    const tierDisplay = stock.status === 'EXITED' ? '-' : `${tier}/4`;
+                    const remainingDisplay = stock.status === 'EXITED' ? '-' : `${remaining}/${originalQty}`;
+                    const realizedPnl = stock.realized_pnl || 0;
+                    const slSeverity = stock.sl_breach_severity || 'SAFE';
+                    const slSeverityClass = `slSeverity ${slSeverity.toLowerCase()}`;
+                    const slSeverityLabel = {safe: 'SAFE', yellow: 'WATCH', orange: 'BELOW', red: 'DEEP', critical: 'CRIT'}[slSeverity.toLowerCase()] || slSeverity;
 
                     return (
                       <tr key={stock.id || `${stock.symbol}-${idx}`}>
@@ -385,11 +424,17 @@ function App() {
                             {stock.status}
                           </span>
                         </td>
-                        <td>{stock.entry_quantity || '-'}</td>
+                        <td>{originalQty || '-'}</td>
+                        <td className="monoCell">{remainingDisplay}</td>
+                        <td className="tierCell">{tierDisplay}</td>
                         <td>{formatCurrency(stock.average_price)}</td>
                         <td className="priceCell">{formatCurrency(currentPrice)}</td>
                         <td className="targetCell">{formatCurrency(stock.target_price)}</td>
                         <td className="slCell">{formatCurrency(stock.stop_loss)}</td>
+                        <td className={slSeverityClass}>{slSeverityLabel}</td>
+                        <td className={`pnlCell ${(realizedPnl || 0) >= 0 ? 'positive' : 'negative'}`}>
+                          {stock.status !== 'EXITED' && realizedPnl !== 0 ? formatCurrency(realizedPnl) : '-'}
+                        </td>
                         <td className={`pnlCell ${(pnl || 0) >= 0 ? 'positive' : 'negative'}`}>
                           {pnl !== null ? formatCurrency(pnl) : '-'}
                         </td>

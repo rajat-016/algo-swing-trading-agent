@@ -474,6 +474,26 @@ def run_full_pipeline(args=None):
                 max_holding_bars=bt_cfg.get("max_holding_bars", 7),
                 confidence_high=bt_cfg.get("confidence_high", 0.65),
                 confidence_medium=bt_cfg.get("confidence_medium", 0.50),
+                tiered_exit_enabled=bt_cfg.get("tiered_exit_enabled", False),
+                tier_thresholds=[
+                    bt_cfg.get("tier_1_pct", 5.0),
+                    bt_cfg.get("tier_2_pct", 10.0),
+                    bt_cfg.get("tier_3_pct", 15.0),
+                    bt_cfg.get("tier_4_pct", 20.0),
+                ],
+                tier_qty_pcts=[
+                    bt_cfg.get("tier_1_qty_pct", 25.0),
+                    bt_cfg.get("tier_2_qty_pct", 25.0),
+                    bt_cfg.get("tier_3_qty_pct", 25.0),
+                    bt_cfg.get("tier_4_qty_pct", 25.0),
+                ],
+                trailing_sl_offsets=[
+                    bt_cfg.get("trailing_sl_tier_1", 0.0),
+                    bt_cfg.get("trailing_sl_tier_2", 0.03),
+                    bt_cfg.get("trailing_sl_tier_3", 0.07),
+                    None,
+                ],
+                ml_exit_min_tier=bt_cfg.get("ml_exit_min_tier", 2),
             )
             
             sim_result = simulator.run(
@@ -566,6 +586,26 @@ def run_full_pipeline(args=None):
                         max_holding_bars=bt_cfg.get("max_holding_bars", 7),
                         confidence_high=bt_cfg.get("confidence_high", 0.65),
                         confidence_medium=bt_cfg.get("confidence_medium", 0.50),
+                        tiered_exit_enabled=bt_cfg.get("tiered_exit_enabled", False),
+                        tier_thresholds=[
+                            bt_cfg.get("tier_1_pct", 5.0),
+                            bt_cfg.get("tier_2_pct", 10.0),
+                            bt_cfg.get("tier_3_pct", 15.0),
+                            bt_cfg.get("tier_4_pct", 20.0),
+                        ],
+                        tier_qty_pcts=[
+                            bt_cfg.get("tier_1_qty_pct", 25.0),
+                            bt_cfg.get("tier_2_qty_pct", 25.0),
+                            bt_cfg.get("tier_3_qty_pct", 25.0),
+                            bt_cfg.get("tier_4_qty_pct", 25.0),
+                        ],
+                        trailing_sl_offsets=[
+                            bt_cfg.get("trailing_sl_tier_1", 0.0),
+                            bt_cfg.get("trailing_sl_tier_2", 0.03),
+                            bt_cfg.get("trailing_sl_tier_3", 0.07),
+                            None,
+                        ],
+                        ml_exit_min_tier=bt_cfg.get("ml_exit_min_tier", 2),
                     )
 
                     sim_result = simulator.run(

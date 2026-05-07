@@ -891,3 +891,57 @@ predictions = relationship("PredictionLog", back_populates="stock", foreign_keys
 - `backend/models/stock.py` - Fixed predictions relationship foreign_keys specification
 
 ---
+
+## 2026-05-07
+
+### Session: Tiered Profit Exit Strategy Implementation
+
+**User Request:** Implement tiered profit-only exit strategy — exit only when profit, SL becomes monitoring gauge, book partial profits at 5/10/15/20%, ML SELL allowed only after Tier 2.
+
+**Architecture:**
+- Tier 1 (+5%) → 25% exit, trailing SL moves to breakeven
+- Tier 2 (+10%) → 25% exit, trailing SL moves to +3%, ML SELL now active
+- Tier 3 (+15%) → 25% exit, trailing SL moves to +7%
+- Tier 4 (+20%) → remaining 25% exit (complete)
+- SL tracked with severity levels: SAFE/YELLOW/ORANGE/RED/CRITICAL (never triggers exit)
+- ML SELL blocked until Tier 2 (≥50% profit booked)
+
+**Files Created (2 new):**
+| File | Purpose |
+|------|---------|
+| `backend/core/decision/tiered_exit.py` | TieredExitEngine — tier triggers, SL breach tracking, trailing SL, ML gating |
+| `backend/migrate_tiered_exit.py` | SQLite migration for new columns + exit_logs table |
+
+**Files Modified (10):**
+| File | Change |
+|------|--------|
+| `backend/models/stock.py` | Added `ExitLog` model, `SLBreachSeverity` enum, 5 new `Stock` columns |
+| `backend/models/__init__.py` | Registered `ExitLog`, `SLBreachSeverity` |
+| `backend/core/config.py` | 13 new tiered exit config fields |
+| `backend/services/trading/loop.py` | Rewrote `_check_exit()`, added `_place_partial_exit()`, updated `_get_open_positions()`, `_place_entry()` |
+| `frontend/src/App.js` | 4 new columns (Remaining, Tier, SL Status, Realized P&L), `tier_exit` WS handler |
+| `frontend/src/index.css` | SL severity color coding with pulse animation for CRITICAL |
+| `backtesting/backtest_engine/position_manager.py` | Tier tracking on Position, `check_tier_exit()` method |
+| `backtesting/backtest_engine/trade_simulator.py` | Tiered exit loop, ML exit after tier 2 |
+| `backtesting/metrics/performance_metrics.py` | `tier_metrics()` — completion rate, profit per tier |
+| `backtesting/config/backtest_config.yaml` | 13 new tiered exit config fields |
+| `backtesting/run_backtest.py` | Wired tier config into both TradeSimulator instances |
+
+**Migration:**
+- Ran `migrate_tiered_exit.py` — added 5 columns to stocks table, created exit_logs table
+- Verified: all 4 existing stocks load with null tier fields (correct for pre-tiered positions)
+
+**Tests Passed:**
+- All backend imports ✅
+- TieredExitEngine: 8/8 logic tests ✅
+- Backtesting imports ✅
+- Position tier exit ✅
+- Tier metrics ✅
+- TradeSimulator with tiered exit ✅
+- DB migration + ORM queries ✅
+- App creation (26 routes) ✅
+
+**Activation:**
+Set in `.env` or config: `tiered_exit_enabled = true`, `exit_only_profit = true`
+
+---

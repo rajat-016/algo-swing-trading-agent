@@ -7,13 +7,14 @@ from sqlalchemy.orm import Session
 from services.broker.kite import KiteBroker
 from services.broker.chartink import ChartInkClient
 from services.risk import RiskManager
-from models.stock import Stock, StockStatus, ExitReason
+from models.stock import Stock, StockStatus, ExitReason, ExitLog, SLBreachSeverity
 from models.prediction_log import PredictionLog
 from core.config import get_settings
 from core.database import SessionLocal
 from core.logging import logger
 from core.enums import OrderSide, OrderType, ProductType
 from core.decision.exit_engine import ExitEngine, Position as ExitPosition
+from core.decision.tiered_exit import TieredExitEngine, TieredPosition
 from core.risk.position_sizer import PositionSizer
 from core.circuit_breaker import CircuitBreaker, CircuitState
 from core.exceptions import TradingLoopError, CircuitBreakerError, ZerodhaError, IPRestrictionError
@@ -50,6 +51,22 @@ class TradingLoop:
         )
 
         self.exit_engine = ExitEngine()
+        self.tiered_exit_engine = TieredExitEngine(
+            tier_1_pct=self.settings.tier_1_pct,
+            tier_1_qty_pct=self.settings.tier_1_qty_pct,
+            tier_2_pct=self.settings.tier_2_pct,
+            tier_2_qty_pct=self.settings.tier_2_qty_pct,
+            tier_3_pct=self.settings.tier_3_pct,
+            tier_3_qty_pct=self.settings.tier_3_qty_pct,
+            tier_4_pct=self.settings.tier_4_pct,
+            tier_4_qty_pct=self.settings.tier_4_qty_pct,
+            trailing_sl_tier_1=self.settings.trailing_sl_tier_1,
+            trailing_sl_tier_2=self.settings.trailing_sl_tier_2,
+            trailing_sl_tier_3=self.settings.trailing_sl_tier_3,
+            ml_sell_threshold=self.exit_engine.ml_sell_threshold,
+            ml_exit_min_tier=self.settings.ml_exit_min_tier,
+            exit_only_profit=self.settings.exit_only_profit,
+        )
         self.position_sizer = PositionSizer(risk_pct=self.settings.risk_per_trade / 100)
         
         # Circuit breaker for trading loop
@@ -274,6 +291,11 @@ class TradingLoop:
                 "stock_id": stock.id,
                 "broker_status": stock.broker_status,
                 "exchange": stock.exchange or "NSE",
+                "original_quantity": stock.original_quantity or stock.entry_quantity,
+                "remaining_quantity": stock.remaining_quantity or stock.entry_quantity,
+                "current_tier": stock.current_tier or 1,
+                "trailing_sl": stock.trailing_sl,
+                "realized_pnl": stock.realized_pnl or 0.0,
             }
         return positions
 
@@ -403,6 +425,11 @@ class TradingLoop:
             ai_confidence=analysis.confidence,
             broker_status="PENDING",
             prediction_id=analysis.prediction_id,
+            original_quantity=analysis.position_size,
+            remaining_quantity=analysis.position_size,
+            current_tier=1,
+            trailing_sl=None,
+            realized_pnl=0.0,
         )
         db.add(stock)
         db.commit()
@@ -475,40 +502,59 @@ class TradingLoop:
             logger.debug(f"Skipping exit check for {symbol}: missing data (price={current_price}, target={target}, sl={sl})")
             return
 
-        position = ExitPosition(
+        original_qty = pos_data.get("original_quantity", pos_data["quantity"])
+        remaining_qty = pos_data.get("remaining_quantity", pos_data["quantity"])
+        current_tier = pos_data.get("current_tier", 1)
+
+        if remaining_qty <= 0:
+            return
+
+        tiered_position = TieredPosition(
             symbol=symbol,
             entry_price=pos_data["entry_price"],
-            quantity=pos_data["quantity"],
+            original_quantity=original_qty,
+            remaining_quantity=remaining_qty,
             stop_loss=sl,
             target=target,
             current_price=current_price,
+            current_tier=current_tier,
         )
 
+        sl_breach = self.tiered_exit_engine.track_sl_breach(tiered_position)
+        if sl_breach["status"] == "BREACHED":
+            severity = sl_breach["severity"]
+            logger.warning(f"SL BREACH [{severity.value}]: {symbol} | SL: ₹{sl:.2f} | Current: ₹{current_price:.2f} | Below SL: {sl_breach['breach_pct']:.1f}%")
+
         ml_exit = await self._get_ml_exit_signal(symbol)
-        exit_decision = self.exit_engine.decide(ml_exit, position)
+        decision, qty, exit_price, reason = self.tiered_exit_engine.decide(ml_exit, tiered_position)
 
-        if exit_decision == "EXIT_SL":
+        if decision == "EXIT_TIER":
             mode_prefix = "[PAPER]" if self.is_paper_mode else "[LIVE]"
-            logger.info(f"{mode_prefix} STOP LOSS: {symbol} | P&L: {pnl_pct:.2f}%")
-            await self._place_exit(db, stock_id, symbol, pos_data, ExitReason.SL, current_price)
+            logger.info(f"{mode_prefix} TIER TRIGGERED: {symbol} | P&L: +{pnl_pct:.2f}% | Tier: {current_tier}")
+            await self._place_partial_exit(db, stock_id, symbol, pos_data, current_tier, qty, exit_price, reason)
 
-        elif exit_decision == "EXIT_TARGET":
+        elif decision == "EXIT_ML":
             mode_prefix = "[PAPER]" if self.is_paper_mode else "[LIVE]"
-            logger.info(f"{mode_prefix} TARGET HIT: {symbol} | P&L: +{pnl_pct:.2f}%")
-            await self._place_exit(db, stock_id, symbol, pos_data, ExitReason.TARGET, current_price)
+            p_sell = float(ml_exit[0]) if ml_exit is not None else 0
+            logger.info(f"{mode_prefix} ML EXIT: {symbol} | p_sell={p_sell:.0%} | Tier: {current_tier}")
+            await self._place_partial_exit(db, stock_id, symbol, pos_data, current_tier, qty, exit_price, reason)
 
-        elif exit_decision == "EXIT_ML":
-            mode_prefix = "[PAPER]" if self.is_paper_mode else "[LIVE]"
-            logger.info(f"{mode_prefix} ML EXIT: {symbol} | p_sell={ml_exit[0]:.0%}")
-            await self._place_exit(db, stock_id, symbol, pos_data, ExitReason.ML_SIGNAL, current_price)
+        elif sl_breach["severity"] == SLBreachSeverity.CRITICAL:
+            logger.error(f"CRITICAL: {symbol} is {sl_breach['breach_pct']:.1f}% below SL — consider manual review")
 
         else:
-            logger.info(f"HOLDING: {symbol} | Price: ₹{current_price:.2f} | Target: ₹{target:.2f} | SL: ₹{sl:.2f} | P&L: {pnl_pct:+.2f}%")
+            next_info = self.tiered_exit_engine.get_next_tier_info(tiered_position)
+            tier_label = f"T{current_tier}" if next_info else "DONE"
+            logger.info(f"HOLDING: {symbol} | Price: ₹{current_price:.2f} | Target: ₹{target:.2f} | SL: ₹{sl:.2f} | P&L: {pnl_pct:+.2f}% | Tier: {tier_label} | SL: {sl_breach['severity'].value}")
             _broadcast_ws({
                 "type": "price_update",
                 "symbol": symbol,
                 "current_price": current_price,
                 "pnl_pct": pnl_pct,
+                "tier": current_tier,
+                "remaining": remaining_qty,
+                "sl_severity": sl_breach["severity"].value,
+                "next_tier": next_info,
             })
 
     async def _get_ml_exit_signal(self, symbol: str) -> Optional[np.ndarray]:
@@ -586,10 +632,10 @@ class TradingLoop:
             stock.broker_status = "COMPLETE"
             stock.pnl = (exit_price - entry_price) * quantity
             stock.pnl_percentage = ((exit_price - entry_price) / entry_price) * 100
+            stock.remaining_quantity = 0
             pnl = stock.pnl
             db.commit()
 
-            # Update prediction outcome
             if stock.prediction_id:
                 try:
                     log = db.query(PredictionLog).filter(PredictionLog.id == stock.prediction_id).first()
@@ -613,6 +659,115 @@ class TradingLoop:
 
         mode_prefix = "[PAPER]" if self.is_paper_mode else "[LIVE]"
         logger.info(f"{mode_prefix} EXIT: {symbol} | Reason: {exit_reason.value} | P&L: ₹{pnl:.2f}")
+
+    async def _place_partial_exit(
+        self,
+        db: Session,
+        stock_id: int,
+        symbol: str,
+        pos_data: Dict,
+        tier: int,
+        quantity: int,
+        exit_price: float,
+        exit_reason: ExitReason,
+    ):
+        entry_price = pos_data["entry_price"]
+        original_quantity = pos_data.get("original_quantity", pos_data["quantity"])
+        current_remaining = pos_data.get("remaining_quantity", pos_data["quantity"])
+        current_tier = pos_data.get("current_tier", tier)
+
+        if self.is_live_mode:
+            order = self.broker.place_order(
+                trading_symbol=symbol,
+                side=OrderSide.SELL,
+                quantity=quantity,
+                order_type=OrderType.LIMIT,
+                price=exit_price,
+                product_type=ProductType.CNC,
+                use_market_protection=self.settings.use_market_protection,
+                market_protection_pct=self.settings.market_protection_pct,
+            )
+            if not order or not order.order_id:
+                logger.error(f"[LIVE] Tier {tier} exit order FAILED for {symbol} - retrying next cycle")
+                return
+            exit_order_id = order.order_id
+        else:
+            exit_order_id = f"PAPER_T{tier}_{int(datetime.utcnow().timestamp())}"
+            pnl = (exit_price - entry_price) * quantity
+            pnl_pct = ((exit_price - entry_price) / entry_price) * 100
+            logger.info(f"[PAPER] Tier {tier} SELL: {symbol} | Qty: {quantity} | Price: ₹{exit_price:.2f} | P&L: ₹{pnl:.2f} ({pnl_pct:.2f}%)")
+
+        tier_pnl = (exit_price - entry_price) * quantity
+        tier_pnl_pct = ((exit_price - entry_price) / entry_price) * 100
+        new_remaining = current_remaining - quantity
+
+        stock = db.query(Stock).filter(Stock.id == stock_id).first()
+        if stock:
+            stock.remaining_quantity = new_remaining
+            stock.current_tier = tier + 1
+            stock.realized_pnl = (stock.realized_pnl or 0) + tier_pnl
+            stock.exit_order_id = exit_order_id
+
+            trailing_sl = self.tiered_exit_engine.get_trailing_sl(
+                TieredPosition(
+                    symbol=symbol,
+                    entry_price=entry_price,
+                    original_quantity=original_quantity,
+                    remaining_quantity=new_remaining,
+                    stop_loss=pos_data["sl"],
+                    target=pos_data["target"],
+                    current_price=exit_price,
+                    current_tier=tier + 1,
+                )
+            )
+            if trailing_sl is not None:
+                stock.trailing_sl = trailing_sl
+
+            if new_remaining <= 0:
+                stock.status = StockStatus.EXITED
+                stock.exit_date = datetime.utcnow()
+                stock.exit_reason = exit_reason
+                stock.pnl = stock.realized_pnl
+                stock.pnl_percentage = ((stock.realized_pnl) / (entry_price * original_quantity)) * 100
+            db.commit()
+
+            exit_log = ExitLog(
+                stock_id=stock_id,
+                tier=tier,
+                exit_price=exit_price,
+                quantity=quantity,
+                exit_reason=exit_reason,
+                pnl=tier_pnl,
+                pnl_percentage=tier_pnl_pct,
+            )
+            db.add(exit_log)
+            db.commit()
+
+            if stock.prediction_id and new_remaining <= 0:
+                try:
+                    log = db.query(PredictionLog).filter(PredictionLog.id == stock.prediction_id).first()
+                    if log:
+                        log.actual_outcome = "WIN" if stock.realized_pnl > 0 else "LOSS"
+                        log.actual_return = stock.pnl_percentage
+                        log.closed_at = datetime.utcnow()
+                        db.commit()
+                except Exception as e:
+                    logger.error(f"Failed to update prediction outcome: {e}")
+
+        _broadcast_ws({
+            "type": "tier_exit",
+            "symbol": symbol,
+            "tier": tier,
+            "exit_price": exit_price,
+            "quantity": quantity,
+            "remaining": new_remaining,
+            "pnl": tier_pnl,
+            "pnl_pct": tier_pnl_pct,
+            "realized_pnl": stock.realized_pnl if stock else tier_pnl,
+        })
+
+        mode_prefix = "[PAPER]" if self.is_paper_mode else "[LIVE]"
+        logger.info(f"{mode_prefix} TIER {tier} EXIT: {symbol} | Qty: {quantity}/{original_quantity} | P&L: ₹{tier_pnl:.2f} | Remaining: {new_remaining}")
 
     def switch_mode(self, mode: str):
         old_mode = self.settings.trading_mode

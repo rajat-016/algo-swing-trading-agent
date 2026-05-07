@@ -18,6 +18,7 @@ class PerformanceMetrics:
         results = {}
 
         results.update(PerformanceMetrics.trading_metrics(trade_log, equity_curve, dates))
+        results.update(PerformanceMetrics.tier_metrics(trade_log))
 
         if predictions is not None and actuals is not None:
             results.update(PerformanceMetrics.ml_metrics(predictions, actuals))
@@ -76,6 +77,48 @@ class PerformanceMetrics:
             "cagr": cagr,
             "sharpe_ratio": sharpe,
             "max_drawdown": max_dd,
+        }
+
+    @staticmethod
+    def tier_metrics(trade_log: List[Dict]) -> Dict:
+        tier_trades = [t for t in trade_log if t.get("reason", "").startswith("TIER_")]
+        if not tier_trades:
+            return {
+                "tier_enabled": False,
+                "tier_completion_rate": 0,
+                "avg_profit_per_tier": {},
+                "total_tier_exits": 0,
+                "total_realized_pnl": 0,
+            }
+
+        tier_pnls = {}
+        tier_counts = {}
+        positions_seen = set()
+
+        for t in tier_trades:
+            tier = t["reason"].replace("TIER_", "")
+            tier_pnls[tier] = tier_pnls.get(tier, []) + [t["pnl"]]
+            tier_counts[tier] = tier_counts.get(tier, 0) + 1
+            positions_seen.add(f"{t['symbol']}_{t['entry_date']}")
+
+        total_positions = len(positions_seen)
+        tier_4_count = tier_counts.get("4", 0)
+        tier_completion_rate = tier_4_count / total_positions if total_positions > 0 else 0
+
+        avg_profit_per_tier = {
+            tier: round(np.mean(pnls), 2) for tier, pnls in tier_pnls.items()
+        }
+
+        total_realized = sum(t.get("realized_pnl", 0) for t in tier_trades if t.get("remaining", 0) <= 0)
+
+        return {
+            "tier_enabled": True,
+            "tier_completion_rate": round(tier_completion_rate, 3),
+            "avg_profit_per_tier": avg_profit_per_tier,
+            "total_tier_exits": len(tier_trades),
+            "total_realized_pnl": round(total_realized, 2),
+            "tier_counts": tier_counts,
+            "total_positions_traded": total_positions,
         }
 
     @staticmethod
