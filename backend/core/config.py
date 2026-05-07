@@ -91,6 +91,22 @@ class Settings(BaseSettings):
     cycle_interval_seconds: int = Field(default=300)
     auto_start_trading: bool = Field(default=False)
 
+    # Tiered Exit Settings
+    tiered_exit_enabled: bool = Field(default=False)
+    exit_only_profit: bool = Field(default=False)
+    tier_1_pct: float = Field(default=5.0)
+    tier_1_qty_pct: float = Field(default=25.0)
+    tier_2_pct: float = Field(default=10.0)
+    tier_2_qty_pct: float = Field(default=25.0)
+    tier_3_pct: float = Field(default=15.0)
+    tier_3_qty_pct: float = Field(default=25.0)
+    tier_4_pct: float = Field(default=20.0)
+    tier_4_qty_pct: float = Field(default=25.0)
+    trailing_sl_tier_1: float = Field(default=0.0)
+    trailing_sl_tier_2: float = Field(default=3.0)
+    trailing_sl_tier_3: float = Field(default=7.0)
+    ml_exit_min_tier: int = Field(default=2)
+
     # Zerodha
     zerodha: ZerodhaConfig = Field(default_factory=ZerodhaConfig)
 

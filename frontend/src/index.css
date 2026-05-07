@@ -640,6 +640,58 @@ body {
   font-family: var(--font-mono);
 }
 
+.monoCell {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.tierCell {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-align: center;
+}
+
+.slSeverity {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  display: inline-block;
+}
+
+.slSeverity.safe {
+  background: rgba(0, 255, 135, 0.1);
+  color: var(--accent-primary);
+}
+
+.slSeverity.yellow {
+  background: rgba(255, 170, 0, 0.15);
+  color: var(--accent-warning);
+}
+
+.slSeverity.orange {
+  background: rgba(255, 140, 0, 0.2);
+  color: #ff8c00;
+}
+
+.slSeverity.red {
+  background: rgba(255, 51, 102, 0.15);
+  color: var(--accent-danger);
+}
+
+.slSeverity.critical {
+  background: rgba(255, 51, 102, 0.3);
+  color: #ff1a4d;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
 .pnlCell {
   font-family: var(--font-mono);
   font-weight: 500;

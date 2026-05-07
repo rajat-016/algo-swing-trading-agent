@@ -15,13 +15,25 @@ class Position:
     stop_loss: float
     target: float
     entry_bar: int = 0
-    entry_confidence: float = 0.0  # NEW: confidence score when entered
+    entry_confidence: float = 0.0
+    original_quantity: int = 0
+    remaining_quantity: int = 0
+    current_tier: int = 1
+    trailing_sl: Optional[float] = None
+    realized_pnl: float = 0.0
+    tier_exits: List[dict] = field(default_factory=list)
     exit_price: Optional[float] = None
     exit_date: Optional[datetime] = None
     exit_reason: Optional[str] = None
     pnl: float = 0.0
     pnl_pct: float = 0.0
     is_open: bool = True
+
+    def __post_init__(self):
+        if self.original_quantity == 0:
+            self.original_quantity = self.quantity
+        if self.remaining_quantity == 0:
+            self.remaining_quantity = self.quantity
 
     def check_exit(self, current_price: float, current_date: datetime, current_bar: int = 0, max_holding_bars: int = 7) -> bool:
         if not self.is_open:
@@ -43,7 +55,6 @@ class Position:
             self.is_open = False
             return True
 
-        # NEW: Time-based exit
         if max_holding_bars > 0 and (current_bar - self.entry_bar) >= max_holding_bars:
             self.exit_price = current_price
             self.exit_date = current_date
@@ -53,6 +64,62 @@ class Position:
             return True
 
         return False
+
+    def check_tier_exit(self, current_price: float, current_date: datetime, current_bar: int,
+                         tier_thresholds: list, tier_qty_pcts: list,
+                         trailing_sl_offsets: list) -> Optional[dict]:
+        if not self.is_open or self.remaining_quantity <= 0:
+            return None
+
+        pnl_pct = ((current_price - self.entry_price) / self.entry_price) * 100
+
+        if self.current_tier <= len(tier_thresholds):
+            tier_idx = self.current_tier - 1
+            trigger_pct = tier_thresholds[tier_idx]
+            qty_pct = tier_qty_pcts[tier_idx]
+
+            if pnl_pct >= trigger_pct:
+                qty = int(self.original_quantity * qty_pct / 100)
+                qty = min(qty, self.remaining_quantity)
+                if qty <= 0:
+                    qty = self.remaining_quantity
+
+                tier_pnl = (current_price - self.entry_price) * qty
+                self.realized_pnl += tier_pnl
+                self.remaining_quantity -= qty
+                self.tier_exits.append({
+                    "tier": self.current_tier,
+                    "exit_price": current_price,
+                    "quantity": qty,
+                    "pnl": tier_pnl,
+                    "date": current_date,
+                    "bar": current_bar,
+                })
+
+                if self.current_tier <= len(trailing_sl_offsets) and trailing_sl_offsets[self.current_tier - 1] is not None:
+                    self.trailing_sl = self.entry_price * (1 + trailing_sl_offsets[self.current_tier - 1] / 100)
+
+                self.current_tier += 1
+
+                if self.remaining_quantity <= 0:
+                    self.is_open = False
+                    self.exit_price = current_price
+                    self.exit_date = current_date
+                    self.exit_reason = "TIER_COMPLETE"
+                    self.pnl = self.realized_pnl
+                    self.pnl_pct = self.realized_pnl / (self.entry_price * self.original_quantity)
+
+                return {
+                    "tier": tier_idx + 1,
+                    "quantity": qty,
+                    "exit_price": current_price,
+                    "pnl": tier_pnl,
+                    "realized_pnl": self.realized_pnl,
+                    "remaining": self.remaining_quantity,
+                    "is_closed": not self.is_open,
+                }
+
+        return None
 
     def close(self, price: float, date: datetime, reason: str = "MANUAL"):
         self.exit_price = price

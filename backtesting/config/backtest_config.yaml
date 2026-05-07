@@ -68,6 +68,19 @@ backtest:
   confidence_medium: 0.50
   portfolio_mode: false
   allocation_strategy: confidence_proportional
+  tiered_exit_enabled: false
+  tier_1_pct: 5.0
+  tier_1_qty_pct: 25.0
+  tier_2_pct: 10.0
+  tier_2_qty_pct: 25.0
+  tier_3_pct: 15.0
+  tier_3_qty_pct: 25.0
+  tier_4_pct: 20.0
+  tier_4_qty_pct: 25.0
+  trailing_sl_tier_1: 0.0
+  trailing_sl_tier_2: 0.03
+  trailing_sl_tier_3: 0.07
+  ml_exit_min_tier: 2
 
 model_selection:
   primary_metric: sharpe_ratio
