@@ -102,8 +102,18 @@ class KiteBroker:
                     if self._validate_connection():
                         self._connected = True
                         return True
+                else:
+                    logger.warning("Zerodha: Request token is invalid/expired")
+                    self._clear_tokens()
 
-            logger.warning("Zerodha: No access token or request token available")
+            logger.error(
+                "Zerodha: Could not connect. Get a fresh request token:\n"
+                f"  1. Open: https://kite.zerodha.com/connect/login?v=3&api_key={self.api_key}\n"
+                "  2. Login with your Zerodha credentials\n"
+                "  3. Copy the request_token from the redirect URL\n"
+                "  4. Set it as ZERODHA__REQUEST_TOKEN in backend/.env\n"
+                "  5. Restart the application"
+            )
             return False
 
         except TokenException as e:
@@ -163,6 +173,28 @@ class KiteBroker:
         except Exception as e:
             logger.error(f"Session generation failed: {e}")
             return False
+
+    def _clear_tokens(self) -> None:
+        """Clear stale access_token and request_token from .env."""
+        try:
+            env_path = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
+            with open(env_path, "r") as f:
+                lines = f.readlines()
+
+            new_lines = []
+            for line in lines:
+                if line.startswith("ZERODHA__ACCESS_TOKEN="):
+                    new_lines.append("ZERODHA__ACCESS_TOKEN=\n")
+                elif line.startswith("ZERODHA__REQUEST_TOKEN="):
+                    new_lines.append("ZERODHA__REQUEST_TOKEN=\n")
+                else:
+                    new_lines.append(line)
+
+            with open(env_path, "w") as f:
+                f.writelines(new_lines)
+            logger.info("Stale tokens cleared from .env")
+        except Exception as e:
+            logger.warning(f"Could not clear tokens: {e}")
 
     def _save_access_token(self) -> None:
         if not self.access_token:

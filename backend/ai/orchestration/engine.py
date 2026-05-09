@@ -1,0 +1,210 @@
+import asyncio
+import time
+from loguru import logger
+from typing import Optional, TYPE_CHECKING
+from dataclasses import dataclass, field
+from ai.prompts.registry import registry as prompt_registry
+
+if TYPE_CHECKING:
+    from ai.inference.service import InferenceService
+
+
+@dataclass
+class WorkflowStep:
+    name: str
+    prompt_name: str
+    config_key: str = "default"
+    template_kwargs: dict = field(default_factory=dict)
+    output_key: str = ""
+    depends_on: list[str] = field(default_factory=list)
+    fallback: Optional[str] = None
+
+
+@dataclass
+class WorkflowResult:
+    step_results: dict[str, str] = field(default_factory=dict)
+    errors: dict[str, str] = field(default_factory=dict)
+    total_latency: float = 0.0
+    success: bool = True
+
+
+class OrchestrationEngine:
+    def __init__(self, inference: Optional["InferenceService"] = None):
+        from ai.inference.service import InferenceService
+        self.inference = inference or InferenceService()
+        self._workflows: dict[str, list[WorkflowStep]] = {}
+
+    def register_workflow(self, name: str, steps: list[WorkflowStep]):
+        self._workflows[name] = steps
+        logger.info(f"Registered workflow '{name}' with {len(steps)} steps")
+
+    async def run_workflow(
+        self,
+        name: str,
+        initial_kwargs: Optional[dict] = None,
+    ) -> WorkflowResult:
+        steps = self._workflows.get(name)
+        if steps is None:
+            raise KeyError(f"Workflow not found: {name}")
+
+        result = WorkflowResult()
+        context = dict(initial_kwargs or {})
+        start = time.monotonic()
+
+        for step in steps:
+            missing_deps = [d for d in step.depends_on if d not in result.step_results]
+            if missing_deps:
+                err = f"Missing dependencies: {missing_deps}"
+                result.errors[step.name] = err
+                logger.error(f"Workflow '{name}' step '{step.name}': {err}")
+                continue
+
+            render_kwargs = {**context, **step.template_kwargs}
+            try:
+                output = await self.inference.render_and_generate(
+                    prompt_name=step.prompt_name,
+                    config_key=step.config_key,
+                    **render_kwargs,
+                )
+                key = step.output_key or step.name
+                result.step_results[key] = output
+                context[key] = output
+                logger.debug(f"Workflow '{name}' step '{step.name}' completed")
+            except Exception as e:
+                err = str(e)
+                result.errors[step.name] = err
+                logger.error(f"Workflow '{name}' step '{step.name}' failed: {e}")
+                if step.fallback:
+                    result.step_results[step.output_key or step.name] = step.fallback
+                    context[step.output_key or step.name] = step.fallback
+                    result.errors[step.name] += " (fallback used)"
+
+        result.total_latency = time.monotonic() - start
+        result.success = len(result.errors) == 0
+        return result
+
+    async def analyze_market_regime(
+        self,
+        trend_status: str,
+        volatility: str,
+        volume_trend: str,
+        breadth: str,
+        vix_level: str,
+        sector_rotation: str,
+    ) -> str:
+        return await self.inference.render_and_generate(
+            "market_regime",
+            config_key="analysis",
+            trend_status=trend_status,
+            volatility=volatility,
+            volume_trend=volume_trend,
+            breadth=breadth,
+            vix_level=vix_level,
+            sector_rotation=sector_rotation,
+        )
+
+    async def explain_trade(
+        self,
+        symbol: str,
+        entry_price: float,
+        exit_price: float,
+        direction: str,
+        confidence: float,
+        regime: str,
+        top_features: str,
+        feature_values: str,
+        outcome: str,
+        pnl: float,
+    ) -> str:
+        return await self.inference.render_and_generate(
+            "trade_explanation",
+            config_key="analysis",
+            symbol=symbol,
+            entry_price=entry_price,
+            exit_price=exit_price,
+            direction=direction,
+            confidence=confidence,
+            regime=regime,
+            top_features=top_features,
+            feature_values=feature_values,
+            outcome=outcome,
+            pnl=pnl,
+        )
+
+    async def analyze_portfolio(self, portfolio_data: str, **kwargs) -> str:
+        return await self.inference.render_and_generate(
+            "portfolio_risk",
+            config_key="analysis",
+            portfolio_data=portfolio_data,
+            **kwargs,
+        )
+
+    async def generate_reflection(
+        self,
+        period: str,
+        total_trades: int,
+        win_rate: float,
+        profit_factor: float,
+        avg_win: float,
+        avg_loss: float,
+        max_drawdown: float,
+        regime_breakdown: str,
+        feature_stability: str,
+        failure_patterns: str,
+    ) -> str:
+        return await self.inference.render_and_generate(
+            "reflection",
+            config_key="reflection",
+            period=period,
+            total_trades=total_trades,
+            win_rate=win_rate,
+            profit_factor=profit_factor,
+            avg_win=avg_win,
+            avg_loss=avg_loss,
+            max_drawdown=max_drawdown,
+            regime_breakdown=regime_breakdown,
+            feature_stability=feature_stability,
+            failure_patterns=failure_patterns,
+        )
+
+    async def research_query(self, question: str, context_data: str) -> str:
+        return await self.inference.render_and_generate(
+            "research_query",
+            config_key="analysis",
+            question=question,
+            context_data=context_data,
+        )
+
+    async def process_query(self, question: str) -> str:
+        search_prompt = prompt_registry.render(
+            "semantic_search",
+            question=question,
+        )
+        search_result = await self.inference.generate(
+            search_prompt,
+            config_key="precise",
+        )
+
+        import json as _json
+        try:
+            parsed = _json.loads(search_result)
+            query_text = parsed.get("search_query", question)
+            memory_types = parsed.get("memory_types", ["trade_memory"])
+        except Exception:
+            query_text = question
+            memory_types = ["trade_memory"]
+
+        similar = await self.inference.semantic_search(
+            collection="trade_memory",
+            query=query_text,
+            n_results=5,
+        )
+
+        context = _json.dumps(similar, indent=2) if similar else "No relevant memories found."
+
+        return await self.inference.render_and_generate(
+            "research_query",
+            config_key="analysis",
+            question=question,
+            context_data=context,
+        )

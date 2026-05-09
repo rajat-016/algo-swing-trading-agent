@@ -1,0 +1,43 @@
+scenarios:
+  - name: "2020_covid_crash"
+    description: "COVID-19 market crash March 2020"
+    start_date: "2020-02-15"
+    end_date: "2020-03-23"
+    type: "historical"
+
+  - name: "2008_financial_crisis"
+    description: "Global financial crisis"
+    start_date: "2008-09-01"
+    end_date: "2009-03-09"
+    type: "historical"
+
+  - name: "market_drop_5pct"
+    description: "5% market drop scenario"
+    type: "synthetic"
+    shock_pct: -0.05
+    volatility_multiplier: 1.5
+
+  - name: "market_drop_10pct"
+    description: "10% market drop scenario"
+    type: "synthetic"
+    shock_pct: -0.10
+    volatility_multiplier: 2.0
+
+  - name: "market_drop_20pct"
+    description: "20% market crash scenario"
+    type: "synthetic"
+    shock_pct: -0.20
+    volatility_multiplier: 3.0
+
+  - name: "high_volatility"
+    description: "3x volatility increase"
+    type: "synthetic"
+    volatility_multiplier: 3.0
+    shock_mean: 0.0
+    shock_std: 0.10
+
+  - name: "flash_crash"
+    description: "Rapid 15% drop with recovery"
+    type: "synthetic"
+    shock_pct: -0.15
+    volatility_multiplier: 5.0
