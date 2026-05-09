@@ -38,6 +38,11 @@ loguru>=0.7.0
 python-dateutil>=2.8.0
 pytz>=2023.3
 
+# AI / LLM Infrastructure
+httpx>=0.25.0
+chromadb>=0.4.22
+duckdb>=0.9.0
+
 # Testing
 pytest>=7.4.0
 pytest-asyncio>=0.21.0

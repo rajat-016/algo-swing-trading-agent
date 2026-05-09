@@ -50,8 +50,10 @@ async def lifespan(app: FastAPI):
     broker = get_broker()
 
     if settings.is_live_trading:
-        broker.connect()
-        logger.info("Connected to Zerodha")
+        if broker.connect():
+            logger.info("Connected to Zerodha")
+        else:
+            logger.warning("Failed to connect to Zerodha - trading will not work")
     else:
         logger.info("Running in paper trading mode")
 

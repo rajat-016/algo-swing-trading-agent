@@ -1,8 +1,9 @@
 from pydantic_settings import BaseSettings
-from pydantic import Field, ConfigDict
+from pydantic import Field, ConfigDict, field_validator
 from typing import Optional
 import enum
 import os
+from pathlib import Path
 
 
 class TradingMode(str, enum.Enum):
@@ -70,6 +71,18 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str = Field(default="sqlite:///trading.db")
+    _backend_dir: Optional[Path] = None
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def resolve_db_path(cls, v):
+        if v and v.startswith("sqlite:///"):
+            path_part = v[len("sqlite:///"):]
+            if not os.path.isabs(path_part):
+                backend_dir = Path(__file__).resolve().parent.parent
+                abs_path = backend_dir / path_part
+                return f"sqlite:///{abs_path.as_posix()}"
+        return v
 
     # API
     api_host: str = Field(default="0.0.0.0")
@@ -109,6 +122,14 @@ class Settings(BaseSettings):
 
     # Zerodha
     zerodha: ZerodhaConfig = Field(default_factory=ZerodhaConfig)
+
+    # AI Copilot
+    ai_copilot_enabled: bool = Field(default=False)
+    ollama_host: str = Field(default="http://localhost:11434")
+    llm_model: str = Field(default="qwen2.5:7b")
+    embedding_model: str = Field(default="nomic-embed-text")
+    chromadb_persist_path: str = Field(default="data/chromadb")
+    duckdb_path: str = Field(default="data/analytics.duckdb")
 
     model_config = ConfigDict(
         extra="ignore",

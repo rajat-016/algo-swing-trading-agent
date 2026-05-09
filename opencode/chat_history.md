@@ -986,3 +986,102 @@ Performed comprehensive codebase exploration across all layers:
 - `.opencode/plans/IMPACT_ANALYSIS.md` — Full system-wide impact analysis
 
 ---
+
+## 2026-05-09
+
+### Session: AI-Native Infrastructure Implementation (Phase 1 Foundation)
+
+**User Request:** Create foundational AI infrastructure: Ollama integration, Qwen2.5 config, embedding service, ChromaDB, DuckDB, AI config management, inference orchestration, bootstrap scripts.
+
+**Architecture:**
+
+```
+backend/ai/
+├── config/settings.py        AISettings via pydantic-settings (.env-based)
+├── llm/
+│   ├── client.py             OllamaClient (async httpx, generate/chat/embed/stream)
+│   └── models.py             LLMModel enum, ModelConfig, CHAT_CONFIGS presets
+├── prompts/
+│   ├── base.py               PromptTemplate (string.Template-based)
+│   └── registry.py           PromptRegistry + 6 pre-registered prompts
+├── inference/
+│   ├── embedding_service.py  EmbeddingService (single/batch generation, cache layer)
+│   ├── chromadb_client.py    ChromaDBClient (persistent, collection CRUD)
+│   ├── duckdb_setup.py       DuckDBAnalytics (4 schemas: trade/market/prediction/reflection)
+│   └── service.py            InferenceService (unified facade + circuit breaker)
+└── orchestration/
+    ├── circuit_breaker.py    AICircuitBreaker (closed/open/half-open, auto-reset)
+    └── engine.py             OrchestrationEngine (workflows, market/trade/portfolio/reflection)
+```
+
+**Files Created (18):**
+
+| File | Purpose |
+|------|---------|
+| `backend/ai/__init__.py` | Package init (empty, lazy imports) |
+| `backend/ai/config/__init__.py` | Config package init |
+| `backend/ai/config/settings.py` | AISettings — all AI config with path resolution |
+| `backend/ai/llm/__init__.py` | LLM package init |
+| `backend/ai/llm/client.py` | OllamaClient — async httpx, generate/chat/embed/stream/health |
+| `backend/ai/llm/models.py` | LLMModel enum, ModelConfig dataclass, 5 CHAT_CONFIGS presets |
+| `backend/ai/prompts/__init__.py` | Prompts package init |
+| `backend/ai/prompts/base.py` | PromptTemplate — string.Template with metadata |
+| `backend/ai/prompts/registry.py` | PromptRegistry — 6 prompts (market_regime, trade_explanation, portfolio_risk, semantic_search, reflection, research_query) |
+| `backend/ai/inference/__init__.py` | Inference package init (empty) |
+| `backend/ai/inference/embedding_service.py` | EmbeddingService — single/batch embed with cache |
+| `backend/ai/inference/chromadb_client.py` | ChromaDBClient — persistent client, collection management, CRUD |
+| `backend/ai/inference/duckdb_setup.py` | DuckDBAnalytics — 4 analytical schemas, parameterized queries |
+| `backend/ai/inference/service.py` | InferenceService — unified facade over LLM + embedding + vector + analytics |
+| `backend/ai/orchestration/__init__.py` | Orchestration package init (empty) |
+| `backend/ai/orchestration/circuit_breaker.py` | AICircuitBreaker — threshold-based, auto-reset |
+| `backend/ai/orchestration/engine.py` | OrchestrationEngine — workflows + convenience methods for all 6 prompt types |
+| `backend/scripts/bootstrap_ai.py` | 5-check bootstrap + optional `--pull-models` |
+
+**Files Modified (3):**
+
+| File | Change |
+|------|--------|
+| `backend/core/config.py` | Added 6 AI fields (ai_copilot_enabled, ollama_host, llm_model, embedding_model, chromadb_persist_path, duckdb_path) |
+| `backend/requirements.txt` | Added httpx, chromadb, duckdb |
+| `backend/.env.example` | Added 6 AI env vars |
+| `backend/.env` | Added 6 AI env vars |
+
+**Integration Test (12/12 PASSED):**
+
+| # | Test | Result |
+|---|------|--------|
+| 1 | Core config integration (AI fields in Settings) | PASS |
+| 2 | AI config singleton pattern | PASS |
+| 3 | Path resolution (chromadb_persist_directory, duckdb_absolute_path) | PASS |
+| 4 | LLM client + model config (OllamaClient, CHAT_CONFIGS) | PASS |
+| 5 | Prompt registry (6 prompts registered) | PASS |
+| 6 | Prompt rendering (3 prompt templates rendered) | PASS |
+| 7 | Circuit breaker (closed -> open -> reset) | PASS |
+| 8 | ChromaDB (init, create collection, insert, count, delete) | PASS |
+| 9 | DuckDB (init, 4 schemas created, insert trade, query) | PASS |
+| 10 | Embedding service (model, batch size, cache) | PASS |
+| 11 | Inference service (circuit breaker, dry) | PASS |
+| 12 | Orchestration engine (creation) | PASS |
+
+**Bootstrap Results:**
+- Ollama: PASS (running at localhost:11434)
+- ChromaDB: PASS (persistent at data/chromadb/)
+- DuckDB: PASS (analytics at data/analytics.duckdb)
+- AI Module Imports: PASS (17/17 modules)
+- AI Settings: PASS (loaded from .env)
+
+**To activate:** Set `AI_COPILOT_ENABLED=true` in `.env` and run `python scripts/bootstrap_ai.py --pull-models`
+
+---
+
+## 2026-05-09
+
+### Session: Bootstrap Fix — Missing Dependencies in Venv
+
+**Issue:** `python scripts/bootstrap_ai.py --pull-models` failed with `No module named 'httpx'` and chromadb not found, even though earlier integration tests passed.
+
+**Root Cause:** The integration tests were run from the root `.venv` (at project root), but the user activated a different virtual environment `(venv)` at `backend/venv/` (or the active shell venv) that didn't have the new dependencies installed. The pip installs during the session went to the root `.venv`, not the user's active venv.
+
+**Fix:** Run `pip install httpx chromadb` from the active venv, then re-run `python scripts/bootstrap_ai.py --pull-models`.
+
+---
