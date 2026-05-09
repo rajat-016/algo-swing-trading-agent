@@ -722,6 +722,42 @@ labeling:
 
 ---
 
+## 2026-05-09
+
+### Session: Reusable Ollama Client Wrapper — Retry, Structured Parsing, Metrics
+
+**User Request:** Build reusable Ollama client wrapper with streaming support, retry handling, timeout management, structured response parsing, model switching support, and inference metrics logging.
+
+**Implementation Summary:**
+
+| Requirement | Implementation |
+|---|---|
+| Streaming support | `generate_stream()` preserved with metrics logging + error tracking |
+| Retry handling | `_retry_async()` — exponential backoff with jitter, retryable statuses (429, 5xx), configurable max retries |
+| Timeout management | Granular `httpx.Timeout` with separate connect/read/write/pool timeouts via `_build_timeout()` |
+| Structured response parsing | `ResponseParser` class — extracts JSON from code blocks / inline text, `parse_as(pydantic)`, `try_extract_json`, `safe_parse`. Integrated as `generate_structured()`, `generate_parse()`, `chat_structured()`, `chat_parse()` |
+| Model switching support | `_resolve_model()` — per-request `model=` kwarg override, works with or without `ModelConfig` |
+| Inference metrics logging | `InferenceRecord` per call (latency, tokens, model, success/error), `InferenceMetricsSummary` aggregate, auto-logged every N calls, `get_metrics_summary()`, `clear_metrics()` |
+
+**Files Modified (4):**
+| File | Change |
+|------|--------|
+| `backend/ai/config/settings.py` | Added 9 new config fields (granular timeouts, retry, metrics) |
+| `backend/ai/llm/models.py` | Added `ResponseParser`, `InferenceRecord`, `InferenceMetricsSummary` classes |
+| `backend/ai/llm/client.py` | Rewrote `OllamaClient` — added retry, structured methods, metrics, granular timeouts, per-request model switching |
+| `backend/ai/llm/__init__.py` | Updated exports with new classes |
+
+**Verification:**
+- 73/73 pytest tests passed covering: ResponseParser (20 tests), InferenceMetrics (8 tests), Client config (5 tests), Model resolution (5 tests), Record metrics (5 tests), Retry (8 tests), Method signatures (13 tests), Full pipeline (3 tests), Edge cases (5 tests), Config binding (1 test)
+- No deprecation warnings
+- Backward compatible — `InferenceService` unchanged
+
+**Files Tested:**
+- Created `test_ollama_wrapper.py` and `test_ollama_full.py` (deleted after verification)
+- `73 passed` with no warnings
+
+---
+
 *End of chat history*
 
 ---

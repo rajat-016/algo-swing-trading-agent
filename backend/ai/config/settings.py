@@ -17,6 +17,18 @@ class AISettings(BaseSettings):
     ollama_host: str = Field(default="http://localhost:11434")
     ollama_request_timeout: int = Field(default=120)
 
+    ollama_connect_timeout: int = Field(default=30)
+    ollama_read_timeout: int = Field(default=120)
+    ollama_pool_timeout: int = Field(default=30)
+
+    ollama_retry_enabled: bool = Field(default=True)
+    ollama_max_retries: int = Field(default=3)
+    ollama_retry_base_delay: float = Field(default=1.0)
+    ollama_retry_max_delay: float = Field(default=30.0)
+
+    inference_metrics_enabled: bool = Field(default=True)
+    inference_metrics_log_interval: int = Field(default=100)
+
     llm_model: str = Field(default="qwen2.5:7b")
     llm_temperature: float = Field(default=0.7)
     llm_max_tokens: int = Field(default=2048)
