@@ -1,5 +1,10 @@
+import json
+import re
 from dataclasses import dataclass, field
-from typing import Optional
+from datetime import datetime, timezone
+from typing import Optional, TypeVar, Type, Any
+
+from pydantic import BaseModel
 
 
 class LLMModel:
@@ -46,3 +51,108 @@ CHAT_CONFIGS = {
     "analysis": ModelConfig(temperature=0.3, max_tokens=4096),
     "reflection": ModelConfig(temperature=0.5, max_tokens=2048),
 }
+
+
+T = TypeVar("T", bound=BaseModel)
+
+
+class ResponseParser:
+    """Extract structured content from LLM text responses."""
+
+    @staticmethod
+    def extract_json(text: str) -> dict:
+        text = text.strip()
+        code_block = re.search(
+            r"```(?:json)?\s*\n?(.*?)\n?```", text, re.DOTALL
+        )
+        if code_block:
+            text = code_block.group(1).strip()
+        start = text.find("{")
+        end = text.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            text = text[start : end + 1]
+        return json.loads(text)
+
+    @staticmethod
+    def extract_json_array(text: str) -> list:
+        text = text.strip()
+        code_block = re.search(
+            r"```(?:json)?\s*\n?(.*?)\n?```", text, re.DOTALL
+        )
+        if code_block:
+            text = code_block.group(1).strip()
+        start = text.find("[")
+        end = text.rfind("]")
+        if start != -1 and end != -1 and end > start:
+            text = text[start : end + 1]
+        return json.loads(text)
+
+    @staticmethod
+    def parse_as(model_class: Type[T], text: str) -> T:
+        data = ResponseParser.extract_json(text)
+        return model_class.model_validate(data)
+
+    @staticmethod
+    def try_extract_json(text: str) -> Optional[dict]:
+        try:
+            return ResponseParser.extract_json(text)
+        except (json.JSONDecodeError, ValueError):
+            return None
+
+    @staticmethod
+    def safe_parse(model_class: Type[T], text: str) -> Optional[T]:
+        try:
+            return ResponseParser.parse_as(model_class, text)
+        except Exception:
+            return None
+
+
+@dataclass
+class InferenceRecord:
+    model: str
+    latency_ms: float
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    success: bool = True
+    error: Optional[str] = None
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    call_type: str = "generate"
+
+    @property
+    def total_tokens(self) -> int:
+        return self.prompt_tokens + self.completion_tokens
+
+
+@dataclass
+class InferenceMetricsSummary:
+    total_calls: int = 0
+    successful_calls: int = 0
+    failed_calls: int = 0
+    total_latency_ms: float = 0.0
+    total_tokens: int = 0
+    model_usage: dict[str, int] = field(default_factory=dict)
+
+    @property
+    def avg_latency_ms(self) -> float:
+        if self.total_calls == 0:
+            return 0.0
+        return self.total_latency_ms / self.total_calls
+
+    @property
+    def success_rate(self) -> float:
+        if self.total_calls == 0:
+            return 1.0
+        return self.successful_calls / self.total_calls
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "total_calls": self.total_calls,
+            "successful_calls": self.successful_calls,
+            "failed_calls": self.failed_calls,
+            "avg_latency_ms": round(self.avg_latency_ms, 2),
+            "total_tokens": self.total_tokens,
+            "success_rate": round(self.success_rate, 4),
+            "model_usage": dict(
+                sorted(self.model_usage.items(), key=lambda x: -x[1])
+            ),
+        }
