@@ -945,3 +945,44 @@ predictions = relationship("PredictionLog", back_populates="stock", foreign_keys
 Set in `.env` or config: `tiered_exit_enabled = true`, `exit_only_profit = true`
 
 ---
+
+## 2026-05-09
+
+### Session: System-Wide Impact Analysis for AI-Native Trading Copilot Phase 1
+
+**User Request:** Conduct a detailed system-wide impact analysis on the existing trading platform to evaluate architectural, infrastructural, data, API, ML pipeline, and operational changes required for implementing the AI-Native Trading Copilot Phase 1 initiative.
+
+**Analysis Completed:**
+
+Performed comprehensive codebase exploration across all layers:
+- Backend architecture (all modules in `backend/core/`, `backend/services/`, `backend/api/`, `backend/models/`)
+- Backtesting system (all modules in `backtesting/`)
+- Frontend architecture (React SPA, components, API client, styling)
+- Infrastructure (Docker, deployment, configuration)
+- Graphify knowledge graph (`graphify-out/GRAPH_REPORT.md`) for dependency analysis
+
+**Key Deliverable:**
+- Created `.opencode/plans/IMPACT_ANALYSIS.md` — a comprehensive 10-section analysis document
+
+**Major Findings:**
+
+1. **Overall readiness score: 5.8/10** — ML infrastructure is strong (8/10) but AI-specific layers are at 1/10
+2. **Three critical gaps:** ChromaDB (no vector storage), Ollama (no LLM runtime), all 8 intelligence modules are new code
+3. **No breaking changes** — copilot layer is purely additive; existing trading loop, broker, features, backtesting untouched
+4. **~25-30 new files**, ~10 modified files, <200 lines refactoring needed
+5. **Dual-database evolves to triple:** SQLite (ops) + DuckDB (analytics) + ChromaDB (vectors)
+6. **Pre-existing bug found:** `Monitoring.jsx` imports (`monitoringApi`, `stressTestApi`) are broken — not exported from `frontend/src/api/index.js`. Must fix before any frontend AI work
+7. **Hardware viable locally:** Qwen2.5 7B (~4GB RAM) for ~2-11 AI queries/day projected
+
+**Architecture Recommendations:**
+- Layered intelligence architecture: `intelligence/` → `memory/` → `ai/` → `api/routes/`
+- Async-first AI layer with circuit breaker pattern
+- DuckDB for live analytical queries (feature snapshots, SHAP values)
+- Graceful degradation when Ollama/ChromaDB offline
+- Feature flag gating (`ai_copilot_enabled: bool = False`)
+- Sprint plan: 5 sprints following PRD sequence
+
+**Files Created:**
+- `.opencode/plans/IMPACT_ANALYSIS.md` — Full system-wide impact analysis
+
+---
