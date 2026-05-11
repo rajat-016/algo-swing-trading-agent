@@ -41,6 +41,8 @@ class ScraplingChartinkClient:
         for attempt in range(1, max_retries + 1):
             try:
                 # Use Scrapling's StealthyFetcher with optimizations
+                # NOTE: `wait=3000` tells the browser to wait 3s AFTER page stability
+                # BEFORE capturing the HTML. This lets Chartink's DataTable AJAX render.
                 page = await StealthyFetcher.async_fetch(
                     self.screener_url,
                     headless=True,
@@ -48,10 +50,8 @@ class ScraplingChartinkClient:
                     block_ads=True,           # Block ~3,500 ad/tracker domains
                     network_idle=True,         # Wait for network to be idle
                     timeout=60000,            # 60s timeout
+                    wait=3000,               # Wait 3s before capturing page content
                 )
-
-                # Wait for table to render (Chartink uses JS to load DataTables)
-                await asyncio.sleep(3)
 
                 symbols = self._extract_symbols(page.body.decode('utf-8', errors='ignore'))
                 

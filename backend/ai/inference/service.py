@@ -1,15 +1,17 @@
 import asyncio
 import time
+from typing import Callable, Optional
+
 from loguru import logger
-from typing import Optional
+
 from ai.config.settings import ai_settings
-from ai.llm.client import OllamaClient
-from ai.llm.models import ModelConfig, CHAT_CONFIGS
-from ai.inference.embedding_service import EmbeddingService
 from ai.inference.chromadb_client import ChromaDBClient
 from ai.inference.duckdb_setup import DuckDBAnalytics
-from ai.prompts.registry import registry as prompt_registry
+from ai.inference.embedding_service import EmbeddingService
+from ai.llm.client import OllamaClient
+from ai.llm.models import CHAT_CONFIGS, ModelConfig
 from ai.orchestration.circuit_breaker import AICircuitBreaker
+from ai.prompts.registry import registry as prompt_registry
 
 
 class InferenceService:
@@ -92,11 +94,45 @@ class InferenceService:
             logger.error(f"AI chat failed after {latency:.2f}s: {e}")
             raise
 
-    async def embed(self, text: str) -> list[float]:
-        return await self.embedding.embed(text)
+    async def embed(
+        self,
+        text: str,
+        use_cache: bool = True,
+        model: Optional[str] = None,
+    ) -> list[float]:
+        return await self.embedding.embed(text, use_cache=use_cache, model=model)
 
-    async def embed_batch(self, texts: list[str]) -> list[list[float]]:
-        return await self.embedding.embed_batch(texts)
+    async def embed_batch(
+        self,
+        texts: list[str],
+        use_cache: bool = True,
+        model: Optional[str] = None,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
+    ) -> list[list[float]]:
+        return await self.embedding.embed_batch(
+            texts,
+            use_cache=use_cache,
+            model=model,
+            progress_callback=progress_callback,
+        )
+
+    async def embed_documents(
+        self,
+        documents: list[dict],
+        text_key: str = "text",
+        use_cache: bool = True,
+        model: Optional[str] = None,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
+        auto_metadata: bool = True,
+    ) -> list[dict]:
+        return await self.embedding.embed_documents(
+            documents,
+            text_key=text_key,
+            use_cache=use_cache,
+            model=model,
+            progress_callback=progress_callback,
+            auto_metadata=auto_metadata,
+        )
 
     async def semantic_search(
         self,
@@ -104,6 +140,7 @@ class InferenceService:
         query: str,
         n_results: int = 10,
         where: Optional[dict] = None,
+        where_document: Optional[dict] = None,
     ) -> dict:
         query_embedding = await self.embed(query)
         return self.chroma.query(
@@ -111,6 +148,7 @@ class InferenceService:
             query_embedding=query_embedding,
             n_results=n_results,
             where=where,
+            where_document=where_document,
         )
 
     async def store_memory(
@@ -129,6 +167,40 @@ class InferenceService:
             ids=ids,
         )
 
+    async def store_with_metadata(
+        self,
+        collection: str,
+        documents: list[dict],
+        text_key: str = "text",
+        use_cache: bool = True,
+        upsert: bool = False,
+    ) -> int:
+        enriched = await self.embed_documents(
+            documents, text_key=text_key, use_cache=use_cache, auto_metadata=True,
+        )
+        texts = [d[text_key] for d in enriched]
+        embeddings = [d["embedding"] for d in enriched]
+        metadatas = [d.get("metadata", {}) for d in enriched]
+        ids = [d.get("id") for d in enriched]
+
+        if upsert:
+            self.chroma.upsert_documents(
+                collection_name=collection,
+                documents=texts,
+                embeddings=embeddings,
+                metadatas=metadatas,
+                ids=ids,
+            )
+        else:
+            self.chroma.add_documents(
+                collection_name=collection,
+                documents=texts,
+                embeddings=embeddings,
+                metadatas=metadatas,
+                ids=ids,
+            )
+        return len(texts)
+
     async def render_and_generate(
         self,
         prompt_name: str,
@@ -138,6 +210,12 @@ class InferenceService:
         prompt = prompt_registry.render(prompt_name, **kwargs)
         return await self.generate(prompt, config_key=config_key)
 
+    def cache_stats(self) -> dict:
+        return self.embedding.cache_stats()
+
+    def clear_embedding_cache(self):
+        self.embedding.clear_cache()
+
     async def check_health(self) -> dict:
         ollama_ok = await self.ollama.check_health()
         return {
@@ -146,6 +224,7 @@ class InferenceService:
             "duckdb": self.duck.is_ready,
             "circuit_breaker": self.circuit_breaker.state,
             "initialized": self._initialized,
+            "embedding_cache": self.cache_stats(),
         }
 
     async def close(self):

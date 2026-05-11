@@ -37,6 +37,13 @@ class AISettings(BaseSettings):
     embedding_model: str = Field(default="nomic-embed-text")
     embedding_dimension: int = Field(default=768)
     embedding_batch_size: int = Field(default=16)
+    embedding_max_concurrency: int = Field(default=4)
+    embedding_cache_max_size: int = Field(default=10000)
+    embedding_cache_ttl_seconds: int = Field(default=86400)
+    embedding_cache_persist_path: str = Field(default="data/embedding_cache")
+    embedding_retry_max_retries: int = Field(default=3)
+    embedding_retry_base_delay: float = Field(default=1.0)
+    embedding_retry_max_delay: float = Field(default=30.0)
 
     chromadb_persist_path: str = Field(default="data/chromadb")
     chromadb_collection_prefix: str = Field(default="swing_")
