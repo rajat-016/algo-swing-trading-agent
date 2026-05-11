@@ -1,8 +1,20 @@
+import hashlib
+import json
+from datetime import datetime
+from typing import Dict, List, Optional
+
 import numpy as np
 import pandas as pd
-from typing import List, Optional
 from services.ai.features import FeatureEngineer
 from core.logging import logger
+
+
+FEATURE_VERSION = "1.0.0"
+
+
+def _compute_feature_hash(feature_names: List[str]) -> str:
+    content = ",".join(sorted(feature_names))
+    return hashlib.sha256(content.encode()).hexdigest()[:16]
 
 
 SELECTED_FEATURES = [
@@ -69,10 +81,52 @@ SELECTED_FEATURES = [
 ]
 
 
+FEATURE_HASH = _compute_feature_hash(SELECTED_FEATURES)
+
+
 class FeaturePipeline:
     def __init__(self, features: Optional[List[str]] = None):
         self.engineer = FeatureEngineer()
         self.selected_features = features or SELECTED_FEATURES
+
+    @property
+    def version_metadata(self) -> Dict[str, object]:
+        return {
+            "feature_version": FEATURE_VERSION,
+            "feature_hash": FEATURE_HASH,
+            "num_features": len(self.selected_features),
+            "feature_names": self.selected_features.copy(),
+        }
+
+    def export_snapshot(
+        self,
+        features: pd.DataFrame,
+        symbol: str,
+        timestamp,
+        extra_metadata: Optional[Dict[str, object]] = None,
+    ) -> Dict[str, object]:
+        ts = timestamp
+        if not isinstance(ts, str):
+            ts = timestamp.isoformat() if hasattr(timestamp, "isoformat") else str(timestamp)
+
+        snapshot = {
+            "symbol": symbol,
+            "timestamp": ts,
+            "feature_version": FEATURE_VERSION,
+            "feature_hash": FEATURE_HASH,
+            "num_features": len(self.selected_features),
+            "feature_names": self.selected_features.copy(),
+            "feature_values": None,
+            "metadata": extra_metadata or {},
+        }
+
+        if isinstance(features, pd.DataFrame):
+            snapshot["feature_values"] = features.to_dict(orient="index") if not features.empty else {}
+            snapshot["num_rows"] = len(features)
+        elif isinstance(features, dict):
+            snapshot["feature_values"] = features
+
+        return snapshot
 
     def transform(self, ohlcv_df: pd.DataFrame, market_df: Optional[pd.DataFrame] = None) -> pd.DataFrame:
         if market_df is not None and not market_df.empty:

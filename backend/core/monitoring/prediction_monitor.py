@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any
 from sqlalchemy.orm import Session
 from core.logging import logger
 from models.prediction_log import PredictionLog
@@ -23,6 +23,7 @@ class PredictionMonitor:
         decision: str,
         model_version: str = "latest",
         stock_id: Optional[int] = None,
+        feature_snapshot: Optional[Dict[str, Any]] = None,
     ) -> Optional[int]:
         if self.db is None:
             logger.warning("No DB session - skipping prediction log")
@@ -40,10 +41,15 @@ class PredictionMonitor:
                 decision=decision,
                 model_version=model_version,
                 stock_id=stock_id,
+                feature_version=feature_snapshot.get("feature_version") if feature_snapshot else None,
+                feature_hash=feature_snapshot.get("feature_hash") if feature_snapshot else None,
             )
             self.db.add(log)
             self.db.commit()
             logger.debug(f"Logged prediction for {symbol}: {decision} (conf={confidence:.2%})")
+            if feature_snapshot:
+                logger.debug(f"  feature_version={feature_snapshot.get('feature_version')}, "
+                             f"feature_hash={feature_snapshot.get('feature_hash')}")
             return log.id
         except Exception as e:
             logger.error(f"Failed to log prediction: {e}")

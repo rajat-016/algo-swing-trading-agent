@@ -17,6 +17,8 @@ class PredictionLog(Base):
     confidence = Column(Float)
     decision = Column(String(20))  # BUY, NO_TRADE, SELL
     model_version = Column(String(50))
+    feature_version = Column(String(20), nullable=True)
+    feature_hash = Column(String(20), nullable=True)
 
     # Link to stock if prediction led to a trade
     stock_id = Column(Integer, ForeignKey("stocks.id"), nullable=True)
