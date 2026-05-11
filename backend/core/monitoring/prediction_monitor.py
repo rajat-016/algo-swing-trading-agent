@@ -24,6 +24,7 @@ class PredictionMonitor:
         model_version: str = "latest",
         stock_id: Optional[int] = None,
         feature_snapshot: Optional[Dict[str, Any]] = None,
+        shap_explanation: Optional[Dict[str, Any]] = None,
     ) -> Optional[int]:
         if self.db is None:
             logger.warning("No DB session - skipping prediction log")
@@ -44,6 +45,27 @@ class PredictionMonitor:
                 feature_version=feature_snapshot.get("feature_version") if feature_snapshot else None,
                 feature_hash=feature_snapshot.get("feature_hash") if feature_snapshot else None,
             )
+
+            if shap_explanation:
+                import json
+                import numpy as np
+                class _NumpyEncoder(json.JSONEncoder):
+                    def default(self, obj):
+                        if isinstance(obj, (np.integer,)):
+                            return int(obj)
+                        if isinstance(obj, (np.floating,)):
+                            return float(obj)
+                        if isinstance(obj, np.ndarray):
+                            return obj.tolist()
+                        return super().default(obj)
+                log.shap_values = json.dumps(shap_explanation, cls=_NumpyEncoder)
+                log.top_features = json.dumps(
+                    shap_explanation.get("top_features", {}), cls=_NumpyEncoder
+                )
+                sv_latency = shap_explanation.get("shap_values", {}).get("metadata", {}).get("latency_seconds")
+                if sv_latency is not None:
+                    log.explanation_latency = sv_latency
+
             self.db.add(log)
             self.db.commit()
             logger.debug(f"Logged prediction for {symbol}: {decision} (conf={confidence:.2%})")

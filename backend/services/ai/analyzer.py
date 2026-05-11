@@ -93,12 +93,27 @@ class StockAnalyzer:
             self.model._is_trained = True
             self._model_loaded = True
 
+            background = data.get("background_samples")
+            self._init_shap_service(background)
+
             metrics = data.get("metrics", {})
             logger.info(f"ML model loaded: {model_path} ({len(self.model.feature_names)} features)")
             return True
         except Exception as e:
             logger.warning(f"ML model load failed: {e}")
             return False
+
+    def _init_shap_service(self, background_samples=None):
+        try:
+            from intelligence.explainability.shap_service import SHAPService
+            self._shap_service = SHAPService(
+                model=self.model,
+                feature_names=self.model.feature_names,
+                background_samples=background_samples,
+            )
+        except ImportError:
+            self._shap_service = None
+            logger.debug("SHAPService not available")
 
     async def analyze(self, symbol: str, available_cash: float) -> StockAnalysis:
         trading_symbol = self.broker._map_chartink_to_zerodha(symbol)
@@ -150,6 +165,17 @@ class StockAnalyzer:
 
             decision = self.decision_engine.decide_entry(probs)
 
+            # Generate SHAP explanation for this prediction
+            shap_explanation = None
+            if self.settings.explainability_enabled and hasattr(self, '_shap_service') and self._shap_service is not None:
+                try:
+                    feature_hash_val = feature_snapshot.get("feature_hash", "") if feature_snapshot else ""
+                    shap_explanation = self._shap_service.generate_explanation(
+                        X, probs, feature_hash=feature_hash_val, symbol=symbol
+                    )
+                except Exception as e:
+                    logger.debug(f"SHAP generation skipped: {e}")
+
             # Log prediction
             predicted_class = int(np.argmax(probs))
             pred_id = self.prediction_monitor.log_prediction(
@@ -161,6 +187,7 @@ class StockAnalyzer:
                 confidence=decision["confidence"],
                 decision=decision["decision"],
                 feature_snapshot=feature_snapshot,
+                shap_explanation=shap_explanation,
             )
 
             if decision["decision"] != "BUY":
