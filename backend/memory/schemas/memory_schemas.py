@@ -2,10 +2,135 @@ from __future__ import annotations
 
 import enum
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, ClassVar, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+
+class RankingBoost(str, enum.Enum):
+    CONFIDENCE = "confidence"
+    RECENCY = "recency"
+    OUTCOME_PRIORITY = "outcome_priority"
+    NONE = "none"
+
+
+class RankingConfig(BaseModel):
+    enabled: bool = Field(default=True, description="Enable metadata ranking")
+    boosts: list[RankingBoost] = Field(
+        default=[RankingBoost.CONFIDENCE, RankingBoost.RECENCY],
+        description="Ordered list of boost factors to apply",
+    )
+    confidence_weight: float = Field(default=0.3, ge=0.0, le=1.0, description="Weight for confidence boost")
+    recency_weight: float = Field(default=0.2, ge=0.0, le=1.0, description="Weight for recency boost")
+    outcome_priority_weight: float = Field(default=0.15, ge=0.0, le=1.0, description="Weight for outcome priority")
+    outcome_priority_order: list[str] = Field(
+        default=["stop_loss_hit", "failed", "partial_exit", "target_hit", "success"],
+        description="Outcome priority ranking (earlier = higher boost)",
+    )
+    recency_half_life_days: float = Field(default=30.0, ge=1.0, description="Half-life for recency decay in days")
+
+
+class HybridSearchConfig(BaseModel):
+    enabled: bool = Field(default=False, description="Enable hybrid vector + keyword search")
+    vector_weight: float = Field(default=0.7, ge=0.0, le=1.0, description="Weight for vector similarity score")
+    keyword_weight: float = Field(default=0.3, ge=0.0, le=1.0, description="Weight for keyword score")
+    keyword_n_results_multiplier: int = Field(default=2, ge=1, description="Multiply n_results for keyword query")
+
+
+class QueryIntent(BaseModel):
+    raw_query: str = Field(description="Original user query")
+    memory_types: Optional[list[MemoryType]] = Field(default=None, description="Inferred memory types")
+    tickers: list[str] = Field(default_factory=list, description="Extracted ticker symbols")
+    outcomes: list[str] = Field(default_factory=list, description="Extracted outcome filters")
+    regimes: list[str] = Field(default_factory=list, description="Extracted regime filters")
+    volatility: Optional[str] = Field(default=None, description="Extracted volatility context")
+    confidence_min: Optional[float] = Field(default=None, description="Inferred minimum confidence")
+    max_results: int = Field(default=10, ge=1, le=100, description="Maximum results")
+    boost_recent: bool = Field(default=True, description="Boost recent results")
+
+    STOP_WORDS: ClassVar[frozenset[str]] = frozenset({
+        "the", "a", "an", "in", "on", "at", "to", "for", "of", "with",
+        "and", "or", "but", "not", "find", "show", "get", "what", "when",
+        "where", "why", "how", "all", "any", "during", "last", "week",
+        "month", "day", "trade", "trades", "market", "regime", "research",
+        "feature", "high", "low", "medium", "failed", "success", "successful",
+        "breakout", "volatile", "volatility", "confidence", "results",
+        "me", "me", "during", "from", "than", "this", "that", "these",
+        "those", "are", "was", "were", "been", "being", "have", "has",
+        "had", "do", "does", "did", "will", "would", "can", "could",
+        "shall", "should", "may", "might", "about", "into", "over",
+    })
+
+    @classmethod
+    def parse(cls, query: str) -> QueryIntent:
+        q = query.lower()
+        tickers = []
+        outcomes = []
+        regimes = []
+        volatility = None
+        confidence_min = None
+        memory_types = None
+
+        if "failed" in q or "stop" in q or "loss" in q:
+            outcomes.append("stop_loss_hit")
+        if "breakout" in q:
+            regimes.append("breakout")
+        if "failed breakout" in q:
+            outcomes.append("stop_loss_hit")
+            regimes.append("breakout")
+        if "high volatility" in q or "volatile" in q:
+            volatility = "high"
+        if "low volatility" in q:
+            volatility = "low"
+        if "success" in q or "profitable" in q or "win" in q:
+            outcomes.append("target_hit")
+        if "high confidence" in q:
+            confidence_min = 0.7
+        if "medium confidence" in q:
+            confidence_min = 0.5
+        if "market" in q or "regime" in q:
+            memory_types = [MemoryType.MARKET]
+        if "research" in q or "feature" in q or "experiment" in q:
+            memory_types = [MemoryType.RESEARCH]
+        if "trade" in q or memory_types is None:
+            memory_types = [MemoryType.TRADE]
+
+        tokens = q.split()
+        for t in tokens:
+            if t in cls.STOP_WORDS:
+                continue
+            cleaned = "".join(c for c in t if c.isalpha())
+            if not cleaned:
+                continue
+            t_upper = cleaned.upper()
+            if len(t_upper) >= 2 and len(t_upper) <= 10 and t_upper.isalpha():
+                tickers.append(t_upper)
+
+        return cls(
+            raw_query=query,
+            memory_types=memory_types,
+            tickers=list(set(tickers)),
+            outcomes=list(set(outcomes)),
+            regimes=list(set(regimes)),
+            volatility=volatility,
+            confidence_min=confidence_min,
+            boost_recent=True,
+        )
+
+
+class AuditLogEntry(BaseModel):
+    query: str = Field(description="Original query text")
+    query_type: str = Field(default="semantic", description="Query type (semantic/text/hybrid)")
+    filters_applied: Optional[dict[str, Any]] = Field(default=None, description="Filters used in query")
+    n_requested: int = Field(description="Number of results requested")
+    n_returned: int = Field(description="Number of results returned")
+    latency_ms: float = Field(description="Query latency in milliseconds")
+    memory_types_queried: list[str] = Field(default_factory=list, description="Memory types queried")
+    result_ids: list[str] = Field(default_factory=list, description="Returned result document IDs")
+    mean_relevance: Optional[float] = Field(default=None, description="Mean relevance score of results")
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), description="ISO 8601 timestamp")
+    error: Optional[str] = Field(default=None, description="Error message if query failed")
 
 
 class MemoryType(str, enum.Enum):
@@ -270,6 +395,13 @@ class MemoryFilter(BaseModel):
     min_confidence: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Minimum confidence filter")
     max_results: int = Field(default=10, ge=1, le=100, description="Maximum results to return")
     offset: int = Field(default=0, ge=0, description="Offset for pagination")
+    volatility: Optional[str] = Field(default=None, description="Filter by volatility level")
+    tickers: Optional[list[str]] = Field(default=None, description="Filter by multiple tickers")
+    outcomes: Optional[list[str]] = Field(default=None, description="Filter by multiple outcomes")
+    regimes: Optional[list[str]] = Field(default=None, description="Filter by multiple market regimes")
+    min_timestamp: Optional[str] = Field(default=None, description="Minimum timestamp (ISO 8601) for recency filter")
+    ranking_config: RankingConfig = Field(default_factory=RankingConfig, description="Metadata ranking configuration")
+    hybrid_config: HybridSearchConfig = Field(default_factory=HybridSearchConfig, description="Hybrid search configuration")
 
     def to_chroma_where(self) -> Optional[dict]:
         clauses = []
@@ -291,12 +423,43 @@ class MemoryFilter(BaseModel):
             clauses.append({"strategy": {"$eq": self.strategy}})
         if self.min_confidence is not None:
             clauses.append({"confidence": {"$gte": self.min_confidence}})
+        if self.volatility:
+            clauses.append({"volatility": {"$eq": self.volatility}})
+        if self.outcomes:
+            if len(self.outcomes) == 1:
+                clauses.append({"outcome": {"$eq": self.outcomes[0]}})
+            else:
+                clauses.append({"outcome": {"$in": self.outcomes}})
+        if self.tickers:
+            if len(self.tickers) == 1:
+                clauses.append({"ticker": {"$eq": self.tickers[0]}})
+            else:
+                clauses.append({"ticker": {"$in": self.tickers}})
+        if self.regimes:
+            if len(self.regimes) == 1:
+                clauses.append({"market_regime": {"$eq": self.regimes[0]}})
+            else:
+                clauses.append({"market_regime": {"$in": self.regimes}})
 
         if not clauses:
             return None
         if len(clauses) == 1:
             return clauses[0]
         return {"$and": clauses}
+
+    @classmethod
+    def from_query_intent(cls, intent: QueryIntent) -> MemoryFilter:
+        return cls(
+            memory_type=intent.memory_types[0] if intent.memory_types and len(intent.memory_types) == 1 else None,
+            ticker=intent.tickers[0] if len(intent.tickers) == 1 else None,
+            tickers=intent.tickers if len(intent.tickers) > 1 else None,
+            outcome=intent.outcomes[0] if len(intent.outcomes) == 1 else None,
+            outcomes=intent.outcomes if len(intent.outcomes) > 1 else None,
+            regimes=intent.regimes if intent.regimes else None,
+            volatility=intent.volatility,
+            min_confidence=intent.confidence_min,
+            max_results=intent.max_results,
+        )
 
 
 class SearchResult(BaseModel):
@@ -306,6 +469,8 @@ class SearchResult(BaseModel):
     metadata: dict[str, Any] = Field(description="Metadata")
     distance: float = Field(description="Cosine distance (0 = identical)")
     relevance_score: float = Field(description="Normalized relevance (1 = best)")
+    ranked_score: Optional[float] = Field(default=None, description="Metadata-ranked score (1 = best)")
+    hybrid_score: Optional[float] = Field(default=None, description="Hybrid vector + keyword score (1 = best)")
 
     @classmethod
     def from_chroma_result(cls, chroma_result: dict, index: int) -> "SearchResult":

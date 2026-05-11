@@ -1337,3 +1337,67 @@ All test files deleted after successful run. Ready for push.
 | Collection ID | 2 | Format correctness, uniqueness |
 
 All test files deleted after successful run.
+
+---
+
+## 2026-05-11
+
+### Session: Semantic Retrieval Engine — Similarity Search, Hybrid Filtering, Metadata Ranking, Semantic Scoring, Audit Logging
+
+**User Request:** Implement semantic search workflows for historical trade and market retrieval — similarity search, hybrid filtering, metadata ranking, semantic scoring, retrieval audit logging. Support example queries like "Find failed breakout trades during high volatility regimes".
+
+**Architecture — 4 New Modules:**
+
+| Module | File | Purpose |
+|--------|------|---------|
+| Scoring | `memory/retrieval/scoring.py` | `normalize_scores()` (min-max normalization), `compute_cross_collection_similarity()` (per-type context boost), `compute_weighted_score()` (vector+keyword+ranked), `clip_relevance()` (threshold filter) |
+| Ranking | `memory/retrieval/ranking.py` | `rank_results()` — metadata-boosted ranking with 3 factors: `_compute_confidence_boost()` (weighted), `_compute_recency_boost()` (exponential decay, 30-day half-life), `_compute_outcome_boost()` (priority-ordered: stop_loss_hit > failed > partial_exit > target_hit > success) |
+| Hybrid Search | `memory/retrieval/hybrid_search.py` | `hybrid_search()` — parallel vector + keyword queries across collections, score normalization, weighted merge (`vector_weight` + `keyword_weight`), dedup by document ID |
+| Audit | `memory/retrieval/audit.py` | `RetrievalAuditor` — thread-safe in-memory audit trail with `log()`, `log_search()`, `get_recent()`, `get_stats()`, JSON `persist()`/`load()`, disable/enable, max entry enforcement |
+
+**New Models in `memory/schemas/memory_schemas.py`:**
+
+| Model | Purpose |
+|-------|---------|
+| `RankingBoost` | Enum: CONFIDENCE, RECENCY, OUTCOME_PRIORITY, NONE |
+| `RankingConfig` | `enabled`, `boosts`, tunable weights (`confidence_weight=0.3`, `recency_weight=0.2`, `outcome_priority_weight=0.15`), `recency_half_life_days=30`, `outcome_priority_order` |
+| `HybridSearchConfig` | `enabled`, `vector_weight=0.7`, `keyword_weight=0.3`, `keyword_n_results_multiplier=2` |
+| `QueryIntent` | `parse()` — natural language query parser extracts: memory types, tickers (stop-word filtered), outcomes, regimes, volatility, confidence thresholds |
+| `AuditLogEntry` | Timestamped query record: `query`, `query_type`, `filters_applied`, `n_requested`, `n_returned`, `latency_ms`, `memory_types_queried`, `result_ids`, `mean_relevance`, `error` |
+
+**Enhancements to Existing Files:**
+
+| File | Change |
+|------|--------|
+| `memory/schemas/memory_schemas.py` | Added 5 new models, `MemoryFilter` gains `volatility`, `tickers`, `outcomes`, `regimes`, `min_timestamp`, `ranking_config`, `hybrid_config` + `from_query_intent()` factory + multi-value ChromaDB `$in` support. `SearchResult` gains `ranked_score`, `hybrid_score` |
+| `memory/retrieval/semantic_retriever.py` | `search()`/`search_by_text()` now normalize scores + rank + audit. New `advanced_search()` (hybrid support + min_relevance clipping). New `search_by_intent()` (auto-parse query). `get_memory_stats()` includes audit stats |
+| `memory/retrieval/__init__.py` | Exports `RetrievalAuditor`, `rank_results`, `normalize_scores`, `compute_weighted_score`, `clip_relevance`, `hybrid_search` |
+| `memory/__init__.py` | Exports 5 new models + `RetrievalAuditor` + scoring/ranking/hybrid utils |
+
+**Test Results (70/70 PASSED, 0 warnings):**
+
+| Category | Tests | Coverage |
+|----------|-------|----------|
+| QueryIntent | 9 | Parsing all query types, ticker extraction, stop words, confidence thresholds, default memory types |
+| MemoryFilter | 9 | from_query_intent, to_chroma_where single/multi/no clauses, min_confidence, multi-value filters, ranking/hybrid config defaults |
+| Ranking Models | 3 | RankingConfig defaults/custom, RankingBoost enum, HybridSearchConfig |
+| AuditLogEntry | 4 | Creation, error handling, timestamp, serialization |
+| Scoring | 6 | Normalize empty/single/range/same, weighted score, clip relevance, cross-collection similarity |
+| Ranking | 9 | Empty, confidence boost (none/clamped), recency boost (recent/old/no-timestamp), outcome boost (first/middle/unknown), ranking order, disabled |
+| RetrievalAuditor | 9 | Log, get_recent, stats (empty/with-entries), errors, disable/enable, max entries, persist/load, clear, log_search helper |
+| SearchResult | 3 | New fields default/set, empty batch |
+| HybridSearchConfig | 2 | Custom weights, keyword multiplier |
+| Integration | 5 | QueryIntent-to-Filter roundtrip, all-fields parsing, ranking with real metadata, latency tracking, full pipeline |
+
+**Files Created (4):**
+- `backend/memory/retrieval/scoring.py`
+- `backend/memory/retrieval/ranking.py`
+- `backend/memory/retrieval/hybrid_search.py`
+- `backend/memory/retrieval/audit.py`
+
+**Files Modified (5):**
+- `backend/memory/schemas/memory_schemas.py`
+- `backend/memory/retrieval/semantic_retriever.py`
+- `backend/memory/retrieval/__init__.py`
+- `backend/memory/__init__.py`
+- `opencode/chat_history.md`
