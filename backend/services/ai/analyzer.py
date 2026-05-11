@@ -114,6 +114,13 @@ class StockAnalyzer:
 
             current_price = float(df["close"].iloc[-1])
 
+            feature_snapshot = self.feature_pipeline.export_snapshot(
+                features=features,
+                symbol=symbol,
+                timestamp=df.index[-1] if hasattr(df, "index") and len(df) > 0 else datetime.utcnow(),
+                extra_metadata={"current_price": current_price},
+            )
+
             if not self._model_loaded or self.model is None or not self.model.is_trained():
                 return self._no_trade(symbol, trading_symbol, "ML model not loaded")
 
@@ -153,6 +160,7 @@ class StockAnalyzer:
                 p_sell=float(probs[0]),
                 confidence=decision["confidence"],
                 decision=decision["decision"],
+                feature_snapshot=feature_snapshot,
             )
 
             if decision["decision"] != "BUY":

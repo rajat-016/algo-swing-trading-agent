@@ -17,6 +17,7 @@ class ModelRegistry:
         feature_names: list,
         metrics: Optional[Dict[str, Any]] = None,
         version: Optional[str] = None,
+        feature_version: Optional[str] = None,
     ) -> str:
         if version is None:
             version = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -29,12 +30,13 @@ class ModelRegistry:
             "feature_names": feature_names,
             "metrics": metrics or {},
             "version": version,
+            "feature_version": feature_version or "unknown",
             "saved_at": datetime.now().isoformat(),
             "num_features": len(feature_names),
         }
 
         joblib.dump(data, str(path))
-        logger.info(f"Model saved: {path} ({len(feature_names)} features)")
+        logger.info(f"Model saved: {path} ({len(feature_names)} features, v{data['feature_version']})")
 
         latest = self.model_dir / "model_latest.joblib"
         joblib.dump(data, str(latest))

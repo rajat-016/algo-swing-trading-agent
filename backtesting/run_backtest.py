@@ -699,6 +699,12 @@ def run_full_pipeline(args=None):
 
     best_window_idx = best.get("window_index", 0)
     model_type = type(trainer.model).__name__
+    try:
+        from core.pipeline.feature_pipeline import FEATURE_VERSION, FEATURE_HASH
+    except ImportError:
+        FEATURE_VERSION = "unknown"
+        FEATURE_HASH = "unknown"
+
     model_path = exporter.export_model(
         model_data=model_data,
         metadata={
@@ -706,6 +712,8 @@ def run_full_pipeline(args=None):
             "window_index": best_window_idx,
             "total_windows_evaluated": len(all_results),
             "model_type": model_type,
+            "feature_version": FEATURE_VERSION,
+            "feature_hash": FEATURE_HASH,
         },
         window_index=best_window_idx,
     )
