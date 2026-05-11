@@ -7,10 +7,19 @@ from loguru import logger
 
 from memory.chromadb.collection_manager import MemoryCollectionManager
 from memory.embeddings.memory_embedder import MemoryEmbedder
+from memory.retrieval.audit import RetrievalAuditor
+from memory.retrieval.hybrid_search import hybrid_search
+from memory.retrieval.ranking import rank_results
+from memory.retrieval.scoring import (
+    clip_relevance,
+    compute_cross_collection_similarity,
+    normalize_scores,
+)
 from memory.schemas.memory_schemas import (
     MarketMemory,
     MemoryFilter,
     MemoryType,
+    QueryIntent,
     ResearchMemory,
     SearchResult,
     TradeMemory,
@@ -22,9 +31,11 @@ class SemanticRetriever:
         self,
         collection_manager: Optional[MemoryCollectionManager] = None,
         memory_embedder: Optional[MemoryEmbedder] = None,
+        auditor: Optional[RetrievalAuditor] = None,
     ):
         self._collections = collection_manager or MemoryCollectionManager()
         self._embedder = memory_embedder or MemoryEmbedder()
+        self._auditor = auditor or RetrievalAuditor()
         self._initialized = False
 
     async def initialize(self):
@@ -132,9 +143,13 @@ class SemanticRetriever:
     ) -> list[SearchResult]:
         self._require_initialized()
         start = time.monotonic()
+        error = None
+
         mem_types = self._resolve_memory_types(memory_filter)
         query_embedding = await self._embedder._service.embed(query)
         where_clause = memory_filter.to_chroma_where() if memory_filter else None
+        effective_n = memory_filter.max_results if memory_filter else n_results
+        offset = memory_filter.offset if memory_filter else 0
 
         all_results: list[SearchResult] = []
         for mem_type in mem_types:
@@ -142,22 +157,37 @@ class SemanticRetriever:
                 chroma_result = self._collections.query(
                     mem_type,
                     query_embedding,
-                    n_results=n_results,
+                    n_results=effective_n + offset,
                     where=where_clause,
                 )
                 results = SearchResult.from_chroma_batch(chroma_result)
                 all_results.extend(results)
             except Exception as e:
                 logger.error(f"Query failed for {mem_type.value}: {e}")
+                if error is None:
+                    error = str(e)
 
-        all_results.sort(key=lambda r: r.relevance_score, reverse=True)
-        max_results = (memory_filter.max_results if memory_filter else 10)
-        offset = (memory_filter.offset if memory_filter else 0)
-        paginated = all_results[offset:offset + max_results]
+        if all_results:
+            all_results = normalize_scores(all_results, "relevance_score")
+            all_results = compute_cross_collection_similarity(all_results)
+            all_results = rank_results(all_results, memory_filter.ranking_config if memory_filter else None)
+
+        all_results.sort(key=lambda r: r.ranked_score or r.relevance_score, reverse=True)
+        paginated = all_results[offset:offset + effective_n]
 
         elapsed = time.monotonic() - start
+        self._auditor.log_search(
+            query=query,
+            results=paginated,
+            latency_ms=elapsed * 1000,
+            mem_types=mem_types,
+            n_requested=effective_n,
+            filters_applied=memory_filter.model_dump(exclude_none=True) if memory_filter else None,
+            error=error,
+        )
+
         logger.info(
-            f"Semantic search '{query[:50]}...' returned "
+            f"Semantic search '{query[:50]}' returned "
             f"{len(paginated)} results in {elapsed:.3f}s"
         )
         return paginated
@@ -170,8 +200,12 @@ class SemanticRetriever:
     ) -> list[SearchResult]:
         self._require_initialized()
         start = time.monotonic()
+        error = None
+
         mem_types = self._resolve_memory_types(memory_filter)
         where_clause = memory_filter.to_chroma_where() if memory_filter else None
+        effective_n = memory_filter.max_results if memory_filter else n_results
+        offset = memory_filter.offset if memory_filter else 0
 
         all_results: list[SearchResult] = []
         for mem_type in mem_types:
@@ -179,25 +213,138 @@ class SemanticRetriever:
                 chroma_result = self._collections.query_by_text(
                     mem_type,
                     query,
-                    n_results=n_results,
+                    n_results=effective_n + offset,
                     where=where_clause,
                 )
                 results = SearchResult.from_chroma_batch(chroma_result)
                 all_results.extend(results)
             except Exception as e:
                 logger.error(f"Text query failed for {mem_type.value}: {e}")
+                if error is None:
+                    error = str(e)
 
-        all_results.sort(key=lambda r: r.relevance_score, reverse=True)
-        max_results = (memory_filter.max_results if memory_filter else 10)
-        offset = (memory_filter.offset if memory_filter else 0)
-        paginated = all_results[offset:offset + max_results]
+        if all_results:
+            all_results = normalize_scores(all_results, "relevance_score")
+            all_results = rank_results(all_results, memory_filter.ranking_config if memory_filter else None)
+
+        all_results.sort(key=lambda r: r.ranked_score or r.relevance_score, reverse=True)
+        paginated = all_results[offset:offset + effective_n]
 
         elapsed = time.monotonic() - start
+        self._auditor.log_search(
+            query=query,
+            results=paginated,
+            latency_ms=elapsed * 1000,
+            mem_types=mem_types,
+            n_requested=effective_n,
+            filters_applied=memory_filter.model_dump(exclude_none=True) if memory_filter else None,
+            error=error,
+        )
+
         logger.info(
-            f"Text search '{query[:50]}...' returned "
+            f"Text search '{query[:50]}' returned "
             f"{len(paginated)} results in {elapsed:.3f}s"
         )
         return paginated
+
+    async def advanced_search(
+        self,
+        query: str,
+        memory_filter: Optional[MemoryFilter] = None,
+        n_results: int = 10,
+        use_hybrid: bool = False,
+        min_relevance: float = 0.0,
+    ) -> list[SearchResult]:
+        self._require_initialized()
+        start = time.monotonic()
+        error = None
+
+        mem_types = self._resolve_memory_types(memory_filter)
+        query_embedding = await self._embedder._service.embed(query)
+        where_clause = memory_filter.to_chroma_where() if memory_filter else None
+        effective_n = memory_filter.max_results if memory_filter else n_results
+        offset = memory_filter.offset if memory_filter else 0
+
+        all_results: list[SearchResult] = []
+
+        for mem_type in mem_types:
+            try:
+                chroma_result = self._collections.query(
+                    mem_type,
+                    query_embedding,
+                    n_results=effective_n + offset,
+                    where=where_clause,
+                )
+                results = SearchResult.from_chroma_batch(chroma_result)
+                all_results.extend(results)
+            except Exception as e:
+                logger.error(f"Vector query failed for {mem_type.value}: {e}")
+                if error is None:
+                    error = str(e)
+
+        if use_hybrid and memory_filter and memory_filter.hybrid_config.enabled:
+            try:
+                hybrid_results = await hybrid_search(
+                    query=query,
+                    query_embedding=query_embedding,
+                    collection_manager=self._collections,
+                    mem_types=mem_types,
+                    memory_filter=memory_filter,
+                    n_results=effective_n + offset,
+                )
+                hybrid_map = {r.id: r for r in hybrid_results}
+                for r in all_results:
+                    if r.id in hybrid_map:
+                        r.hybrid_score = hybrid_map[r.id].hybrid_score
+            except Exception as e:
+                logger.error(f"Hybrid search failed: {e}")
+                if error is None:
+                    error = str(e)
+
+        if all_results:
+            all_results = normalize_scores(all_results, "relevance_score")
+            all_results = compute_cross_collection_similarity(all_results)
+            all_results = rank_results(all_results, memory_filter.ranking_config if memory_filter else None)
+
+        all_results.sort(key=lambda r: r.ranked_score or r.relevance_score, reverse=True)
+        paginated = all_results[offset:offset + effective_n]
+
+        if min_relevance > 0.0:
+            paginated = clip_relevance(paginated, threshold=min_relevance)
+
+        elapsed = time.monotonic() - start
+        self._auditor.log_search(
+            query=query,
+            results=paginated,
+            latency_ms=elapsed * 1000,
+            mem_types=mem_types,
+            n_requested=effective_n,
+            filters_applied=memory_filter.model_dump(exclude_none=True) if memory_filter else None,
+            error=error,
+        )
+
+        logger.info(
+            f"Advanced search '{query[:50]}' returned "
+            f"{len(paginated)} results in {elapsed:.3f}s"
+        )
+        return paginated
+
+    async def search_by_intent(
+        self,
+        query: str,
+        n_results: int = 10,
+        use_hybrid: bool = False,
+        min_relevance: float = 0.0,
+    ) -> list[SearchResult]:
+        intent = QueryIntent.parse(query)
+        memory_filter = MemoryFilter.from_query_intent(intent)
+        return await self.advanced_search(
+            query=query,
+            memory_filter=memory_filter,
+            n_results=n_results,
+            use_hybrid=use_hybrid,
+            min_relevance=min_relevance,
+        )
 
     async def get_memory_stats(self) -> dict[str, Any]:
         self._require_initialized()
@@ -211,7 +358,12 @@ class SemanticRetriever:
             except Exception as e:
                 stats[mem_type.value] = {"error": str(e)}
         stats["embedding_cache"] = self._embedder.cache_stats()
+        stats["audit"] = self._auditor.get_stats()
         return stats
+
+    @property
+    def auditor(self) -> RetrievalAuditor:
+        return self._auditor
 
     @property
     def is_ready(self) -> bool:
