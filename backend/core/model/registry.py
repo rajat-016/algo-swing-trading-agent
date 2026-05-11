@@ -1,4 +1,5 @@
 import joblib
+import numpy as np
 from pathlib import Path
 from typing import Optional, Dict, Any
 from datetime import datetime
@@ -18,6 +19,7 @@ class ModelRegistry:
         metrics: Optional[Dict[str, Any]] = None,
         version: Optional[str] = None,
         feature_version: Optional[str] = None,
+        background_samples: Optional[np.ndarray] = None,
     ) -> str:
         if version is None:
             version = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -34,6 +36,11 @@ class ModelRegistry:
             "saved_at": datetime.now().isoformat(),
             "num_features": len(feature_names),
         }
+
+        if background_samples is not None:
+            bg_samples = background_samples[:100] if len(background_samples) > 100 else background_samples
+            data["background_samples"] = bg_samples
+            data["num_background_samples"] = len(bg_samples)
 
         joblib.dump(data, str(path))
         logger.info(f"Model saved: {path} ({len(feature_names)} features, v{data['feature_version']})")

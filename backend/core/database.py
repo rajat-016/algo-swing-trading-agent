@@ -1,6 +1,7 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.pool import StaticPool
+from loguru import logger
 
 _engine = None
 _SessionLocal = None
@@ -34,8 +35,29 @@ def get_db():
         db.close()
 
 
+def _run_migrations():
+    engine = get_engine()
+    inspector = inspect(engine)
+    existing_columns = {col["name"] for col in inspector.get_columns("prediction_logs")}
+    migrations = [
+        ("shap_values", "ALTER TABLE prediction_logs ADD COLUMN shap_values TEXT"),
+        ("top_features", "ALTER TABLE prediction_logs ADD COLUMN top_features TEXT"),
+        ("explanation_latency", "ALTER TABLE prediction_logs ADD COLUMN explanation_latency FLOAT"),
+    ]
+    with engine.connect() as conn:
+        for col_name, stmt in migrations:
+            if col_name not in existing_columns:
+                try:
+                    conn.execute(text(stmt))
+                    logger.info(f"Migrated prediction_logs: added column {col_name}")
+                except Exception as e:
+                    logger.warning(f"Migration for {col_name} failed: {e}")
+        conn.commit()
+
+
 def init_db():
     Base.metadata.create_all(bind=get_engine())
+    _run_migrations()
 
 
 Base = declarative_base()

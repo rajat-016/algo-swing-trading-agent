@@ -131,6 +131,13 @@ class Settings(BaseSettings):
     chromadb_persist_path: str = Field(default="data/chromadb")
     duckdb_path: str = Field(default="data/analytics.duckdb")
 
+    # Explainability Engine
+    explainability_enabled: bool = Field(default=True)
+    shap_top_features: int = Field(default=15)
+    shap_background_samples: int = Field(default=100)
+    shap_max_display_features: int = Field(default=20)
+    explanation_cache_ttl_seconds: int = Field(default=3600)
+
     model_config = ConfigDict(
         extra="ignore",
         env_file=".env",

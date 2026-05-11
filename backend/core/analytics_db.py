@@ -79,11 +79,33 @@ CREATE TABLE IF NOT EXISTS reflection_log (
 );
 """
 
+SHAP_EXPLANATIONS_SCHEMA = """
+CREATE TABLE IF NOT EXISTS shap_explanations (
+    id INTEGER PRIMARY KEY,
+    prediction_id VARCHAR,
+    symbol VARCHAR NOT NULL,
+    prediction_time TIMESTAMP,
+    predicted_class VARCHAR,
+    confidence DOUBLE,
+    base_value DOUBLE,
+    predicted_score DOUBLE,
+    top_features TEXT,
+    feature_attribution TEXT,
+    shap_values_json TEXT,
+    explainer_type VARCHAR,
+    latency_seconds DOUBLE,
+    model_version VARCHAR,
+    feature_version VARCHAR,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+"""
+
 ANALYTICAL_SCHEMAS = [
     TRADE_MEMORY_SCHEMA_V1,
     MARKET_MEMORY_SCHEMA,
     PREDICTION_LOG_ANALYTICS_SCHEMA,
     REFLECTION_LOG_SCHEMA,
+    SHAP_EXPLANATIONS_SCHEMA,
 ]
 
 OHLCV_REQUIRED_COLS = ["datetime", "open", "high", "low", "close", "volume", "symbol"]
@@ -362,6 +384,43 @@ class AnalyticsDB:
     def get_recent_trades(self, limit: int = 100) -> list:
         return self.fetch_all(
             "SELECT * FROM trade_memory ORDER BY created_at DESC LIMIT ?",
+            params=[limit],
+        )
+
+    # ---- SHAP Explanations ----
+
+    def store_shap_explanation(self, explanation: dict):
+        conn = self._get_conn()
+        import json as _json
+        conn.execute(
+            """
+            INSERT INTO shap_explanations
+            (prediction_id, symbol, prediction_time, predicted_class, confidence,
+             base_value, predicted_score, top_features, feature_attribution,
+             shap_values_json, explainer_type, latency_seconds, model_version, feature_version)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                explanation.get("prediction_id"),
+                explanation.get("symbol", ""),
+                explanation.get("prediction_time"),
+                explanation.get("predicted_class"),
+                explanation.get("confidence"),
+                explanation.get("base_value"),
+                explanation.get("predicted_score"),
+                _json.dumps(explanation.get("top_features", {})),
+                _json.dumps(explanation.get("feature_attribution", {})),
+                _json.dumps(explanation.get("shap_values_json", {})),
+                explanation.get("explainer_type"),
+                explanation.get("latency_seconds"),
+                explanation.get("model_version"),
+                explanation.get("feature_version"),
+            ],
+        )
+
+    def get_recent_explanations(self, limit: int = 20) -> list:
+        return self.fetch_all(
+            "SELECT * FROM shap_explanations ORDER BY created_at DESC LIMIT ?",
             params=[limit],
         )
 
