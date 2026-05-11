@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import enum
+import json
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, ClassVar, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class MemoryType(str, enum.Enum):
@@ -14,16 +15,109 @@ class MemoryType(str, enum.Enum):
 
 
 class TradeMemory(BaseModel):
+    SCHEMA_VERSION: ClassVar[str] = "1.0"
+
     trade_id: str = Field(description="Unique trade identifier")
     ticker: str = Field(description="Stock ticker symbol")
-    timestamp: str = Field(description="ISO 8601 timestamp of trade")
-    market_regime: Optional[str] = Field(default=None, description="Market regime at trade time")
-    confidence: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Model confidence")
-    reasoning: str = Field(description="Reasoning behind the trade")
-    outcome: Optional[str] = Field(default=None, description="Trade outcome (win/loss/stop_loss_hit/etc)")
-    features: Optional[dict[str, float]] = Field(default=None, description="Feature snapshot")
-    pnl: Optional[float] = Field(default=None, description="Profit/loss for this trade")
-    metadata: Optional[dict[str, Any]] = Field(default=None, description="Additional metadata")
+    timestamp: str = Field(description="ISO 8601 timestamp of trade entry/event")
+    market_regime: Optional[str] = Field(default=None, description="Market regime classification at trade time")
+    feature_snapshot: Optional[dict[str, float]] = Field(default=None, description="ML feature values at decision time")
+    prediction: Optional[str] = Field(default=None, description="Model prediction class (BUY/SELL/HOLD/STRONG_BUY/STRONG_SELL/NO_TRADE)")
+    confidence: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Model confidence score")
+    reasoning: str = Field(description="Reasoning behind the trade decision")
+    outcome: Optional[str] = Field(default=None, description="Trade outcome classification")
+    portfolio_state: Optional[dict[str, Any]] = Field(default=None, description="Portfolio snapshot at trade time")
+    reflection_notes: Optional[str] = Field(default=None, description="Post-trade analysis and reflection")
+    schema_version: str = Field(default=SCHEMA_VERSION, description="Schema version identifier")
+
+    @field_validator("timestamp")
+    @classmethod
+    def validate_timestamp(cls, v: str) -> str:
+        try:
+            datetime.fromisoformat(v)
+        except (ValueError, TypeError):
+            raise ValueError(f"timestamp must be ISO 8601 format, got: {v}")
+        return v
+
+    @field_validator("ticker")
+    @classmethod
+    def validate_ticker(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("ticker must not be empty")
+        stripped = v.strip().upper()
+        if not stripped.isalpha():
+            raise ValueError(f"ticker must contain only letters, got: {v}")
+        return stripped
+
+    @field_validator("trade_id")
+    @classmethod
+    def validate_trade_id(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("trade_id must not be empty")
+        return v.strip()
+
+    @field_validator("reasoning")
+    @classmethod
+    def validate_reasoning(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("reasoning must not be empty")
+        return v.strip()
+
+    VALID_PREDICTIONS: ClassVar[frozenset[str]] = frozenset({"BUY", "SELL", "HOLD", "STRONG_BUY", "STRONG_SELL", "NO_TRADE"})
+
+    @field_validator("prediction")
+    @classmethod
+    def validate_prediction(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None:
+            val = v.strip().upper()
+            if val not in cls.VALID_PREDICTIONS:
+                raise ValueError(
+                    f"prediction must be one of {sorted(cls.VALID_PREDICTIONS)}, got: {v}"
+                )
+            return val
+        return v
+
+    @field_validator("feature_snapshot")
+    @classmethod
+    def validate_feature_snapshot(cls, v: Optional[dict[str, float]]) -> Optional[dict[str, float]]:
+        if v is not None and not v:
+            raise ValueError("feature_snapshot must not be empty dict; use None if absent")
+        return v
+
+    @field_validator("portfolio_state")
+    @classmethod
+    def validate_portfolio_state(cls, v: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
+        if v is not None and not v:
+            raise ValueError("portfolio_state must not be empty dict; use None if absent")
+        return v
+
+    @model_validator(mode="after")
+    def validate_confidence_range(self):
+        if self.confidence is not None and (self.confidence < 0.0 or self.confidence > 1.0):
+            raise ValueError("confidence must be between 0.0 and 1.0")
+        return self
+
+    def to_dict(self) -> dict[str, Any]:
+        return self.model_dump(exclude_none=False)
+
+    def to_json(self, indent: int = 2) -> str:
+        return self.model_dump_json(indent=indent)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> TradeMemory:
+        return cls(**data)
+
+    @classmethod
+    def from_json(cls, json_str: str) -> TradeMemory:
+        return cls.model_validate_json(json_str)
+
+    @classmethod
+    def validate_schema(cls, data: dict[str, Any]) -> tuple[bool, Optional[str]]:
+        try:
+            cls(**data)
+            return True, None
+        except Exception as e:
+            return False, str(e)
 
     def to_embedding_text(self) -> str:
         parts = [
@@ -32,12 +126,25 @@ class TradeMemory(BaseModel):
         ]
         if self.market_regime:
             parts.append(f"Regime: {self.market_regime}")
+        if self.prediction:
+            parts.append(f"Prediction: {self.prediction}")
+        if self.confidence is not None:
+            parts.append(f"Confidence: {self.confidence:.2f}")
         if self.outcome:
             parts.append(f"Outcome: {self.outcome}")
-        if self.features:
-            top = sorted(self.features.items(), key=lambda x: abs(x[1]), reverse=True)[:10]
+        if self.reflection_notes:
+            parts.append(f"Reflection: {self.reflection_notes}")
+        if self.feature_snapshot:
+            top = sorted(self.feature_snapshot.items(), key=lambda x: abs(x[1]), reverse=True)[:10]
             feat_str = ", ".join(f"{k}={v:.3f}" for k, v in top)
             parts.append(f"Top features: [{feat_str}]")
+        if self.portfolio_state:
+            port_items = []
+            for key in ("capital", "exposure", "positions_count", "daily_pnl"):
+                if key in self.portfolio_state:
+                    port_items.append(f"{key}={self.portfolio_state[key]}")
+            if port_items:
+                parts.append(f"Portfolio: [{', '.join(port_items)}]")
         return ". ".join(parts)
 
     def to_metadata(self) -> dict[str, Any]:
@@ -46,17 +153,16 @@ class TradeMemory(BaseModel):
             "trade_id": self.trade_id,
             "ticker": self.ticker,
             "timestamp": self.timestamp,
+            "schema_version": self.schema_version,
         }
         if self.market_regime:
             meta["market_regime"] = self.market_regime
+        if self.prediction:
+            meta["prediction"] = self.prediction
         if self.outcome:
             meta["outcome"] = self.outcome
         if self.confidence is not None:
             meta["confidence"] = self.confidence
-        if self.pnl is not None:
-            meta["pnl"] = self.pnl
-        if self.metadata:
-            meta.update(self.metadata)
         return meta
 
     def collection_id(self) -> str:

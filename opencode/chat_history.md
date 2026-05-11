@@ -1292,3 +1292,48 @@ backend/ai/
 | `test_semantic_retriever.py` | 19 | Init (2), store (8), search (7), stats (2) |
 
 All test files deleted after successful run. Ready for push.
+
+---
+
+## 2026-05-11
+
+### Session: Trade Memory Schema Enhancement — Versioning, Serialization, Validation
+
+**User Request:** Design normalized trade memory schema for semantic intelligence workflows with fields: trade_id, ticker, timestamp, market_regime, feature_snapshot, prediction, confidence, reasoning, outcome, portfolio_state, reflection_notes. Must be versioned, support serialization, and have schema validation.
+
+**Enhancements Applied to `backend/memory/schemas/memory_schemas.py`:**
+
+| Change | Detail |
+|--------|--------|
+| New fields | `prediction` (BUY/SELL/HOLD/STRONG_BUY/STRONG_SELL/NO_TRADE), `portfolio_state` (dict), `reflection_notes` (str), `schema_version` (str default "1.0") |
+| Renamed field | `features` → `feature_snapshot` for clarity |
+| Schema versioning | `SCHEMA_VERSION` class constant ("1.0"), persisted in metadata and DuckDB |
+| Serialization | `to_dict()`, `to_json()`, `from_dict()`, `from_json()` — full round-trip support |
+| Schema validation | `validate_schema(data)` → `(bool, Optional[str])` — fast-fail or return error message |
+| Field validators | Timestamp (ISO 8601), ticker (alpha+uppercased), prediction (enum), confidence (0-1), non-empty guards |
+| Updated embedding text | Includes prediction, confidence, portfolio summary, reflection notes |
+| Updated metadata | Includes schema_version, prediction |
+
+**Updated `backend/ai/inference/duckdb_setup.py`:**
+
+- Normalized `trade_memory` table schema (v1 columns: feature_snapshot, prediction, portfolio_state, reflection_notes, schema_version)
+- Added `_migrate_if_needed()` for existing databases
+- Updated `insert_trade_memory()` to match new schema
+
+**Updated `backend/core/analytics_db.py`:**
+
+- Same normalized schema + migration logic + updated `insert_trade_memory()`
+
+**Test Results (51/51 PASSED):**
+
+| Category | Tests | Coverage |
+|----------|-------|----------|
+| Schema Versioning | 5 | Default version, custom version, class constant, metadata, dict |
+| Serialization | 7 | to_dict all/none, to_json valid/indent, from_dict/json round-trip, optional None |
+| Schema Validation | 12 | Valid data, missing required fields, invalid prediction, confidence bounds, edge cases, empty fields |
+| Field Validators | 14 | Ticker uppercased/stripped/non-alpha, trade_id stripped, prediction values, timestamp formats, confidence bounds, empty snapshots |
+| Embedding Text | 6 | Required/optional fields, None exclusion, top-10 features, portfolio summary, no PII |
+| Metadata | 4 | Core/optional fields, None exclusion, schema version |
+| Collection ID | 2 | Format correctness, uniqueness |
+
+All test files deleted after successful run.

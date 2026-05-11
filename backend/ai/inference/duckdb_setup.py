@@ -4,22 +4,20 @@ from typing import Optional
 from ai.config.settings import ai_settings
 
 
-TRADE_MEMORY_SCHEMA = """
+TRADE_MEMORY_SCHEMA_V1 = """
 CREATE TABLE IF NOT EXISTS trade_memory (
     trade_id VARCHAR PRIMARY KEY,
     symbol VARCHAR NOT NULL,
-    entry_price DOUBLE,
-    exit_price DOUBLE,
-    direction VARCHAR,
+    timestamp TIMESTAMP,
+    market_regime VARCHAR,
+    feature_snapshot TEXT,
+    prediction VARCHAR,
     confidence DOUBLE,
-    regime VARCHAR,
-    pnl DOUBLE,
-    pnl_pct DOUBLE,
-    entry_time TIMESTAMP,
-    exit_time TIMESTAMP,
-    reason_summary TEXT,
-    features_snapshot TEXT,
+    reasoning TEXT,
     outcome VARCHAR,
+    portfolio_state TEXT,
+    reflection_notes TEXT,
+    schema_version VARCHAR DEFAULT '1.0',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 """
@@ -82,6 +80,7 @@ class DuckDBAnalytics:
 
             self._conn = duckdb.connect(db_path)
             self._create_schemas()
+            self._migrate_if_needed()
             self._ready = True
             logger.info(f"DuckDB analytics initialized at {db_path}")
         except ImportError:
@@ -93,12 +92,31 @@ class DuckDBAnalytics:
 
     def _create_schemas(self):
         for schema in [
-            TRADE_MEMORY_SCHEMA,
+            TRADE_MEMORY_SCHEMA_V1,
             MARKET_MEMORY_SCHEMA,
             PREDICTION_LOG_SCHEMA,
             REFLECTION_LOG_SCHEMA,
         ]:
             self._conn.execute(schema)
+
+    def _migrate_if_needed(self):
+        try:
+            cols = [row[1] for row in self._conn.execute(
+                "PRAGMA table_info('trade_memory')"
+            ).fetchall()]
+            v1_cols = {"prediction", "portfolio_state", "reflection_notes", "schema_version"}
+            missing = v1_cols - set(cols)
+            for col in missing:
+                col_type = {
+                    "prediction": "VARCHAR",
+                    "portfolio_state": "TEXT",
+                    "reflection_notes": "TEXT",
+                    "schema_version": "VARCHAR DEFAULT '1.0'",
+                }[col]
+                self._conn.execute(f"ALTER TABLE trade_memory ADD COLUMN {col} {col_type}")
+                logger.info(f"Migrated trade_memory: added column {col}")
+        except Exception as e:
+            logger.warning(f"Migration check failed (may be normal for first init): {e}")
 
     def _require_conn(self):
         if not self._ready or self._conn is None:
@@ -133,26 +151,24 @@ class DuckDBAnalytics:
         self._conn.execute(
             """
             INSERT OR REPLACE INTO trade_memory
-            (trade_id, symbol, entry_price, exit_price, direction, confidence,
-             regime, pnl, pnl_pct, entry_time, exit_time, reason_summary,
-             features_snapshot, outcome)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (trade_id, symbol, timestamp, market_regime, feature_snapshot,
+             prediction, confidence, reasoning, outcome,
+             portfolio_state, reflection_notes, schema_version)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             [
                 trade["trade_id"],
-                trade["symbol"],
-                trade.get("entry_price"),
-                trade.get("exit_price"),
-                trade.get("direction"),
+                trade.get("symbol") or trade.get("ticker", ""),
+                trade.get("timestamp"),
+                trade.get("market_regime"),
+                trade.get("feature_snapshot"),
+                trade.get("prediction"),
                 trade.get("confidence"),
-                trade.get("regime"),
-                trade.get("pnl"),
-                trade.get("pnl_pct"),
-                trade.get("entry_time"),
-                trade.get("exit_time"),
-                trade.get("reason_summary"),
-                trade.get("features_snapshot"),
+                trade.get("reasoning"),
                 trade.get("outcome"),
+                trade.get("portfolio_state"),
+                trade.get("reflection_notes"),
+                trade.get("schema_version", "1.0"),
             ],
         )
 
