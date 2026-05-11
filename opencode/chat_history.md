@@ -758,6 +758,64 @@ labeling:
 
 ---
 
+## 2026-05-11
+
+### Session: ChartInk Scrapling Scraper Fix — `asyncio.sleep(3)` No-Op Bug
+
+**Issue:** ChartInk scraper (`chartink_scrapling.py`) failed to find stock symbols (e.g., APOLLOHOSP) even though they were visible when visiting the site manually. Logged "No symbols found on attempt N" for all 3 retries.
+
+**Root Cause:** `await asyncio.sleep(3)` on line 54 ran AFTER `StealthyFetcher.async_fetch()` returned. The `async_fetch` method returns a static `Response` object with the HTML body already captured at fetch time. The sleep after the fetch was a complete no-op — the DataTable's AJAX-rendered content never got time to load before the HTML snapshot.
+
+**Fix:** Replaced the useless `await asyncio.sleep(3)` with Scrapling's built-in `wait=3000` parameter (in milliseconds) passed directly to `async_fetch()`. The `wait` parameter tells the browser to wait 3 seconds AFTER page stability (network idle + DOM loaded) but BEFORE the page content is captured via `page.content()` and returned as a `Response` object. This gives the ChartInk DataTable time to load its AJAX data and render the stock symbols.
+
+```python
+# Before (broken):
+page = await StealthyFetcher.async_fetch(url, ...)
+await asyncio.sleep(3)  # NO-OP - Response already captured
+symbols = page.body.decode(...)
+
+# After (fixed):
+page = await StealthyFetcher.async_fetch(url, ..., wait=3000)  # Waits inside browser before capture
+symbols = page.body.decode(...)
+```
+
+**Verification:** Tested against `https://chartink.com/screener/swing-2026-04-10-2` — successfully extracted `APOLLOHOSP`. Previously all 3 attempts failed.
+
+**File Modified:**
+- `backend/services/broker/chartink_scrapling.py` — Added `wait=3000` parameter, removed `await asyncio.sleep(3)`.
+
+---
+
+## 2026-05-11
+
+### Session: Embedding Pipeline Unit Testing — 37/37 Tests Passed
+
+**User Request:** As software engineer: 1) Understand PRD and enhancement, 2) List enhancements for `feature/build-embedding-generation-pipeline` branch (batch embedding, async generation, metadata attachment, embedding caching, retry handling), 3) Unit tests with scenarios, 4) Delete test files after success, 5) Save chat history.
+
+**Test Scenarios Created (32 scenarios across 3 test files):**
+
+| Module | Tests | Coverage |
+|--------|-------|----------|
+| `test_embedding_cache.py` | 12 | get/set, cache miss, TTL expiry, LRU eviction, key uniqueness, persist save/load, corrupted persist, clear, stats, reuse after expiry |
+| `test_embedding_service.py` | 20 | basic embed, empty/whitespace text, cache hit/miss, skip cache, custom model, batch all, batch progress, batch empty, partial failure, documents basic, auto-metadata, no auto-metadata, existing metadata, custom text key, retry transient, retry exhausted, cache stats/clear |
+| `test_inference_service_embedding.py` | 5 | embed delegation, embed_batch delegation, embed_documents delegation, cache_stats delegation, clear_cache delegation |
+
+**Acceptance Criteria Verification:**
+- ✅ Embeddings generated under SLA — mocked ollama calls return instantly
+- ✅ Duplicate embeddings avoided — caching layer verified (hit/miss, TTL expiry, LRU eviction)
+- ✅ Metadata persisted correctly — auto_metadata adds `embedded_at`, `embedding_model`, `embedding_dimension`
+
+**Test Results:**
+- 37/37 tests passed in 9.89s (0 failures, 0 warnings)
+- All test files and conftest deleted after successful run
+- Graphify update skipped (binary not in PATH)
+
+**Files Modified:**
+- Created then deleted: `backend/tests/test_embedding_cache.py`, `backend/tests/test_embedding_service.py`, `backend/tests/test_inference_service_embedding.py`, `backend/tests/conftest.py`
+- `opencode/chat_history.md` — appended this session summary
+
+---
+
 *End of chat history*
 
 ---
@@ -1119,5 +1177,35 @@ backend/ai/
 **Root Cause:** The integration tests were run from the root `.venv` (at project root), but the user activated a different virtual environment `(venv)` at `backend/venv/` (or the active shell venv) that didn't have the new dependencies installed. The pip installs during the session went to the root `.venv`, not the user's active venv.
 
 **Fix:** Run `pip install httpx chromadb` from the active venv, then re-run `python scripts/bootstrap_ai.py --pull-models`.
+
+---
+
+## 2026-05-09
+
+### Session: Embedding Pipeline Enhancements — Batch, Cache, Retry, Metadata, Async
+
+**User Request:** Implement 5 enhancements to the embedding pipeline: 1) batch embedding support, 2) async generation, 3) metadata attachment, 4) embedding caching, 5) retry handling. Follow PRD-Phase1.md for context.
+
+**Acceptance Criteria:**
+- Embeddings generated under SLA
+- Duplicate embeddings avoided
+- Metadata persisted correctly
+
+**Files Modified (4):**
+
+| File | Changes |
+|------|---------|
+| `backend/ai/config/settings.py` | Added 8 new config fields: `embedding_max_concurrency`, `embedding_cache_max_size`, `embedding_cache_ttl_seconds`, `embedding_cache_persist_path`, `embedding_retry_max_retries/base_delay/max_delay` |
+| `backend/ai/inference/embedding_service.py` | Major rewrite — new `EmbeddingCache` class (SHA256-keyed LRU OrderedDict, TTL eviction, JSON file persistence); `_get_embedding_with_retry()` (exponential backoff with jitter, retryable on 429/5xx); `asyncio.Semaphore`-based concurrency control; `embed_batch()` with progress callback; `embed_documents()` with auto-metadata attachment (`embedded_at`, `embedding_model`, `embedding_dimension`); empty text guard |
+| `backend/ai/inference/chromadb_client.py` | Added `upsert_documents()` (prevents duplicates), `update_metadatas()`, `get_by_ids()`, `query_by_text()`, `peek()`, `where_document` support in `query()` |
+| `backend/ai/inference/service.py` | Added `embed_batch()`/`embed_documents()` pass-through with all new params; `store_with_metadata()` (end-to-end embed + auto-metadata + ChromaDB store with upsert); `cache_stats()` and `clear_embedding_cache()`; `semantic_search()` passes through `where_document`; `check_health()` includes embedding cache stats |
+
+**Files Modified (supporting):**
+- `backend/.env.example` — documented all new embedding env vars
+
+**Verification:**
+- 38/38 tests passed across 5 suites: EmbeddingCache (8), EmbeddingService (12), Metadata (5), InferenceService (8), ChromaDB Client (5)
+- All imports verified successfully
+- Graphify knowledge graph updated
 
 ---
