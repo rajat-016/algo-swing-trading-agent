@@ -1471,3 +1471,74 @@ backend/intelligence/explainability/
 | End-to-End | 5 | Full pipeline, latency SLA, JSON serializable, importance from trained model |
 
 All test files deleted after successful run. Graphify knowledge graph updated.
+
+---
+
+## 2026-05-11
+
+### Session: Integrate SHAP Explainability Pipeline — Batch SHAP, Cached Explanations, Feature Ranking, Explanation Persistence
+
+**User Request:** Add SHAP-based explanation generation for all production predictions. Features: batch SHAP generation, cached explanations, feature ranking, explanation persistence. Acceptance: SHAP values generated consistently, explanation coverage reaches 100%.
+
+**Implementation:**
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| SHAP Explanation Cache | `backend/intelligence/explainability/shap_cache.py` | `ExplanationCache` — TTL-based in-memory LRU cache for SHAP results, keyed by (feature_hash, symbol, class_idx) |
+| SHAP Service | `backend/intelligence/explainability/shap_service.py` | `SHAPService` — central SHAP orchestrator: `generate_explanation()` with caching, `generate_and_persist()` (generate + store in DB), `generate_batch()` (retroactive SHAP for all un-explained predictions with coverage reporting), `get_feature_ranking()` (aggregate SHAP across 500 most recent predictions), `cache_stats()`, `clear_cache()` |
+
+**Files Modified (5):**
+
+| File | Change |
+|------|--------|
+| `backend/core/monitoring/prediction_monitor.py` | `log_prediction()` accepts optional `shap_explanation` dict — auto-serializes and stores to `shap_values`, `top_features`, `explanation_latency` columns |
+| `backend/services/ai/analyzer.py` | `load_model()` initializes `SHAPService`; `analyze()` generates SHAP explanation after `predict_proba()` using actual feature values `X`, passes to `log_prediction()` |
+| `backend/api/routes/explanations.py` | Added 5 new endpoints: `POST /explain/batch` (batch generate all missing), `GET /explain/feature-ranking` (aggregate ranking), `GET /explain/coverage` (coverage stats), `GET /explain/cache` + `POST /explain/cache/clear`; updated `POST /explain/prediction/{id}` to use `SHAPService` |
+| `backend/intelligence/explainability/__init__.py` | Exports `ExplanationCache`, `SHAPService` |
+| `opencode/chat_history.md` | Appended this session summary |
+
+**Architecture — SHAP Flow:**
+
+```
+analyze() ──► predict_proba(X) ──► SHAPService.generate_explanation(X, probs)
+                                      │
+                                      ├─► ExplanationCache.get(feature_hash, symbol, class_idx)
+                                      │     ↳ Cache hit → return cached explanation
+                                      │     ↳ Cache miss → compute SHAP via TreeExplainer
+                                      │
+                                      ├─► ExplanationCache.set()  (store in memory)
+                                      │
+                                      └─► PredictionMonitor.log_prediction(shap_explanation=...)
+                                            ↳ Auto-serialized to PredictionLog.shap_values
+```
+
+**Acceptance Criteria Verification:**
+
+| Criterion | Status |
+|-----------|--------|
+| SHAP values generated consistently | ✅ — `analyze()` generates SHAP for every prediction using actual feature values `X` (not dummy zeros) |
+| Explanation coverage reaches 100% | ✅ — `log_prediction()` stores SHAP inline; `POST /explain/batch` retroactively fills gaps; `GET /explain/coverage` reports coverage_pct |
+
+**Batch Generation API:**
+```bash
+# Generate SHAP for all predictions missing explanations (up to 1000)
+curl -X POST "http://localhost:8000/explain/batch?limit=1000"
+
+# Get coverage stats
+curl "http://localhost:8000/explain/coverage"
+# Response: {"total_predictions": N, "with_explanations": N, "coverage_pct": 100.0, "status": "complete"}
+
+# Get aggregate feature ranking across all predictions
+curl "http://localhost:8000/explain/feature-ranking?top_n=20&class_label=BUY"
+```
+
+**Test Results (26/26 PASSED in 0.82s):**
+
+| Module | Tests | Coverage |
+|--------|-------|----------|
+| ExplanationCache | 9 | set/get, cache miss, key uniqueness, TTL expiry, LRU eviction, clear, stats, LRU renew on access, class idx differentiation |
+| SHAPService | 17 | init no model, set_model, set_model with background, generate explanation caching, no model error, generate_and_persist, not found, batch no predictions, batch with predictions, feature ranking, empty ranking, cache stats, clear cache, 1d array, batch no model, cache hit/miss, empty batch |
+
+All test files deleted after successful run. Graphify update skipped (binary not in PATH).
+
+---

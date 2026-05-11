@@ -1,9 +1,9 @@
 import json
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 import numpy as np
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
@@ -36,6 +36,39 @@ def _get_explainer():
         return None
 
 
+def _get_shap_service():
+    try:
+        from intelligence.explainability.shap_service import SHAPService
+        from core.model.registry import ModelRegistry
+        registry = ModelRegistry()
+        model_data = registry.load()
+        model = model_data.get("model")
+        feature_names = model_data.get("feature_names", [])
+        background = model_data.get("background_samples")
+        service = SHAPService(
+            model=model,
+            feature_names=feature_names,
+            background_samples=background,
+        )
+        return service
+    except Exception as e:
+        logger.warning(f"Could not load SHAPService: {e}")
+        return None
+
+
+class _NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (np.integer,)):
+            return int(obj)
+        if isinstance(obj, (np.floating,)):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
+
+
 @router.get("/prediction/{prediction_id}")
 async def explain_prediction(
     prediction_id: int,
@@ -64,7 +97,7 @@ async def explain_prediction(
         "symbol": pred.symbol,
         "decision": pred.decision,
         "confidence": pred.confidence,
-        "message": "No cached explanation. Use POST /explain to generate one.",
+        "message": "No cached explanation. Use POST /explain/prediction/{id} to generate one.",
     }
 
 
@@ -77,22 +110,18 @@ async def generate_explanation(
     if not pred:
         raise HTTPException(404, f"Prediction {prediction_id} not found")
 
-    explainer = _get_explainer()
-    if explainer is None:
+    service = _get_shap_service()
+    if service is None:
         raise HTTPException(503, "Explainability engine not available. Ensure model is trained.")
 
     try:
-        probs = np.array([[pred.p_sell or 0.0, pred.p_hold or 0.0, pred.p_buy or 0.0]])
-        dummy_X = np.zeros((1, len(explainer.feature_names)))
+        success = service.generate_and_persist(db, prediction_id)
+        if not success:
+            raise HTTPException(500, "SHAP generation failed")
 
-        explanation = explainer.explain_prediction(dummy_X, probs[0])
-
-        pred.shap_values = json.dumps(explanation, cls=_NumpyEncoder)
-        pred.top_features = json.dumps(
-            explanation.get("top_features", {}), cls=_NumpyEncoder
-        )
-        pred.explanation_latency = explanation.get("metadata", {}).get("total_latency_seconds")
-        db.commit()
+        db.refresh(pred)
+        explanation = json.loads(pred.shap_values) if pred.shap_values else {}
+        top_feat = json.loads(pred.top_features) if pred.top_features else {}
 
         return {
             "prediction_id": prediction_id,
@@ -100,8 +129,11 @@ async def generate_explanation(
             "decision": pred.decision,
             "confidence": pred.confidence,
             "explanation": explanation,
+            "top_features": top_feat,
             "cached": False,
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Explanation generation failed: {e}")
         raise HTTPException(500, f"Explanation failed: {str(e)}")
@@ -195,6 +227,82 @@ async def recent_explanations(
     return {"explanations": results, "count": len(results)}
 
 
+@router.post("/batch")
+async def batch_generate_explanations(
+    limit: int = Query(default=200, ge=1, le=1000),
+    db: Session = Depends(get_db),
+):
+    """Generate SHAP explanations for all predictions missing them."""
+    service = _get_shap_service()
+    if service is None:
+        raise HTTPException(503, "SHAPService not available. Ensure model is trained.")
+
+    try:
+        result = service.generate_batch(db, limit=limit)
+        return result
+    except Exception as e:
+        logger.error(f"Batch SHAP generation failed: {e}")
+        raise HTTPException(500, f"Batch SHAP generation failed: {str(e)}")
+
+
+@router.get("/feature-ranking")
+async def feature_ranking(
+    top_n: int = Query(default=20, ge=1, le=81),
+    class_label: str = Query(default="BUY", regex="^(BUY|SELL|HOLD)$"),
+    db: Session = Depends(get_db),
+):
+    """Aggregate SHAP feature importance across all predictions."""
+    service = _get_shap_service()
+    if service is None:
+        raise HTTPException(503, "SHAPService not available. Ensure model is trained.")
+
+    try:
+        ranking = service.get_feature_ranking(db, top_n=top_n, class_label=class_label)
+        return ranking
+    except Exception as e:
+        logger.error(f"Feature ranking failed: {e}")
+        raise HTTPException(500, f"Feature ranking failed: {str(e)}")
+
+
+@router.get("/coverage")
+async def explanation_coverage(
+    db: Session = Depends(get_db),
+):
+    """Get SHAP explanation coverage stats."""
+    total = db.query(PredictionLog).count()
+    with_shap = db.query(PredictionLog).filter(PredictionLog.shap_values.isnot(None)).count()
+    without_shap = total - with_shap
+
+    coverage_pct = round(with_shap / total * 100, 2) if total > 0 else 0
+
+    return {
+        "total_predictions": total,
+        "with_explanations": with_shap,
+        "without_explanations": without_shap,
+        "coverage_pct": coverage_pct,
+        "status": "complete" if coverage_pct >= 100 else "incomplete",
+    }
+
+
+@router.get("/cache")
+async def cache_stats():
+    """Get SHAP explanation cache statistics."""
+    service = _get_shap_service()
+    if service is None:
+        return {"status": "unavailable"}
+    return service.cache_stats()
+
+
+@router.post("/cache/clear")
+async def clear_cache():
+    """Clear the in-memory SHAP explanation cache."""
+    service = _get_shap_service()
+    if service is None:
+        return {"status": "unavailable"}
+    service.clear_cache()
+    return {"status": "cleared"}
+
+
 @router.get("/health")
 async def explainability_health():
     explainer = _get_explainer()
@@ -211,16 +319,3 @@ async def explainability_health():
         "explainer_type": explainer.shap_explainer.explainer_type,
         "num_features": len(explainer.feature_names),
     }
-
-
-class _NumpyEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, (np.integer,)):
-            return int(obj)
-        if isinstance(obj, (np.floating,)):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        return super().default(obj)
