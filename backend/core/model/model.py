@@ -86,6 +86,26 @@ class TradingModel:
         importances = self.model.feature_importances_
         return dict(zip(self.feature_names, importances.tolist()))
 
+    def explain(self, X: np.ndarray) -> Dict[str, Any]:
+        if not self._is_trained:
+            raise RuntimeError("Model not trained. Cannot explain.")
+        X_aligned = self._align_features(X)
+        X_scaled = self.scaler.transform(X_aligned) if self.scaler is not None else X_aligned
+        try:
+            from intelligence.explainability.prediction_explainer import PredictionExplainer
+            explainer = PredictionExplainer(
+                model=self,
+                feature_names=self.feature_names,
+            )
+            probs = self.predict_proba(X)
+            return explainer.explain_prediction(X_scaled, probs[0] if probs.ndim > 1 else probs)
+        except ImportError:
+            logger.warning("intelligence.explainability not available")
+            return {"error": "Explainability module not available"}
+        except Exception as e:
+            logger.error(f"Explain failed: {e}")
+            return {"error": str(e)}
+
     def _align_features(self, X: np.ndarray) -> np.ndarray:
         if not self.feature_names:
             return X

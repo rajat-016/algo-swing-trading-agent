@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from core.database import Base
 
@@ -19,6 +19,11 @@ class PredictionLog(Base):
     model_version = Column(String(50))
     feature_version = Column(String(20), nullable=True)
     feature_hash = Column(String(20), nullable=True)
+
+    # Explainability: SHAP values and feature attribution
+    shap_values = Column(Text, nullable=True)
+    top_features = Column(Text, nullable=True)
+    explanation_latency = Column(Float, nullable=True)
 
     # Link to stock if prediction led to a trade
     stock_id = Column(Integer, ForeignKey("stocks.id"), nullable=True)
