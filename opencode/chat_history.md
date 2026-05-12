@@ -1833,4 +1833,83 @@ All test files deleted after successful run.
 
 ---
 
+## 2026-05-12 (Session 3)
+
+### Session: Implement Post-Trade Reflection Workflow
+
+**User Request:** Generate structured reflections after trade completion covering: setup quality, execution quality, regime alignment, volatility context, feature confirmation quality. Store reflections in semantic memory.
+
+**Branch:** `feature/implement-post-trade-reflection-workflow`
+
+**Implementation Summary:**
+
+| Step | Description |
+|------|-------------|
+| 1 | Analyzed PRD (Section 8.8 Reflection Engine), existing codebase, graphify knowledge graph |
+| 2 | Built development plan |
+| 3 | Impact analysis confirmed no breaking changes |
+
+**Files Created (6 new):**
+
+| File | Purpose |
+|------|---------|
+| `backend/intelligence/reflection_engine/__init__.py` | Package init, exports PostTradeReflector, BatchReflector, ReflectionService |
+| `backend/intelligence/reflection_engine/post_trade_reflector.py` | PostTradeReflector — per-trade LLM reflection generator using `post_trade_reflection` prompt; PostTradeReflection Pydantic model with 5 evaluation dimensions + lessons_learned; JSON parsing with fallback; stores to semantic memory (ChromaDB) |
+| `backend/intelligence/reflection_engine/batch_reflector.py` | BatchReflector — computes metrics from recent trades (win rate, profit factor, max drawdown, regime breakdown), calls existing `generate_reflection()` prompt, stores to reflection_log |
+| `backend/intelligence/reflection_engine/service.py` | ReflectionService — unified facade, enabled/disabled flag, reflect_trade(), batch_reflect(), get_reflection_logs() |
+| `backend/api/routes/reflection.py` | 3 API endpoints (see below) |
+
+**Files Modified (5):**
+
+| File | Change |
+|------|--------|
+| `backend/ai/prompts/registry.py` | Added `POST_TRADE_REFLECTION` prompt template — structured JSON output covering setup_quality, execution_quality, regime_alignment, volatility_context, feature_confirmation_quality, overall_assessment, lessons_learned |
+| `backend/ai/orchestration/engine.py` | Added `generate_post_trade_reflection()` method — delegates to `post_trade_reflection` prompt with full trade context |
+| `backend/ai/journal/journal_service.py` | Added `_get_reflection_service()` lazy loader, wired `ReflectionService.reflect_trade()` into `_journal_post_trade_summary()` — auto-generates reflection on trade exit |
+| `backend/api/routes/__init__.py` | Registered `reflection.router` |
+| `backend/core/config.py` | Added `reflection_engine_enabled` config field (default: False) |
+
+**API Endpoints (3 new):**
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /reflection/trade/{trade_id}` | Generate single post-trade reflection for a completed trade |
+| `POST /reflection/batch` | Generate batch reflection on recent trades with aggregated metrics |
+| `GET /reflection/logs` | List all stored reflection logs |
+
+**Reflection Dimensions (post_trade_reflection prompt):**
+
+| Dimension | Evaluation |
+|-----------|------------|
+| setup_quality | Entry setup technical soundness — risk/reward, entry conditions met |
+| execution_quality | Execution timing, sizing, exit timeliness |
+| regime_alignment | Alignment with prevailing market regime |
+| volatility_context | Volatility factoring, stop placement appropriateness |
+| feature_confirmation_quality | ML model feature confirmation strength |
+
+**PostTradeReflection Model:**
+- Structured Pydantic model with JSON parsing from LLM
+- Fallback to raw text when JSON parsing fails
+- Automatically stored to ChromaDB semantic memory via SemanticRetriever.store_trade()
+- Also persisted to DuckDB `reflection_log` table via ReflectionService
+
+**Acceptance Criteria Verifications:**
+- ✅ Reflections auto-generated on trade exit (wired into `_journal_post_trade_summary()`)
+- ✅ Reflections stored in semantic memory (ChromaDB via `_store_reflection_to_semantic_memory()`)
+- ✅ Also persisted in DuckDB `reflection_log` table
+- ✅ All operations wrapped in try/except — non-blocking to trading loop
+- ✅ Gated behind `reflection_engine_enabled` config flag
+
+**Test Results:** 16/16 PASSED
+- PostTradeReflection model validation (3 tests)
+- PostTradeReflector JSON parsing, fallback, mock engine, to_dict/to_json (6 tests)
+- BatchReflector metrics calculation, empty trades, win/loss breakdowns (4 tests)
+- Prompt registration and rendering (2 tests)
+
+All test files deleted after successful run.
+
+**Impact Analysis:** Purely additive — no schema changes to existing models, no database migrations, no existing API contract changes. Builds on existing reflection_log table, reflection prompt, and journaling infrastructure.
+
+---
+
 *End of chat history*

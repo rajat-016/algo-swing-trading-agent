@@ -139,6 +139,40 @@ class OrchestrationEngine:
             **kwargs,
         )
 
+    async def generate_post_trade_reflection(
+        self,
+        symbol: str,
+        trade_id: str,
+        entry_price: Optional[float] = None,
+        exit_price: Optional[float] = None,
+        direction: str = "BUY",
+        confidence: Optional[float] = None,
+        regime: str = "",
+        outcome: str = "",
+        pnl: float = 0,
+        pnl_pct: float = 0,
+        exit_reason: str = "",
+        feature_snapshot: str = "{}",
+        portfolio_state: str = "{}",
+    ) -> str:
+        return await self.inference.render_and_generate(
+            "post_trade_reflection",
+            config_key="reflection",
+            symbol=symbol,
+            trade_id=trade_id,
+            entry_price=entry_price or 0,
+            exit_price=exit_price or 0,
+            direction=direction,
+            confidence=confidence or 0,
+            regime=regime,
+            outcome=outcome,
+            pnl=pnl,
+            pnl_pct=pnl_pct,
+            exit_reason=exit_reason,
+            feature_snapshot=feature_snapshot,
+            portfolio_state=portfolio_state,
+        )
+
     async def generate_reflection(
         self,
         period: str,
