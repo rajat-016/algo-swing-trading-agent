@@ -131,6 +131,19 @@ class Settings(BaseSettings):
     chromadb_persist_path: str = Field(default="data/chromadb")
     duckdb_path: str = Field(default="data/analytics.duckdb")
 
+    # Market Regime Engine
+    regime_engine_enabled: bool = Field(default=True)
+    regime_ema_short: int = Field(default=50)
+    regime_ema_long: int = Field(default=200)
+    regime_sideways_threshold_pct: float = Field(default=0.02)
+    regime_adx_trend_threshold: float = Field(default=25.0)
+    regime_high_vol_atr_pct: float = Field(default=0.03)
+    regime_low_vol_atr_pct: float = Field(default=0.015)
+    regime_breakout_volume_ratio: float = Field(default=1.5)
+    regime_event_volume_spike_ratio: float = Field(default=3.0)
+    regime_stability_lookback: int = Field(default=5)
+    regime_persist_history: bool = Field(default=True)
+
     # Explainability Engine
     explainability_enabled: bool = Field(default=True)
     shap_top_features: int = Field(default=15)

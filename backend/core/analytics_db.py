@@ -67,6 +67,26 @@ CREATE TABLE IF NOT EXISTS prediction_log_analytics (
 );
 """
 
+REGIME_HISTORY_SCHEMA = """
+CREATE TABLE IF NOT EXISTS market_regime_history (
+    id INTEGER PRIMARY KEY,
+    regime VARCHAR NOT NULL,
+    confidence DOUBLE,
+    risk_level VARCHAR,
+    stability VARCHAR,
+    atr_pct DOUBLE,
+    bb_width DOUBLE,
+    vix_level DOUBLE,
+    ema_diff_pct DOUBLE,
+    adx DOUBLE,
+    macd_histogram DOUBLE,
+    volume_ratio DOUBLE,
+    signal_breakdown TEXT,
+    suggested_behavior TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+"""
+
 REFLECTION_LOG_SCHEMA = """
 CREATE TABLE IF NOT EXISTS reflection_log (
     id INTEGER PRIMARY KEY,
@@ -103,6 +123,7 @@ CREATE TABLE IF NOT EXISTS shap_explanations (
 ANALYTICAL_SCHEMAS = [
     TRADE_MEMORY_SCHEMA_V1,
     MARKET_MEMORY_SCHEMA,
+    REGIME_HISTORY_SCHEMA,
     PREDICTION_LOG_ANALYTICS_SCHEMA,
     REFLECTION_LOG_SCHEMA,
     SHAP_EXPLANATIONS_SCHEMA,
