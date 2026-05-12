@@ -1964,4 +1964,57 @@ All test files deleted after successful run.
 
 ---
 
+## 2026-05-12
+
+### Session: Build Correlation Analysis Engine
+
+**User Request:** Implement rolling correlation matrix, sector clustering, instability alerts, and diversification scoring.
+
+**Features Delivered:**
+
+| Feature | Description |
+|---------|-------------|
+| Rolling Correlation Matrix | Windowed (configurable 60d default, 10d step) pairwise correlation timeseries, trend detection (rising/falling/stable), stability score |
+| Sector Clustering | Intra-sector vs inter-sector correlation analysis, sector concentration %, cross-sector correlation pairs, inter-sector matrix |
+| Instability Alerts | Correlation regime change detection (high/correlated/fragmented/low), pair-level convergence/divergence alerts, cross-sector unexpected correlation, regime transition tracking |
+| Diversification Scoring | Effective N (HHI-based), average pairwise correlation score, sector diversification score, concentration penalty, composite score (0-100) with breakdown |
+
+**Files Created (7 new files in `backend/intelligence/portfolio_analysis/correlation/`):**
+
+| File | Purpose |
+|------|---------|
+| `__init__.py` | Package init |
+| `models.py` | Extended dataclasses: `RollingWindowSnapshot`, `RollingCorrelationResult`, `SectorCluster`, `SectorClusteringReport`, `InstabilityAlert`, `InstabilityReport`, `DiversificationBreakdown`, `DiversificationScore` |
+| `rolling.py` | `RollingCorrelationAnalyzer` — sliding window correlation computation, trend detection via linear regression slope, stability via std deviation |
+| `clustering.py` | `SectorClusteringEngine` — sector-grouped correlation analysis using existing `SECTOR_MAP`, intra/inter sector comparison, cross-sector pair detection |
+| `instability.py` | `InstabilityAnalyzer` — split-half correlation change detection, regime classification (highly_correlated/low_correlation/fragmented/stable), quadrant-based regime transition tracking, rolling-based analysis |
+| `diversification.py` | `DiversificationScorer` — effective N formula, weighted breakdown (30% effective N, 25% avg correlation, 25% sector div, 20% concentration), score 0-100 |
+| `service.py` | `CorrelationAnalysisService` — unified facade, DuckDB persistence via `correlation_analysis` schema, regime context integration |
+
+**Files Modified (3):**
+
+| File | Change |
+|------|--------|
+| `backend/api/routes/__init__.py` | Registered `correlation_analysis` route module |
+| `backend/core/analytics_db.py` | Added `CORRELATION_ANALYSIS_SCHEMA` + registered in `ANALYTICAL_SCHEMAS` |
+| `backend/api/routes/correlation_analysis.py` | **NEW** — 8 endpoints |
+
+**API Endpoints:**
+| Endpoint | Purpose |
+|----------|---------|
+| `POST /correlation/analyze` | Full correlation analysis with persistence |
+| `GET /correlation/rolling` | Rolling correlation timeseries + trend |
+| `GET /correlation/clusters` | Sector clustering report |
+| `GET /correlation/instability` | Instability alerts + regime |
+| `GET /correlation/diversification` | Diversification score breakdown |
+| `GET /correlation/history` | Historical snapshots |
+| `GET /correlation/latest` | Latest snapshot |
+| `GET /correlation/health` | Engine status |
+
+**Impact Analysis:** Purely additive — builds as sub-package within existing `portfolio_analysis/`. New DuckDB schema (`correlation_analysis`) auto-created on first use. No changes to existing models, API contracts, or config. Leverages existing `SECTOR_MAP`, `AnalyticsDB`, `RegimeService`.
+
+**Unit Testing:** 37 scenarios covering all modules — rolling (empty, single, multiple windows, avg range, trend up/down/stable, stability, returns direct, high count), sector clustering (empty, multi-holding, intra/inter values, matrix, cross pairs, no price, single, concentration), instability (empty, detection, high regime, classification, rolling-based, transitions), diversification (empty, single, score, breakdown, effective N, concentration), service (empty DB, with holdings, price data, history), integration (full pipeline, edge cases). All 37 tests passed. Test file deleted after verification.
+
+---
+
 *End of chat history*
