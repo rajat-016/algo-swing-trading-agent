@@ -237,6 +237,23 @@ class TradingLoop:
         interval_mins = self.settings.cycle_interval_seconds // 60
         logger.info(f"=== Cycle Complete (next: {next_cycle_time}, {interval_mins} Min) ===")
 
+    @property
+    def _journal(self):
+        if not hasattr(self, '_journal_service') or self._journal_service is None:
+            try:
+                from ai.journal.journal_service import TradeJournalService
+                import asyncio
+                svc = TradeJournalService()
+                try:
+                    asyncio.create_task(svc.initialize())
+                except Exception:
+                    pass
+                self._journal_service = svc
+            except Exception as e:
+                logger.debug(f"TradeJournalService unavailable: {e}")
+                self._journal_service = None
+        return self._journal_service
+
     def _trigger_retraining(self):
         """Trigger model retraining if needed. Creates own DB session."""
         db = SessionLocal()
@@ -483,6 +500,39 @@ class TradingLoop:
         mode_prefix = "[PAPER]" if self.is_paper_mode else "[LIVE]"
         logger.info(f"{mode_prefix} ENTRY: {zerodha_symbol} | Price: Rs.{analysis.entry_price:.2f} | Qty: {analysis.position_size} | Target: Rs.{analysis.target_price:.2f} | SL: Rs.{analysis.stop_loss:.2f}")
 
+        journal = self._journal
+        if journal and journal.enabled:
+            regime_name = None
+            try:
+                from intelligence.market_regime.service import RegimeService
+                regime_svc = RegimeService()
+                current = regime_svc.get_current_regime()
+                if current:
+                    regime_name = current.regime.value if hasattr(current.regime, "value") else str(current.regime)
+            except Exception:
+                pass
+            try:
+                feature_snap = getattr(analysis, 'feature_snapshot', None)
+                if feature_snap is None:
+                    feature_snap = getattr(analysis, 'feature_snapshot_data', None)
+            except Exception:
+                feature_snap = None
+            if hasattr(journal, 'journal_entry') and callable(getattr(journal, 'journal_entry')):
+                asyncio.create_task(journal.journal_entry({
+                    "trade_id": stock.id,
+                    "symbol": zerodha_symbol,
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "market_regime": regime_name,
+                    "feature_snapshot": feature_snap,
+                    "prediction": "BUY",
+                    "confidence": analysis.confidence,
+                    "reasoning": getattr(analysis, 'reason', f"ML signal: {analysis.confidence:.0%} confidence"),
+                    "entry_price": analysis.entry_price,
+                    "quantity": analysis.position_size,
+                    "target_price": analysis.target_price,
+                    "stop_loss": analysis.stop_loss,
+                }, db=db))
+
     async def _check_exit(self, db: Session, symbol: str, pos_data: Dict):
         if self.is_paper_mode:
             current_price = pos_data["entry_price"] * 1.05
@@ -660,6 +710,19 @@ class TradingLoop:
         mode_prefix = "[PAPER]" if self.is_paper_mode else "[LIVE]"
         logger.info(f"{mode_prefix} EXIT: {symbol} | Reason: {exit_reason.value} | P&L: Rs.{pnl:.2f}")
 
+        journal = self._journal
+        if journal and journal.enabled and stock:
+            asyncio.create_task(journal.journal_exit({
+                "trade_id": stock_id,
+                "symbol": symbol,
+                "pnl": stock.pnl if stock else pnl,
+                "pnl_pct": stock.pnl_percentage if stock else 0,
+                "exit_price": exit_price,
+                "exit_reason": exit_reason,
+                "entry_price": entry_price,
+                "quantity": quantity,
+            }, db=db))
+
     async def _place_partial_exit(
         self,
         db: Session,
@@ -768,6 +831,31 @@ class TradingLoop:
 
         mode_prefix = "[PAPER]" if self.is_paper_mode else "[LIVE]"
         logger.info(f"{mode_prefix} TIER {tier} EXIT: {symbol} | Qty: {quantity}/{original_quantity} | P&L: Rs.{tier_pnl:.2f} | Remaining: {new_remaining}")
+
+        journal = self._journal
+        if journal and journal.enabled:
+            asyncio.create_task(journal.journal_partial_exit({
+                "trade_id": stock_id,
+                "symbol": symbol,
+                "tier": tier,
+                "quantity": quantity,
+                "exit_price": exit_price,
+                "pnl": tier_pnl,
+                "exit_reason": exit_reason,
+                "remaining_quantity": new_remaining,
+            }))
+
+            if new_remaining <= 0:
+                asyncio.create_task(journal.journal_exit({
+                    "trade_id": stock_id,
+                    "symbol": symbol,
+                    "pnl": stock.realized_pnl if stock else tier_pnl,
+                    "pnl_pct": stock.pnl_percentage if stock else 0,
+                    "exit_price": exit_price,
+                    "exit_reason": exit_reason,
+                    "entry_price": entry_price,
+                    "quantity": original_quantity,
+                }, db=db))
 
     def switch_mode(self, mode: str):
         old_mode = self.settings.trading_mode

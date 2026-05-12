@@ -1737,4 +1737,100 @@ All test files deleted after successful run.
 
 ---
 
+## 2026-05-12
+
+### Session: Build AI Trade Journal System — Persistent Trade Journaling, Auto-Logging, Post-Trade Summaries
+
+**User Request:** Build AI-native trade journaling infrastructure with automatic trade logging, reasoning persistence, post-trade reflections, regime association, and portfolio snapshots.
+
+**Branch:** `feature/build-ai-trade-journal-system`
+
+**Implementation Summary:**
+
+| Step | Description |
+|------|-------------|
+| 1 | Analyzed PRD (Section 8.4 AI Trade Journal), chat history, graphify knowledge graph |
+| 2 | Built development plan with 8 phases |
+| 3 | Implemented impact analysis — no breaking changes to existing models, schemas, or APIs |
+| 4 | Created `backend/ai/journal/` module |
+
+**Files Created (3 new):**
+
+| File | Purpose |
+|------|---------|
+| `backend/ai/journal/__init__.py` | Package init, exports TradeJournalService |
+| `backend/ai/journal/journal_service.py` | TradeJournalService — core journaling service |
+| `backend/api/routes/trade_journal.py` | 5 API endpoints for journal access |
+
+**Files Modified (5):**
+
+| File | Change |
+|------|--------|
+| `backend/services/trading/loop.py` | Added journal hooks in `_place_entry()`, `_place_exit()`, `_place_partial_exit()` |
+| `backend/api/routes/__init__.py` | Registered `trade_journal.router` |
+| `backend/core/config.py` | Added `trade_journal_enabled` config field |
+| `backend/ai/inference/duckdb_setup.py` | Migration for V2 trade_memory columns (pnl, pnl_pct, exit_price, exit_reason, closed_at) |
+| `backend/core/analytics_db.py` | Same V2 migration |
+
+**TradeJournalService Architecture:**
+
+| Component | Responsibility |
+|-----------|---------------|
+| `journal_entry()` | Auto-journal on trade entry — captures regime, feature snapshot, portfolio state, reasoning |
+| `journal_exit()` | Backfills outcome (WIN/LOSS) to both ChromaDB and DuckDB, generates post-trade summary |
+| `journal_partial_exit()` | Logs tier exits to reflection_notes, triggers full journal_exit when position fully closed |
+| `_store_to_duckdb()` | Persists to DuckDB (with AnalyticsDB fallback) |
+| `_backfill_chromadb_outcome()` | Updates ChromaDB trade_memory metadata with outcome + closed_at |
+| `_backfill_duckdb_outcome()` | Updates DuckDB trade_memory row with outcome, pnl, exit details |
+| `_append_partial_exit_to_notes()` | Appends tier exit details to reflection_notes |
+| `_journal_post_trade_summary()` | Generates rich post-trade text summary using TradeIntelligenceService reasoning |
+| `_build_portfolio_state()` | Captures current portfolio snapshot (positions, exposure) |
+| `search_trades()` | Semantic search across journaled trades |
+| `get_recent_duckdb_trades()` | Lists recent trades from DuckDB |
+| `get_trade_by_id()` | Gets single trade by ID |
+
+**API Endpoints (5 new):**
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /journal/trades` | List all journaled trades |
+| `GET /journal/trades/{trade_id}` | Get specific journal entry |
+| `POST /journal/search` | Semantic search across trades |
+| `GET /journal/stats` | Journal statistics (counts, availability) |
+| `GET /journal/search/text` | Quick text-based trade search |
+
+**Key Design Decisions:**
+- Gated behind `ai_copilot_enabled` flag — non-blocking when disabled
+- All journal operations wrapped in try/except — non-critical, never blocks trading loop
+- Dual persistence to ChromaDB (vector search) + DuckDB (structured analytics)
+- Async journal operations via `asyncio.create_task()` — non-blocking for trading loop
+- Outcome backfill on full exit updates both ChromaDB metadata and DuckDB columns
+- Post-trade summaries generated using existing TradeIntelligenceService reasoning
+
+**Journal Entry Data Captured:**
+- trade_id, ticker, timestamp
+- market_regime (from RegimeService)
+- feature_snapshot (from StockAnalyzer)
+- prediction + confidence
+- reasoning (entry rationale)
+- portfolio_state (positions, exposure)
+- outcome (OPEN initially, backfilled to WIN/LOSS on exit)
+- reflection_notes (tier exits appended, post-trade summary generated)
+
+**Test Results:** 22/22 tests passed covering:
+- Service init, enabled/disabled config
+- Portfolio state building
+- DuckDB storage with fallback
+- Outcome backfill (Chromadb + DuckDB)
+- Partial exit notes appending
+- Trade retrieval (by ID, recent list)
+- Search (disabled, no retriever)
+- Journal stats
+
+All test files deleted after successful run.
+
+**Impact Analysis:** Purely additive — no schema changes to existing SQLAlchemy models, no database migrations required (DuckDB V2 columns auto-migrated), no existing API contract changes. All 5 existing endpoint groups untouched.
+
+---
+
 *End of chat history*
