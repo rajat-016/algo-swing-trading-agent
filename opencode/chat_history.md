@@ -1630,4 +1630,51 @@ All test files deleted after successful run.
 
 ---
 
+## 2026-05-12 (Session 2)
+
+### Session: Enhanced Similar Trade Retrieval — 5-Factor Matching
+
+**User Request:** Enhance similar trade retrieval with 5 matching factors: regime similarity, volatility conditions, feature similarity, sector alignment, breakout structure.
+
+**Branch:** `feature/implement-similar-trade-retrieval`
+
+**Implementation Summary:**
+
+| File | Change | Purpose |
+|------|--------|---------|
+| `backend/intelligence/trade_analysis/sector_map.py` | **CREATE** | Sector mapping for all 101 Nifty 50 + Next 50 symbols across 20 sectors, plus RELATED_SECTORS graph |
+| `backend/intelligence/trade_analysis/similarity.py` | **REFACTOR** | Added 5 independent factor scorers, composite weighted scoring (weights: regime=0.25, vol=0.20, features=0.25, sector=0.15, breakout=0.15), new `find_similar_enhanced()` method, `SimilarityMatchFactors`/`EnhancedSimilarityResult` dataclasses, `_result_to_dict()` serializer. Original methods retained for backward compatibility. |
+| `backend/intelligence/trade_analysis/service.py` | **MODIFY** | Updated `analyze_trade()` to pass `volatility_context` and `prediction` to enhanced retriever |
+| `backend/intelligence/trade_analysis/__init__.py` | **MODIFY** | Export new types + sector mapping functions |
+
+**Matching Factor Design:**
+
+| Factor | Weight | Scoring |
+|--------|--------|---------|
+| regime_similarity | 0.25 | Hierarchical: exact=1.0, same category=0.6, different=0.0 |
+| volatility_match | 0.20 | Vol level from regime/context: exact=1.0, adjacent=0.4, opposite=0.0 |
+| feature_similarity | 0.25 | Jaccard-style overlap ratio of top feature names in embedding text |
+| sector_alignment | 0.15 | Same sector=1.0, related (via RELATED_SECTORS graph)=0.5, different=0.0 |
+| breakout_structure | 0.15 | Direction match (0.6) + breakout feature presence in both (0.4) or neither (0.2) |
+
+**Test Results (45/45 PASSED):**
+
+| Scenario | Tests | Coverage |
+|----------|-------|----------|
+| TestSectorMap | 8 | Known symbols, unknown ticker, ticker variants, same/related/unrelated/none sectors, all mapped |
+| TestRegimeSimilarity | 5 | Exact, same category bullish/bearish/neutral, different category, none inputs, unknown regime |
+| TestVolatility | 8 | Resolve from regime/context/none, exact/adjacent/extreme match, none inputs |
+| TestFeatureSimilarity | 4 | All/partial/no match, empty inputs |
+| TestSectorAlignment | 5 | Same/related/different sector, none target, unknown ticker |
+| TestBreakoutStructure | 5 | Same direction ± breakout, opposite direction, none predictions, all none |
+| TestPredictionDirection | 4 | Buy/Sell/Hold/None |
+| TestCompositeScore | 4 | Perfect/partial/no match, weight sum validation |
+| TestEnhancedRetriever | 3 | Empty results, without context, result_to_dict format |
+
+All test files deleted after successful run.
+
+**Impact Analysis:** Purely additive — no schema changes, no database migrations, no model changes, no existing API contract changes. Old `find_all_similar()` still works unchanged.
+
+---
+
 *End of chat history*

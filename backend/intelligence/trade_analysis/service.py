@@ -87,11 +87,13 @@ class TradeIntelligenceService:
 
         similarity = self._get_similarity()
         top_features = [f.get("feature", "") for f in (explanation.top_positive_features or [])]
-        result["similar_trades"] = similarity.find_all_similar(
+        result["similar_trades"] = similarity.find_similar_enhanced(
             symbol=symbol,
             regime=explanation.regime_context.get("regime") if explanation.regime_context else None,
             outcome=outcome,
             feature_names=top_features[:5] if top_features else None,
+            volatility_context=explanation.regime_context,
+            prediction=explanation.prediction.get("decision") if explanation.prediction else None,
         )
 
         result["latency_ms"] = round((time.monotonic() - start) * 1000, 2)
