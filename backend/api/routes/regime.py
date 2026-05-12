@@ -129,6 +129,26 @@ async def get_regime_distribution(
     return {"distribution": service.get_regime_distribution(days=days)}
 
 
+@router.get("/transition")
+async def get_transition_summary():
+    service = _get_regime_service()
+    if service is None:
+        raise HTTPException(503, "Regime engine not available")
+
+    return {"transition": service.get_transition_summary()}
+
+
+@router.get("/transition/logs")
+async def get_transition_logs(
+    limit: int = Query(default=50, ge=1, le=500),
+):
+    service = _get_regime_service()
+    if service is None:
+        raise HTTPException(503, "Regime engine not available")
+
+    return {"logs": service.get_transition_logs(limit=limit)}
+
+
 @router.get("/health")
 async def regime_health():
     service = _get_regime_service()
@@ -141,6 +161,7 @@ async def regime_health():
 
     stats = service.get_regime_stats()
     current = service.get_current_regime()
+    transition = service.get_transition_summary()
     return {
         "status": "available",
         "regime_engine_enabled": True,
@@ -148,4 +169,11 @@ async def regime_health():
         "current_confidence": current.confidence if current else None,
         "tracker_total_transitions": stats.get("total_transitions", 0),
         "persistence_ready": stats.get("persistence_ready", False),
+        "transition_detector": {
+            "is_unstable": transition.get("is_unstable", False),
+            "is_transitioning": transition.get("is_transitioning", False),
+            "persistence_bars": transition.get("regime_persistence_bars", 0),
+            "spike_detected": transition.get("vol_spike_detected", False),
+            "confidence_degraded": transition.get("confidence_degraded", False),
+        },
     }

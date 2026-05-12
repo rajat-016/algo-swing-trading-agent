@@ -10,6 +10,7 @@ from intelligence.market_regime.tracker import RegimeTransitionTracker
 from intelligence.market_regime.persistence import RegimePersistence
 from intelligence.market_regime.features import RegimeFeaturePipeline
 from intelligence.market_regime.features.feature_drift_logger import FeatureDriftLogger
+from intelligence.market_regime.transition_detector import TransitionDetector
 
 
 class RegimeService:
@@ -20,6 +21,7 @@ class RegimeService:
         self.persistence = RegimePersistence(self.config, db)
         self.drift_logger = FeatureDriftLogger(db)
         self.feature_pipeline = RegimeFeaturePipeline(self.drift_logger, db)
+        self.transition_detector = TransitionDetector(self.config)
         self._latest_output: Optional[RegimeOutput] = None
 
     def initialize(self, db=None):
@@ -93,6 +95,42 @@ class RegimeService:
             )
 
         output.regime_features = regime_features
+
+        transition_output = self.transition_detector.record(
+            regime=regime_name,
+            confidence=output.confidence,
+            timestamp=output.timestamp,
+        )
+        if transition_output is not None:
+            output.transition_data = {
+                "transition_probability_matrix": transition_output.transition_probability_matrix,
+                "current_transition_probability": transition_output.current_transition_probability,
+                "most_likely_next_regime": transition_output.most_likely_next_regime,
+                "most_likely_next_probability": transition_output.most_likely_next_probability,
+                "regime_persistence_bars": transition_output.regime_persistence_bars,
+                "avg_regime_duration": transition_output.avg_regime_duration,
+                "persistence_alert": transition_output.persistence_alert,
+                "volatility_spike_score": transition_output.volatility_spike_score,
+                "vol_spike_detected": transition_output.vol_spike_detected,
+                "vol_spike_severity": transition_output.vol_spike_severity,
+                "confidence_degradation": transition_output.confidence_degradation,
+                "confidence_degraded": transition_output.confidence_degraded,
+                "confidence_trend": transition_output.confidence_trend,
+                "transition_alert": transition_output.transition_alert,
+                "is_unstable": transition_output.is_unstable,
+                "is_transitioning": transition_output.is_transitioning,
+            }
+            if persist and self.persistence.is_ready:
+                self.persistence.store_transition_log(transition_output, regime_name)
+
+            if transition_output.is_unstable or transition_output.is_transitioning:
+                logger.warning(
+                    f"Regime instability detected: regime={regime_name} "
+                    f"unstable={transition_output.is_unstable} "
+                    f"transitioning={transition_output.is_transitioning} "
+                    f"alerts={transition_output.transition_alert}"
+                )
+
         self._latest_output = output
         return output
 
@@ -115,7 +153,14 @@ class RegimeService:
     def get_regime_distribution(self, days: int = 30) -> Dict[str, int]:
         return self.persistence.get_regime_distribution(days)
 
+    def get_transition_summary(self) -> dict:
+        return self.transition_detector.get_transition_summary()
+
+    def get_transition_logs(self, limit: int = 50) -> List[dict]:
+        return self.persistence.get_transition_logs(limit)
+
     def reset(self):
         self.tracker.reset()
+        self.transition_detector.reset()
         self._latest_output = None
         logger.info("RegimeService reset")

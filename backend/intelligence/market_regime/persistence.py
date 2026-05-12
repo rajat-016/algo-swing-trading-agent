@@ -4,6 +4,7 @@ from loguru import logger
 
 from intelligence.market_regime.config import RegimeConfig
 from intelligence.market_regime.regimes import RegimeOutput, RegimeType
+from intelligence.market_regime.transition_detector import TransitionDetectorOutput
 
 
 REGIME_HISTORY_TABLE = """
@@ -31,6 +32,31 @@ CREATE INDEX IF NOT EXISTS idx_regime_history_created_at
 ON market_regime_history(created_at DESC);
 """
 
+TRANSITION_LOG_TABLE = """
+CREATE TABLE IF NOT EXISTS regime_transition_log (
+    id INTEGER PRIMARY KEY,
+    current_regime VARCHAR NOT NULL,
+    transition_probability DOUBLE,
+    regime_persistence_bars INTEGER,
+    avg_regime_duration DOUBLE,
+    volatility_spike_score DOUBLE,
+    vol_spike_detected BOOLEAN,
+    confidence_degradation DOUBLE,
+    confidence_degraded BOOLEAN,
+    transition_alert VARCHAR,
+    markov_next_regime VARCHAR,
+    markov_next_probability DOUBLE,
+    is_unstable BOOLEAN,
+    is_transitioning BOOLEAN,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+"""
+
+TRANSITION_LOG_INDEX = """
+CREATE INDEX IF NOT EXISTS idx_transition_log_created
+ON regime_transition_log(created_at DESC);
+"""
+
 
 class RegimePersistence:
     def __init__(self, config: RegimeConfig, db=None):
@@ -50,6 +76,14 @@ class RegimePersistence:
             self._db.execute(REGIME_HISTORY_TABLE)
             try:
                 self._db.execute(REGIME_HISTORY_INDEX)
+            except Exception:
+                pass
+            try:
+                self._db.execute(TRANSITION_LOG_TABLE)
+            except Exception:
+                pass
+            try:
+                self._db.execute(TRANSITION_LOG_INDEX)
             except Exception:
                 pass
             self._ready = True
@@ -168,6 +202,71 @@ class RegimePersistence:
         except Exception as e:
             logger.warning(f"Failed to count transitions: {e}")
             return 0
+
+    def store_transition_log(
+        self,
+        transition_output: "TransitionDetectorOutput",
+        current_regime: str,
+    ) -> bool:
+        if not self._ready or self._db is None:
+            return False
+
+        try:
+            self._db.execute(
+                """
+                INSERT INTO regime_transition_log
+                (current_regime, transition_probability, regime_persistence_bars,
+                 avg_regime_duration, volatility_spike_score, vol_spike_detected,
+                 confidence_degradation, confidence_degraded, transition_alert,
+                 markov_next_regime, markov_next_probability, is_unstable,
+                 is_transitioning, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                [
+                    current_regime,
+                    transition_output.current_transition_probability,
+                    transition_output.regime_persistence_bars,
+                    transition_output.avg_regime_duration,
+                    transition_output.volatility_spike_score,
+                    transition_output.vol_spike_detected,
+                    transition_output.confidence_degradation,
+                    transition_output.confidence_degraded,
+                    transition_output.transition_alert,
+                    transition_output.most_likely_next_regime,
+                    transition_output.most_likely_next_probability,
+                    transition_output.is_unstable,
+                    transition_output.is_transitioning,
+                    datetime.now(timezone.utc).isoformat(),
+                ],
+            )
+            return True
+        except Exception as e:
+            logger.error(f"Failed to store transition log: {e}")
+            return False
+
+    def get_transition_logs(self, limit: int = 50) -> List[dict]:
+        if not self._ready or self._db is None:
+            return []
+
+        try:
+            rows = self._db.fetch_all(
+                "SELECT * FROM regime_transition_log ORDER BY created_at DESC LIMIT ?",
+                [limit],
+            )
+            col_names = [
+                "id", "current_regime", "transition_probability",
+                "regime_persistence_bars", "avg_regime_duration",
+                "volatility_spike_score", "vol_spike_detected",
+                "confidence_degradation", "confidence_degraded",
+                "transition_alert", "markov_next_regime",
+                "markov_next_probability", "is_unstable",
+                "is_transitioning", "created_at",
+            ]
+            # Remove confidence_current, confidence_previous from col_names since they're not in the query
+            return [dict(zip(col_names, r)) for r in rows]
+        except Exception as e:
+            logger.warning(f"Failed to query transition logs: {e}")
+            return []
 
     def _row_to_dict(self, row) -> dict:
         col_names = [
