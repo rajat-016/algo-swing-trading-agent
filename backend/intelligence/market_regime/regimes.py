@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, field
 
 
@@ -105,6 +105,7 @@ class RegimeOutput:
     suggested_behavior: List[str] = field(default_factory=list)
     signal_breakdown: dict = field(default_factory=dict)
     timestamp: Optional[str] = None
+    regime_features: Optional[Dict[str, Dict[str, float]]] = None
 
     def to_dict(self) -> dict:
         base = {

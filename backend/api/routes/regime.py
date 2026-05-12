@@ -30,11 +30,8 @@ def _get_regime_service():
         )
 
         db = AnalyticsDB()
-        service = RegimeService(config=config)
-        from intelligence.market_regime.persistence import RegimePersistence
-        persistence = RegimePersistence(config, db)
-        persistence.initialize(db)
-        service.persistence = persistence
+        service = RegimeService(config=config, db=db)
+        service.initialize(db)
         return service
     except Exception as e:
         logger.warning(f"Could not load RegimeService: {e}")
