@@ -120,6 +120,33 @@ CREATE TABLE IF NOT EXISTS shap_explanations (
 );
 """
 
+PORTFOLIO_INSIGHTS_SCHEMA = """
+CREATE TABLE IF NOT EXISTS portfolio_insights (
+    id INTEGER PRIMARY KEY,
+    snapshot_time TIMESTAMP,
+    total_value DOUBLE,
+    num_positions INTEGER,
+    num_sectors INTEGER,
+    top_holding_pct DOUBLE,
+    top_3_holdings_pct DOUBLE,
+    herfindahl_index DOUBLE,
+    sector_exposures TEXT,
+    capital_concentrations TEXT,
+    correlation_pairs TEXT,
+    correlation_clusters TEXT,
+    portfolio_daily_vol_pct DOUBLE,
+    portfolio_annualized_vol_pct DOUBLE,
+    weighted_vol_pct DOUBLE,
+    net_exposure_pct DOUBLE,
+    directional_bias VARCHAR,
+    risk_score DOUBLE,
+    overall_risk_level VARCHAR,
+    alerts TEXT,
+    regime_label VARCHAR,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+"""
+
 ANALYTICAL_SCHEMAS = [
     TRADE_MEMORY_SCHEMA_V1,
     MARKET_MEMORY_SCHEMA,
@@ -127,6 +154,7 @@ ANALYTICAL_SCHEMAS = [
     PREDICTION_LOG_ANALYTICS_SCHEMA,
     REFLECTION_LOG_SCHEMA,
     SHAP_EXPLANATIONS_SCHEMA,
+    PORTFOLIO_INSIGHTS_SCHEMA,
 ]
 
 OHLCV_REQUIRED_COLS = ["datetime", "open", "high", "low", "close", "volume", "symbol"]

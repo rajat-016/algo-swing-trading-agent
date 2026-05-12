@@ -1912,4 +1912,56 @@ All test files deleted after successful run.
 
 ---
 
+## 2026-05-12
+
+### Session: Implement Portfolio Intelligence Engine
+
+**User Request:** Implement Portfolio Intelligence Engine — portfolio-level intelligence and systemic risk analysis.
+
+**Scope Delivered:**
+- sector concentration
+- exposure analysis
+- volatility exposure
+- directional bias
+- capital concentration
+- correlation clustering
+
+**Files Created (8 new files in `backend/intelligence/portfolio_analysis/`):**
+
+| File | Purpose |
+|------|---------|
+| `__init__.py` | Package init |
+| `config.py` | PortfolioConfig (max_sector_pct, correlation thresholds, vol thresholds) |
+| `exposure_analyzer.py` | ExposureAnalyzer — sector exposures (SECTOR_MAP-based), capital concentration (top N, Herfindahl index), overexposure detection |
+| `correlation_analyzer.py` | CorrelationAnalyzer — pairwise correlation matrix, BFS-based cluster detection, high/medium/low classification |
+| `volatility_analyzer.py` | VolatilityAnalyzer — daily/annualized vol per holding, portfolio weighted vol, high/low vol detection |
+| `directional_bias.py` | DirectionalBiasAnalyzer — net/long/short exposure, bullish/bearish/neutral classification |
+| `risk_insights.py` | RiskInsightsGenerator — overexposure, correlated position, directional bias, volatility alerts; instability flags; composite risk score (0-100) |
+| `persistence.py` | PortfolioPersistence — DuckDB save/load for portfolio_insights snapshots |
+| `service.py` | PortfolioIntelligenceService — unified facade, regime context integration, load holdings from DB, price data for correlation |
+
+**Files Modified (4):**
+
+| File | Change |
+|------|--------|
+| `backend/core/config.py` | Added `portfolio_engine_enabled: bool = True` |
+| `backend/core/analytics_db.py` | Added `PORTFOLIO_INSIGHTS_SCHEMA` + registered in `ANALYTICAL_SCHEMAS` |
+| `backend/api/routes/__init__.py` | Registered `portfolio` route module |
+| `backend/api/routes/portfolio.py` | **NEW** — 5 endpoints: `GET /portfolio/risk`, `GET /portfolio/risk/no-persist`, `GET /portfolio/history`, `GET /portfolio/latest`, `GET /portfolio/health` |
+
+**API Endpoints:**
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /portfolio/risk` | Full portfolio analysis with persistence |
+| `GET /portfolio/risk/no-persist` | Analysis without DuckDB persistence |
+| `GET /portfolio/history` | Historical portfolio snapshots |
+| `GET /portfolio/latest` | Latest snapshot |
+| `GET /portfolio/health` | Engine health + latest risk level |
+
+**Impact Analysis:** Purely additive — no schema changes to existing SQLAlchemy models, no database migrations, no existing API contract changes. New DuckDB schema (`portfolio_insights`) auto-created on first use. Builds on existing `SECTOR_MAP`, `AnalyticsDB`, `RegimeService`, and `PORTFOLIO_RISK` prompt template.
+
+**Unit Testing:** 46 scenarios covering all modules — config defaults/custom, exposure (empty, sector, concentration, overexposure, HHI), correlation (empty, perfect, high, returns, cluster, NaN), volatility (empty, classification, high/low, weighted), directional bias (empty, long, short, mixed, neutral, with capital), risk insights (empty, overexposure, correlation, bias, instability, score bounds), persistence (no-db, serialize, save/load), service (empty DB, with holdings, history), integration pipeline. All 46 tests passed. Test file deleted after verification.
+
+---
+
 *End of chat history*

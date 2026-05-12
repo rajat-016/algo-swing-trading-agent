@@ -150,6 +150,9 @@ class Settings(BaseSettings):
     # Reflection Engine
     reflection_engine_enabled: bool = Field(default=False)
 
+    # Portfolio Intelligence Engine
+    portfolio_engine_enabled: bool = Field(default=True)
+
     # Explainability Engine
     explainability_enabled: bool = Field(default=True)
     shap_top_features: int = Field(default=15)
