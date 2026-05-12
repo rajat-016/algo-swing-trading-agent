@@ -147,6 +147,27 @@ CREATE TABLE IF NOT EXISTS portfolio_insights (
 );
 """
 
+CORRELATION_ANALYSIS_SCHEMA = """
+CREATE TABLE IF NOT EXISTS correlation_analysis (
+    id INTEGER PRIMARY KEY,
+    snapshot_time TIMESTAMP,
+    rolling_window_size INTEGER,
+    rolling_step INTEGER,
+    rolling_trend VARCHAR,
+    rolling_stability DOUBLE,
+    current_avg_corr DOUBLE,
+    num_symbols INTEGER,
+    sector_clusters TEXT,
+    inter_sector_matrix TEXT,
+    instability_alerts TEXT,
+    correlation_regime VARCHAR,
+    diversification_score DOUBLE,
+    diversification_breakdown TEXT,
+    regime_label VARCHAR,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+"""
+
 ANALYTICAL_SCHEMAS = [
     TRADE_MEMORY_SCHEMA_V1,
     MARKET_MEMORY_SCHEMA,
@@ -155,6 +176,7 @@ ANALYTICAL_SCHEMAS = [
     REFLECTION_LOG_SCHEMA,
     SHAP_EXPLANATIONS_SCHEMA,
     PORTFOLIO_INSIGHTS_SCHEMA,
+    CORRELATION_ANALYSIS_SCHEMA,
 ]
 
 OHLCV_REQUIRED_COLS = ["datetime", "open", "high", "low", "close", "volume", "symbol"]
