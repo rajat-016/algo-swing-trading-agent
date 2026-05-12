@@ -1340,210 +1340,68 @@ All test files deleted after successful run.
 
 ---
 
-## 2026-05-11
-
-### Session: Semantic Retrieval Engine — Similarity Search, Hybrid Filtering, Metadata Ranking, Semantic Scoring, Audit Logging
-
-**User Request:** Implement semantic search workflows for historical trade and market retrieval — similarity search, hybrid filtering, metadata ranking, semantic scoring, retrieval audit logging. Support example queries like "Find failed breakout trades during high volatility regimes".
-
-**Architecture — 4 New Modules:**
-
-| Module | File | Purpose |
-|--------|------|---------|
-| Scoring | `memory/retrieval/scoring.py` | `normalize_scores()` (min-max normalization), `compute_cross_collection_similarity()` (per-type context boost), `compute_weighted_score()` (vector+keyword+ranked), `clip_relevance()` (threshold filter) |
-| Ranking | `memory/retrieval/ranking.py` | `rank_results()` — metadata-boosted ranking with 3 factors: `_compute_confidence_boost()` (weighted), `_compute_recency_boost()` (exponential decay, 30-day half-life), `_compute_outcome_boost()` (priority-ordered: stop_loss_hit > failed > partial_exit > target_hit > success) |
-| Hybrid Search | `memory/retrieval/hybrid_search.py` | `hybrid_search()` — parallel vector + keyword queries across collections, score normalization, weighted merge (`vector_weight` + `keyword_weight`), dedup by document ID |
-| Audit | `memory/retrieval/audit.py` | `RetrievalAuditor` — thread-safe in-memory audit trail with `log()`, `log_search()`, `get_recent()`, `get_stats()`, JSON `persist()`/`load()`, disable/enable, max entry enforcement |
-
-**New Models in `memory/schemas/memory_schemas.py`:**
-
-| Model | Purpose |
-|-------|---------|
-| `RankingBoost` | Enum: CONFIDENCE, RECENCY, OUTCOME_PRIORITY, NONE |
-| `RankingConfig` | `enabled`, `boosts`, tunable weights (`confidence_weight=0.3`, `recency_weight=0.2`, `outcome_priority_weight=0.15`), `recency_half_life_days=30`, `outcome_priority_order` |
-| `HybridSearchConfig` | `enabled`, `vector_weight=0.7`, `keyword_weight=0.3`, `keyword_n_results_multiplier=2` |
-| `QueryIntent` | `parse()` — natural language query parser extracts: memory types, tickers (stop-word filtered), outcomes, regimes, volatility, confidence thresholds |
-| `AuditLogEntry` | Timestamped query record: `query`, `query_type`, `filters_applied`, `n_requested`, `n_returned`, `latency_ms`, `memory_types_queried`, `result_ids`, `mean_relevance`, `error` |
-
-**Enhancements to Existing Files:**
-
-| File | Change |
-|------|--------|
-| `memory/schemas/memory_schemas.py` | Added 5 new models, `MemoryFilter` gains `volatility`, `tickers`, `outcomes`, `regimes`, `min_timestamp`, `ranking_config`, `hybrid_config` + `from_query_intent()` factory + multi-value ChromaDB `$in` support. `SearchResult` gains `ranked_score`, `hybrid_score` |
-| `memory/retrieval/semantic_retriever.py` | `search()`/`search_by_text()` now normalize scores + rank + audit. New `advanced_search()` (hybrid support + min_relevance clipping). New `search_by_intent()` (auto-parse query). `get_memory_stats()` includes audit stats |
-| `memory/retrieval/__init__.py` | Exports `RetrievalAuditor`, `rank_results`, `normalize_scores`, `compute_weighted_score`, `clip_relevance`, `hybrid_search` |
-| `memory/__init__.py` | Exports 5 new models + `RetrievalAuditor` + scoring/ranking/hybrid utils |
-
-**Test Results (70/70 PASSED, 0 warnings):**
-
-| Category | Tests | Coverage |
-|----------|-------|----------|
-| QueryIntent | 9 | Parsing all query types, ticker extraction, stop words, confidence thresholds, default memory types |
-| MemoryFilter | 9 | from_query_intent, to_chroma_where single/multi/no clauses, min_confidence, multi-value filters, ranking/hybrid config defaults |
-| Ranking Models | 3 | RankingConfig defaults/custom, RankingBoost enum, HybridSearchConfig |
-| AuditLogEntry | 4 | Creation, error handling, timestamp, serialization |
-| Scoring | 6 | Normalize empty/single/range/same, weighted score, clip relevance, cross-collection similarity |
-| Ranking | 9 | Empty, confidence boost (none/clamped), recency boost (recent/old/no-timestamp), outcome boost (first/middle/unknown), ranking order, disabled |
-| RetrievalAuditor | 9 | Log, get_recent, stats (empty/with-entries), errors, disable/enable, max entries, persist/load, clear, log_search helper |
-| SearchResult | 3 | New fields default/set, empty batch |
-| HybridSearchConfig | 2 | Custom weights, keyword multiplier |
-| Integration | 5 | QueryIntent-to-Filter roundtrip, all-fields parsing, ranking with real metadata, latency tracking, full pipeline |
-
-**Files Created (4):**
-- `backend/memory/retrieval/scoring.py`
-- `backend/memory/retrieval/ranking.py`
-- `backend/memory/retrieval/hybrid_search.py`
-- `backend/memory/retrieval/audit.py`
-
-**Files Modified (5):**
-- `backend/memory/schemas/memory_schemas.py`
-- `backend/memory/retrieval/semantic_retriever.py`
-- `backend/memory/retrieval/__init__.py`
-- `backend/memory/__init__.py`
-- `opencode/chat_history.md`
-
----
-
-## 2026-05-11
-
-### Session: Explainability Engine — SHAP Integration, Feature Attribution, Confidence Analysis, Prediction Explanation APIs
-
-**User Request:** Implement Explainability Engine with SHAP integration, feature attribution, confidence analysis, prediction explanation APIs, and model contribution visualization.
-
-**Architecture:**
-
-```
-backend/intelligence/explainability/
-├── __init__.py                  Package exports
-├── shap_explainer.py            Core SHAP TreeExplainer integration
-├── feature_attribution.py       Top positive/negative driver analysis
-├── confidence_analyzer.py       Group decomposition, entropy, margin
-├── prediction_explainer.py      Orchestrator combining all modules
-└── visualization.py             Waterfall, bar, gauge chart data prep
-```
-
-**Files Created (6):**
-
-| File | Purpose |
-|------|---------|
-| `backend/intelligence/__init__.py` | Package init |
-| `backend/intelligence/explainability/__init__.py` | Module exports (SHAPExplainer, FeatureAttribution, ConfidenceAnalyzer, PredictionExplainer) |
-| `backend/intelligence/explainability/shap_explainer.py` | `SHAPExplainer` — builds `shap.TreeExplainer` on XGBoost model, `compute_shap_values()`, `get_top_features()`, `feature_importance_from_shap()` with 3-class BUY/HOLD/SELL output |
-| `backend/intelligence/explainability/feature_attribution.py` | `FeatureAttribution` — per-class positive/negative driver lists, contribution percentages, summarized attribution with top-5 features |
-| `backend/intelligence/explainability/confidence_analyzer.py` | `ConfidenceAnalyzer` — 7-group decomposition (price_action, moving_averages, momentum, volatility, volume, pattern_strategy, relative_strength), confidence metrics (entropy, margin, level) |
-| `backend/intelligence/explainability/prediction_explainer.py` | `PredictionExplainer` — orchestrator: shap → attribution → confidence → decision drivers → visualization data, JSON serialization with `_NumpyEncoder` |
-| `backend/intelligence/explainability/visualization.py` | `ExplanationVisualizer` — waterfall, feature bar, confidence gauge, group contribution chart, summary dashboard data |
-
-**Files Modified (8):**
-
-| File | Change |
-|------|--------|
-| `backend/core/config.py` | Added 5 explainability settings: `explainability_enabled`, `shap_top_features`, `shap_background_samples`, `shap_max_display_features`, `explanation_cache_ttl_seconds` |
-| `backend/core/model/model.py` | Added `explain(X)` method — returns full explanation dict via PredictionExplainer |
-| `backend/core/model/registry.py` | `save()` accepts `background_samples` (numpy array, capped at 100), stored in model artifact |
-| `backend/models/prediction_log.py` | Added `shap_values` (Text), `top_features` (Text), `explanation_latency` (Float) columns |
-| `backend/models/__init__.py` | Exports `PredictionLog` |
-| `backend/core/database.py` | `_run_migrations()` — auto-adds new columns to existing `prediction_logs` table via ALTER TABLE |
-| `backend/core/analytics_db.py` | Added `SHAP_EXPLANATIONS_SCHEMA` (prediction_id, symbol, base_value, top_features, feature_attribution, shap_values_json, latency_seconds, etc.), `store_shap_explanation()`, `get_recent_explanations()` |
-| `backend/api/routes/__init__.py` | Registered `explanations` router |
-| `backend/requirements.txt` | Added `shap>=0.44.0` |
-| `backend/api/routes/explanations.py` | NEW — 5 endpoints: `GET /explain/prediction/{id}` (cached), `POST /explain/prediction/{id}` (generate), `POST /explain/live` (with probs), `GET /explain/feature-importance`, `GET /explain/recent`, `GET /explain/health` |
-
-**Acceptance Criteria Verification:**
-
-| Criterion | Status |
-|-----------|--------|
-| Prediction explanations generated | ✅ — `explain_prediction()` returns full explanation with 3-class SHAP values, attribution, confidence decomposition |
-| Top feature attribution exposed | ✅ — per-class positive/negative drivers, contribution percentages, group breakdown |
-| Explanation latency under SLA (<3s) | ✅ — Verified: 0.014s for 5 features (well under 3s SLA) |
-
-**Test Results (50/50 PASSED, 10.61s):**
-
-| Category | Tests | Coverage |
-|----------|-------|----------|
-| SHAPExplainer | 13 | Init, TreeExplainer build, compute values (1d/2d), top features, feature importance, SHAP not installed, no model error, normalize output, metadata |
-| FeatureAttribution | 6 | Basic computation, value correctness, summarization, empty edge case, feature match |
-| ConfidenceAnalyzer | 8 | Decompose, group structure, decision drivers, metrics (high/medium/low), empty edge, real feature groups |
-| PredictionExplainer | 8 | Full pipeline, value correctness, metadata passthrough, set_model, JSON serialization, importance ordering, top features structure |
-| Visualization | 6 | Waterfall, bar data, gauge, group chart, dashboard, data keys |
-| Model Explain + Registry | 4 | TradingModel.explain(), untrained guard, registry with/without background samples |
-| API Routes | 3 | NumpyEncoder, health unavailable, route import check |
-| End-to-End | 5 | Full pipeline, latency SLA, JSON serializable, importance from trained model |
-
-All test files deleted after successful run. Graphify knowledge graph updated.
-
----
-
-## 2026-05-11
-
-### Session: Integrate SHAP Explainability Pipeline — Batch SHAP, Cached Explanations, Feature Ranking, Explanation Persistence
-
-**User Request:** Add SHAP-based explanation generation for all production predictions. Features: batch SHAP generation, cached explanations, feature ranking, explanation persistence. Acceptance: SHAP values generated consistently, explanation coverage reaches 100%.
-
-**Implementation:**
-
-| Component | File | Purpose |
-|-----------|------|---------|
-| SHAP Explanation Cache | `backend/intelligence/explainability/shap_cache.py` | `ExplanationCache` — TTL-based in-memory LRU cache for SHAP results, keyed by (feature_hash, symbol, class_idx) |
-| SHAP Service | `backend/intelligence/explainability/shap_service.py` | `SHAPService` — central SHAP orchestrator: `generate_explanation()` with caching, `generate_and_persist()` (generate + store in DB), `generate_batch()` (retroactive SHAP for all un-explained predictions with coverage reporting), `get_feature_ranking()` (aggregate SHAP across 500 most recent predictions), `cache_stats()`, `clear_cache()` |
-
-**Files Modified (5):**
-
-| File | Change |
-|------|--------|
-| `backend/core/monitoring/prediction_monitor.py` | `log_prediction()` accepts optional `shap_explanation` dict — auto-serializes and stores to `shap_values`, `top_features`, `explanation_latency` columns |
-| `backend/services/ai/analyzer.py` | `load_model()` initializes `SHAPService`; `analyze()` generates SHAP explanation after `predict_proba()` using actual feature values `X`, passes to `log_prediction()` |
-| `backend/api/routes/explanations.py` | Added 5 new endpoints: `POST /explain/batch` (batch generate all missing), `GET /explain/feature-ranking` (aggregate ranking), `GET /explain/coverage` (coverage stats), `GET /explain/cache` + `POST /explain/cache/clear`; updated `POST /explain/prediction/{id}` to use `SHAPService` |
-| `backend/intelligence/explainability/__init__.py` | Exports `ExplanationCache`, `SHAPService` |
-| `opencode/chat_history.md` | Appended this session summary |
-
-**Architecture — SHAP Flow:**
-
-```
-analyze() ──► predict_proba(X) ──► SHAPService.generate_explanation(X, probs)
-                                      │
-                                      ├─► ExplanationCache.get(feature_hash, symbol, class_idx)
-                                      │     ↳ Cache hit → return cached explanation
-                                      │     ↳ Cache miss → compute SHAP via TreeExplainer
-                                      │
-                                      ├─► ExplanationCache.set()  (store in memory)
-                                      │
-                                      └─► PredictionMonitor.log_prediction(shap_explanation=...)
-                                            ↳ Auto-serialized to PredictionLog.shap_values
-```
-
-**Acceptance Criteria Verification:**
-
-| Criterion | Status |
-|-----------|--------|
-| SHAP values generated consistently | ✅ — `analyze()` generates SHAP for every prediction using actual feature values `X` (not dummy zeros) |
-| Explanation coverage reaches 100% | ✅ — `log_prediction()` stores SHAP inline; `POST /explain/batch` retroactively fills gaps; `GET /explain/coverage` reports coverage_pct |
-
-**Batch Generation API:**
-```bash
-# Generate SHAP for all predictions missing explanations (up to 1000)
-curl -X POST "http://localhost:8000/explain/batch?limit=1000"
-
-# Get coverage stats
-curl "http://localhost:8000/explain/coverage"
-# Response: {"total_predictions": N, "with_explanations": N, "coverage_pct": 100.0, "status": "complete"}
-
-# Get aggregate feature ranking across all predictions
-curl "http://localhost:8000/explain/feature-ranking?top_n=20&class_label=BUY"
-```
-
-**Test Results (26/26 PASSED in 0.82s):**
-
-| Module | Tests | Coverage |
-|--------|-------|----------|
-| ExplanationCache | 9 | set/get, cache miss, key uniqueness, TTL expiry, LRU eviction, clear, stats, LRU renew on access, class idx differentiation |
-| SHAPService | 17 | init no model, set_model, set_model with background, generate explanation caching, no model error, generate_and_persist, not found, batch no predictions, batch with predictions, feature ranking, empty ranking, cache stats, clear cache, 1d array, batch no model, cache hit/miss, empty batch |
-
-All test files deleted after successful run. Graphify update skipped (binary not in PATH).
-
----
-
 ## 2026-05-12
+
+### Session: Regime-Specific Feature Pipelines — Volatility Clustering, Trend Persistence, Breadth Analytics, Sector Strength, Market Stress
+
+**User Request:** Create regime-specific feature pipelines:
+1. Volatility clustering metrics
+2. Trend persistence indicators
+3. Breadth analytics
+4. Sector strength calculations
+5. Market stress indicators
+
+**Acceptance Criteria:**
+- ✅ Features aligned with production pipeline (versioned + hashed + export_snapshot pattern)
+- ✅ Feature drift logging enabled (PSI-based DriftDetector pattern, DuckDB persisted)
+- ✅ Regime feature snapshots persisted (DuckDB `regime_feature_snapshots` table)
+
+**Implementation Summary:**
+
+| Layer | Files Created/Modified | Responsibility |
+|-------|----------------------|----------------|
+| **Features Package** | `features/__init__.py` | Package exports |
+| **Volatility Clustering** | `features/volatility_clustering.py` | Ljung-Box, serial corr, half-life, HV percentile, Parkinson/Yang-Zhang vol, vol-of-vol, regime vol, GARCH-like signal, mean-reversion speed, tail ratio, skew/kurtosis |
+| **Trend Persistence** | `features/trend_persistence.py` | ADX slope, EMA alignment, trend consistency, MACD persistence, LR slope stability, choppiness index, directional persistence, EMA strength, consecutive bars |
+| **Breadth Analytics** | `features/breadth_analytics.py` | % above MA50/200, advance-decline ratio, breadth thrust, McClellan oscillator, cumulative breadth, universe-level metrics |
+| **Sector Strength** | `features/sector_strength.py` | Relative strength, sector vs market, momentum ranking, acceleration, correlation, dispersion, rotation intensity, lead-lag ratio |
+| **Market Stress** | `features/market_stress.py` | VIX level/gauge, max drawdown, skew, realized vol, volume spike, below MA ratios, consecutive losses, annualized vol |
+| **Drift Logger** | `features/feature_drift_logger.py` | PSI computation, per-group baselines, NORMAL/WARNING/DRIFT status, DuckDB `feature_drift_log` table |
+| **Orchestrator** | `features/pipeline.py` | RegimeFeaturePipeline: compute_all, compute_and_log, export_snapshot, persist_snapshot, snapshot history |
+| **Wiring** | `market_regime/__init__.py` | Added RegimeFeaturePipeline, FeatureDriftLogger, all 5 compute functions |
+| **Wiring** | `regimes.py` | Added `regime_features` field to RegimeOutput |
+| **Wiring** | `service.py` | Integrated RegimeFeaturePipeline into analyze() — auto computes features, logs drift, persists snapshots |
+| **Wiring** | `api/routes/regime.py` | Simplified `_get_regime_service()` to use single initialization |
+
+**Key Design Decisions:**
+1. **Standalone from ML pipeline** — Regime features are market-level intelligence, NOT added to SELECTED_FEATURES (avoids breaking 61-feature ML model)
+2. **Versioned + hashed** — Each feature group has its own version constant, SHA256 feature hashes matching FeaturePipeline.export_snapshot() pattern
+3. **Per-group drift logging** — PSI-based with NORMAL/WARNING/DRIFT status per feature group
+4. **Dual persistence** — RegimeOutput stores latest features in memory; snapshots persisted to DuckDB
+
+**Test Results: 42/42 PASSED**
+- All 5 feature groups tested with normal, empty, insufficient data, and edge case inputs
+- Pipeline integration tested (compute → drift → snapshot → persist lifecycle)
+- DriftLogger verified with identical/different distributions, baselines, and DB logging
+- Test file deleted after successful run
+
+**Files Created (8 new):**
+- `backend/intelligence/market_regime/features/__init__.py`
+- `backend/intelligence/market_regime/features/volatility_clustering.py`
+- `backend/intelligence/market_regime/features/trend_persistence.py`
+- `backend/intelligence/market_regime/features/breadth_analytics.py`
+- `backend/intelligence/market_regime/features/sector_strength.py`
+- `backend/intelligence/market_regime/features/market_stress.py`
+- `backend/intelligence/market_regime/features/feature_drift_logger.py`
+- `backend/intelligence/market_regime/features/pipeline.py`
+
+**Files Modified (4):**
+- `backend/intelligence/market_regime/__init__.py`
+- `backend/intelligence/market_regime/regimes.py`
+- `backend/intelligence/market_regime/service.py`
+- `backend/api/routes/regime.py`
+
+---
 
 ### Session: Market Regime Engine Implementation — Algorithmic Classification, Confidence Scoring, Transition Tracking, Persistence
 

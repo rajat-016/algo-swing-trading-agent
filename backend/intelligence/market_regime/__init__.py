@@ -5,6 +5,15 @@ from intelligence.market_regime.confidence import ConfidenceScorer
 from intelligence.market_regime.tracker import RegimeTransitionTracker
 from intelligence.market_regime.persistence import RegimePersistence
 from intelligence.market_regime.service import RegimeService
+from intelligence.market_regime.features import (
+    RegimeFeaturePipeline,
+    FeatureDriftLogger,
+    compute_volatility_clustering,
+    compute_trend_persistence,
+    compute_breadth_analytics,
+    compute_sector_strength,
+    compute_market_stress,
+)
 
 __all__ = [
     "RegimeConfig",
@@ -15,4 +24,11 @@ __all__ = [
     "RegimeTransitionTracker",
     "RegimePersistence",
     "RegimeService",
+    "RegimeFeaturePipeline",
+    "FeatureDriftLogger",
+    "compute_volatility_clustering",
+    "compute_trend_persistence",
+    "compute_breadth_analytics",
+    "compute_sector_strength",
+    "compute_market_stress",
 ]
