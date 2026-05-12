@@ -1563,4 +1563,71 @@ All test files deleted after successful run.
 
 ---
 
+## 2026-05-12
+
+### Session: Build Trade Intelligence Engine — Contextual Trade Reasoning Workflows
+
+**User Request:** Build Trade Intelligence Engine with trade reasoning workflows, failure analysis, regime mismatch detection, volatility expansion analysis, weak confirmation detection, and similar trade retrieval.
+
+**Requirements (from PRD Section 8.2):**
+- Explain why trades succeed/fail
+- Analyze regime mismatch
+- Analyze volatility expansion
+- Detect weak confirmations
+- Retrieve similar trades
+
+**Dependencies:** Explainability + Semantic retrieval + Regime engine
+
+**Implementation Summary:**
+
+| File | Purpose |
+|------|---------|
+| `backend/intelligence/trade_analysis/reasoning.py` | ReasoningEngine — generates entry rationale, outcome analysis, risk factors, confidence assessment, summary text |
+| `backend/intelligence/trade_analysis/failure_analyzer.py` | FailureAnalyzer — regime mismatch, volatility expansion, weak confirmation detection, stop-loss analysis |
+| `backend/intelligence/trade_analysis/similarity.py` | SimilarTradeRetriever — search by outcome, by regime, by features, combined |
+| `backend/intelligence/trade_analysis/service.py` | TradeIntelligenceService — unified facade (analyze_trade, analyze_failure, get_reasoning) |
+| `backend/api/routes/trade_intelligence.py` | POST /trade/intelligence, POST /trade/intelligence/failure, POST /trade/intelligence/reasoning |
+
+**Wiring:**
+- `backend/api/routes/__init__.py` — registered `trade_intelligence.router`
+
+**Architecture Details:**
+
+| Component | Responsibility | Key Methods |
+|-----------|---------------|-------------|
+| ReasoningEngine | Textual trade reasoning | `generate_trade_reasoning()` → entry_rationale, outcome_analysis, risk_factors, confidence_assessment, summary |
+| FailureAnalyzer | Failure analysis | `analyze_regime_mismatch()` — BUY in bear/high-vol detection; `analyze_volatility_expansion()` — ATR + spike detection; `detect_weak_confirmations()` — low confidence, thin margin, conflicting features; `analyze_stop_loss()` — SL hit + vol/regime contributors; `analyze_failure()` — combined |
+| SimilarTradeRetriever | Enhanced similar trade search | `find_similar_by_outcome()`, `find_similar_by_regime()`, `find_similar_by_features()`, `find_all_similar()` — deduplicates + sorts by relevance |
+| TradeIntelligenceService | Unified facade | `analyze_trade()` — full pipeline (explain → reason → failure analysis → similar); `analyze_failure()` — failure-focused; `get_reasoning()` — reasoning-only |
+
+**Failures Detected:**
+- Regime mismatch: BUY in bear_trend/high_volatility/ event_driven; SELL in bull_trend/breakout; unstable/transitioning regimes
+- Volatility expansion: high_vol regime, ATR spike, vol_spike_detected
+- Weak confirmations: confidence <0.5, margin <0.1, entropy >1.0, opposing SHAP features >50% of positive
+- Stop-loss: SL hit + vol spike = volatility contributor; SL hit + bear/sideways = regime contributor
+
+**API Endpoints (3 new):**
+| Endpoint | Description |
+|----------|-------------|
+| `POST /trade/intelligence` | Full trade intelligence with reasoning + failure analysis + similar trades |
+| `POST /trade/intelligence/failure` | Failure-specific analysis |
+| `POST /trade/intelligence/reasoning` | Reasoning-only generation |
+
+**Test Results (36/36 PASSED):**
+
+| Scenario | Tests | Coverage |
+|----------|-------|----------|
+| ReasoningEngine | 7 | Full reasoning, low confidence, entry rationale, outcome win/loss, risk factors, confidence levels, summary |
+| FailureAnalyzer | 12 | No failure, regime mismatch (bear/unstable/none), vol expansion, weak confirmations (weak/strong/none), SL analysis (hit/none), combined failure |
+| SimilarTradeRetriever | 4 | With results, no results, no retriever, combined search |
+| TradeIntelligenceService | 4 | Full trade, not found, failure analysis, reasoning |
+| Graceful degradation | 4 | Explainer unavailable, minimal data reasoning, minimal data failure, no similarity backend |
+| Request validation | 3 | Minimal, full, symbol required |
+
+All test files deleted after successful run.
+
+**Impact Analysis:** Purely additive — no schema changes, no model changes, no existing route changes. Each component independently degrades when its data source is unavailable.
+
+---
+
 *End of chat history*
