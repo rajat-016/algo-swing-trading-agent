@@ -2,6 +2,23 @@ from typing import Any, Optional
 from core.logging import logger
 
 
+REGIME_FEATURE_ALIGNMENT: dict[str, list[str]] = {
+    "bull_trend": ["momentum", "trend", "breakout", "relative_strength", "volume_expansion", "price_expansion", "sector_momentum"],
+    "bear_trend": ["defensive", "mean_reversion", "put", "bearish", "volatility"],
+    "high_volatility": ["volatility", "atr", "stop_loss", "risk", "range", "compression"],
+    "low_volatility": ["breakout", "compression", "momentum", "volume", "relative_strength"],
+    "breakout": ["breakout", "volume", "momentum", "relative_strength", "price_expansion", "volatility_compression"],
+    "sideways": ["mean_reversion", "range", "support", "resistance", "oscillator"],
+    "event_driven": ["event", "news", "sentiment", "gap", "volume_spike"],
+    "mean_reversion": ["mean_reversion", "oversold", "overbought", "rsi", "bbands", "support", "resistance"],
+}
+
+MOMENTUM_FEATURE_KEYWORDS: list[str] = [
+    "momentum", "trend", "adx", "rsi", "macd", "relative_strength",
+    "price_expansion", "volume_expansion", "breakout",
+]
+
+
 class FailureAnalyzer:
     def analyze_failure(self, prediction: Optional[dict] = None,
                          top_positive: Optional[list] = None,
@@ -12,6 +29,9 @@ class FailureAnalyzer:
         vol_expansion = self.analyze_volatility_expansion(regime_context)
         weak_confirmations = self.detect_weak_confirmations(prediction, top_positive, top_negative)
         stop_loss_analysis = self.analyze_stop_loss(stock_data, regime_context)
+        weak_momentum = self.detect_weak_momentum(regime_context, top_positive)
+        regime_instability = self.analyze_regime_instability(regime_context)
+        feature_alignment = self.analyze_feature_alignment(top_positive, regime_context)
 
         failure_reasons = []
         severity = "low"
@@ -24,10 +44,16 @@ class FailureAnalyzer:
             failure_reasons.append(weak_confirmations["description"])
         if stop_loss_analysis.get("sl_contributor"):
             failure_reasons.append(stop_loss_analysis["description"])
+        if weak_momentum.get("weak_momentum_detected"):
+            failure_reasons.append(weak_momentum["description"])
+        if regime_instability.get("instability_detected"):
+            failure_reasons.append(regime_instability["description"])
+        if feature_alignment.get("poor_alignment_detected"):
+            failure_reasons.append(feature_alignment["description"])
 
-        if len(failure_reasons) >= 2:
+        if len(failure_reasons) >= 3:
             severity = "high"
-        elif len(failure_reasons) == 1:
+        elif len(failure_reasons) >= 1:
             severity = "medium"
 
         return {
@@ -38,6 +64,9 @@ class FailureAnalyzer:
             "volatility_expansion": vol_expansion,
             "weak_confirmations": weak_confirmations,
             "stop_loss_analysis": stop_loss_analysis,
+            "weak_momentum": weak_momentum,
+            "regime_instability": regime_instability,
+            "feature_alignment": feature_alignment,
             "primary_cause": failure_reasons[0] if failure_reasons else None,
         }
 
@@ -207,6 +236,162 @@ class FailureAnalyzer:
                 reasons.append(f"high prediction entropy ({entropy:.2f})")
 
             result["description"] = "Weak trade confirmations: " + "; ".join(reasons) + "."
+
+        return result
+
+    def detect_weak_momentum(self, regime_context: Optional[dict],
+                              top_positive: Optional[list] = None) -> dict:
+        result = {
+            "weak_momentum_detected": False,
+            "description": None,
+            "trend_strength": None,
+            "adx_value": None,
+            "volume_confirmation": None,
+            "momentum_in_features": None,
+        }
+
+        if not regime_context:
+            return result
+
+        trend_ctx = regime_context.get("trend_context", {}) or {}
+        vol_ctx = regime_context.get("volatility_context", {}) or {}
+        trans_data = regime_context.get("transition_data", {}) or {}
+
+        adx = trend_ctx.get("adx")
+        if adx is not None:
+            result["adx_value"] = adx
+            result["trend_strength"] = "strong" if adx >= 25 else "moderate" if adx >= 20 else "weak"
+            if adx < 20:
+                result["weak_momentum_detected"] = True
+
+        vol_decline = trans_data.get("volume_decline_detected", trans_data.get("volume_drop_detected", False))
+        if vol_decline:
+            result["volume_confirmation"] = "declining"
+            result["weak_momentum_detected"] = True
+        elif vol_ctx.get("volume_trend") == "falling":
+            result["volume_confirmation"] = "declining"
+            result["weak_momentum_detected"] = True
+
+        if top_positive:
+            feature_names = [f.get("feature", "").lower() for f in top_positive]
+            has_momentum = any(
+                any(kw in name for kw in MOMENTUM_FEATURE_KEYWORDS)
+                for name in feature_names
+            )
+            result["momentum_in_features"] = has_momentum
+            if not has_momentum and len(feature_names) > 0:
+                result["weak_momentum_detected"] = True
+
+        if result["weak_momentum_detected"]:
+            parts = ["Weak momentum confirmation"]
+            if result.get("adx_value") is not None and result["adx_value"] < 20:
+                parts.append(f"low trend strength (ADX={result['adx_value']:.1f})")
+            if result.get("volume_confirmation") == "declining":
+                parts.append("declining volume")
+            if result.get("momentum_in_features") is False:
+                parts.append("no momentum-related features in top drivers")
+            result["description"] = ". ".join(parts) + "."
+
+        return result
+
+    def analyze_regime_instability(self, regime_context: Optional[dict]) -> dict:
+        result = {
+            "instability_detected": False,
+            "description": None,
+            "stability_label": None,
+            "is_transitioning": False,
+            "likely_next_regime": None,
+            "transition_probability": None,
+            "vol_spike_alert": False,
+            "regime_flip_risk": False,
+        }
+
+        if not regime_context:
+            return result
+
+        stability = regime_context.get("stability", "moderate")
+        trans_data = regime_context.get("transition_data", {}) or {}
+
+        result["stability_label"] = stability
+        result["is_transitioning"] = trans_data.get("is_transitioning", False)
+        result["likely_next_regime"] = trans_data.get("most_likely_next_regime")
+        result["transition_probability"] = trans_data.get("most_likely_next_probability")
+        result["vol_spike_alert"] = trans_data.get("vol_spike_detected", False)
+
+        reasons = []
+
+        if stability == "unstable":
+            result["instability_detected"] = True
+            reasons.append(f"market regime is unstable")
+
+        if trans_data.get("is_transitioning"):
+            result["instability_detected"] = True
+            next_regime = trans_data.get("most_likely_next_regime", "unknown")
+            prob = trans_data.get("most_likely_next_probability")
+            prob_str = f" ({prob:.0%} probability)" if prob else ""
+            reasons.append(f"transitioning to {next_regime}{prob_str}")
+
+        if trans_data.get("vol_spike_detected"):
+            result["instability_detected"] = True
+            reasons.append("volatility spike detected during trade")
+
+        current_regime = regime_context.get("regime", "")
+        likely_next = trans_data.get("most_likely_next_regime", "")
+        if likely_next and current_regime:
+            is_flip = (
+                ("bull" in current_regime and "bear" in likely_next)
+                or ("bear" in current_regime and "bull" in likely_next)
+            )
+            if is_flip:
+                result["regime_flip_risk"] = True
+                result["instability_detected"] = True
+                reasons.append("regime flip risk (bull↔bear transition)")
+
+        if result["instability_detected"]:
+            result["description"] = "Regime instability: " + "; ".join(reasons) + "."
+
+        return result
+
+    def analyze_feature_alignment(self, top_positive: Optional[list],
+                                   regime_context: Optional[dict]) -> dict:
+        result = {
+            "poor_alignment_detected": False,
+            "description": None,
+            "regime_inappropriate_features": [],
+            "missing_regime_features": [],
+            "regime_alignment_score": None,
+        }
+
+        if not top_positive or not regime_context:
+            return result
+
+        regime = regime_context.get("regime", "unknown")
+        feature_names = [f.get("feature", "").lower() for f in top_positive]
+        appropriate = REGIME_FEATURE_ALIGNMENT.get(regime, [])
+
+        regime_inappropriate = [
+            f for f in feature_names
+            if f and not any(akw in f for akw in appropriate)
+        ]
+        missing = [
+            af for af in appropriate[:5]
+            if not any(af in fn for fn in feature_names)
+        ]
+
+        result["regime_inappropriate_features"] = regime_inappropriate[:5]
+        result["missing_regime_features"] = missing[:5]
+
+        if feature_names:
+            aligned = len([f for f in feature_names if any(akw in f for akw in appropriate)])
+            result["regime_alignment_score"] = round(aligned / len(feature_names), 4)
+
+        if regime_inappropriate and len(regime_inappropriate) >= len(feature_names) * 0.5:
+            result["poor_alignment_detected"] = True
+            result["description"] = (
+                f"Poor feature alignment for {regime.replace('_', ' ')} regime. "
+                f"Top features {', '.join(regime_inappropriate[:3])} are not regime-appropriate. "
+                f"Missing regime-aligned features: {', '.join(missing[:3])}."
+            )
 
         return result
 

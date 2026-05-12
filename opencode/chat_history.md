@@ -1677,4 +1677,64 @@ All test files deleted after successful run.
 
 ---
 
+## 2026-05-12
+
+### Session: Build Trade Failure Analyzer — Weak Momentum, Regime Instability, Feature Alignment, Recurring Pattern Analysis, Post-Trade Analysis
+
+**User Request:** Enhance the Trade Failure Analyzer with 3 new detectors (weak momentum, regime instability, poor feature alignment), cross-trade recurring pattern analysis, and auto-generated post-trade analysis.
+
+**Branch:** `feature/build-trade-failure-analyzer`
+
+**Implementation Summary:**
+
+| File | Change | Purpose |
+|------|--------|---------|
+| `backend/intelligence/trade_analysis/failure_analyzer.py` | **ENHANCE** | Added 3 new detectors: `detect_weak_momentum()` (ADX <20, volume decline, momentum feature presence), `analyze_regime_instability()` (stability label, transition detection, regime flip risk, vol spike alerts), `analyze_feature_alignment()` (regime-appropriate feature matching via REGIME_FEATURE_ALIGNMENT, alignment score, missing/inappropriate features). `analyze_failure()` now runs all 7 detectors, severity >=3 reasons = high, outputs `primary_cause`. |
+| `backend/intelligence/trade_analysis/failure_patterns.py` | **CREATE** | `FailurePatternAnalyzer` — queries historical failed trades via `SemanticRetriever`, classifies into 7 pattern categories (`PATTERN_CATEGORIES`), computes frequencies, identifies recurring patterns (>=30% frequency), returns regime/outcome breakdowns and sample trades. |
+| `backend/intelligence/trade_analysis/service.py` | **MODIFY** | Added `_get_pattern_analyzer()` lazy loader, `generate_post_trade_analysis()` (post-mortem). `analyze_trade()` triggers failure analysis on any loss/negative P&L. |
+| `backend/api/routes/trade_intelligence.py` | **MODIFY** | Added `POST /trade/intelligence/post-mortem` endpoint returning structured post-trade analysis. |
+| `backend/intelligence/trade_analysis/__init__.py` | **MODIFY** | Export `FailurePatternAnalyzer`. |
+
+**New Detectors Design:**
+
+| Detector | Logic | Output Keys |
+|----------|-------|-------------|
+| `detect_weak_momentum` | ADX < 20 trend strength + volume decline (transition_data or volatility_context volume_trend=falling) + momentum feature keyword presence in top SHAP features | `weak_momentum_detected`, `adx_value`, `trend_strength`, `volume_confirmation`, `momentum_in_features`, `description` |
+| `analyze_regime_instability` | Regime stability label + transition detection (is_transitioning) + regime flip risk (bull->bear or bear->bull) + vol spike alert | `instability_detected`, `stability_label`, `is_transitioning`, `likely_next_regime`, `regime_flip_risk`, `vol_spike_alert`, `description` |
+| `analyze_feature_alignment` | Feature-to-regime matching via `REGIME_FEATURE_ALIGNMENT` dict (maps 8 regimes -> appropriate feature keywords). Score = matched_weight / total_weight. Flags missing regime features and regime-inappropriate features. | `poor_alignment_detected`, `regime_alignment_score`, `missing_regime_features`, `regime_inappropriate_features`, `description` |
+
+**Post-Trade Analysis Output:**
+```json
+{
+  "status": "ok",
+  "trade_summary": { ... },
+  "reasoning": { ... },
+  "failure_analysis": { ... },
+  "failure_patterns": { "patterns_found": N, "patterns": [...], "recurring_patterns": [...], "most_common_regime": "..." },
+  "similar_trades": [...],
+  "latency_ms": 123
+}
+```
+
+**Test Results (45/45 PASSED):**
+
+| Test Suite | Tests | Coverage |
+|------------|-------|----------|
+| TestWeakMomentum | 8 | No regime context, low ADX, strong ADX, declining volume, momentum features absent/present, description details, volume trend falling |
+| TestRegimeInstability | 7 | No context, stable/unstable regime, transitioning, vol spike, regime flip risk, combined instability |
+| TestFeatureAlignment | 6 | No context/features, aligned/misaligned features, missing regime features, alignment score calculation |
+| TestCombinedFailureAnalysis | 5 | Good data (no failure), all detectors in output, multiple failure reasons, high severity, primary cause |
+| TestFailurePatternAnalyzer | 4 | No retriever, empty patterns, classify results, recurring patterns identified, pattern categories exist |
+| TestRegimeMismatch | 4 | Buy in high risk, buy in bear, sell in bull, no context |
+| TestVolatilityExpansion | 2 | High vol detected, no context |
+| TestWeakConfirmations | 4 | Low/strong confidence, no prediction, conflicting features |
+| TestStopLoss | 2 | SL triggered, no data |
+| TestPostTradeAnalysis | 2 | No explainer, response structure |
+
+All test files deleted after successful run.
+
+**Impact Analysis:** Purely additive — no schema changes, no database migrations, no model changes, no existing API contract changes. All 4 original detector APIs and `analyze_failure()` unchanged.
+
+---
+
 *End of chat history*
