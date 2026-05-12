@@ -41,6 +41,12 @@ class RegimeConfig:
     max_transition_history: int = 1000
     stability_lookback: int = 5
 
+    transition_high_probability_threshold: float = 0.5
+    transition_confidence_degradation_threshold: float = 0.15
+    transition_vol_spike_threshold: float = 0.4
+    transition_persistence_extended_ratio: float = 2.5
+    transition_smoothing_window: int = 3
+
     persistence_duckdb_table: str = "market_regime_history"
 
     def to_dict(self) -> dict:

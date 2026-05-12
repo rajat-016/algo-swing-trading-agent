@@ -1477,3 +1477,50 @@ backend/intelligence/market_regime/
 All test files deleted after successful run.
 
 ---
+
+## 2026-05-12
+
+### Session: Build Regime Transition Detector — Instability Detection, Persistence Tracking, Vol Spike Alerts, Confidence Degradation
+
+**User Request:** Build regime transition detector to detect unstable or transitioning market environments.
+
+**Acceptance Criteria:**
+- ✅ Transition detection operational (Markov probability matrix, stability assessment)
+- ✅ Unstable regimes flagged correctly (vol spike, confidence degradation, persistence fatigue)
+
+**Requirements Met:**
+
+| Requirement | Implementation |
+|---|---|
+| Transition probability scoring | Markov transition count matrix -> normalized probabilities; most_likely_next_regime with probability |
+| Regime persistence tracking | Bar counter per regime, average historical duration, persistence ratio (current/avg), alerts for extended/short-lived regimes |
+| Volatility spike detection | Multi-factor score: regime change frequency x confidence volatility; severity levels (low/medium/high) |
+| Confidence degradation alerts | Prior vs recent confidence means, trend direction (improving/stable/declining), degraded flag when degradation > threshold |
+
+**Files Created (1 new):**
+| File | Purpose |
+|------|---------|
+| `backend/intelligence/market_regime/transition_detector.py` | TransitionDetector + TransitionDetectorOutput |
+
+**Files Modified (5):**
+| File | Change |
+|------|--------|
+| `regimes.py` | Added `transition_data` field to RegimeOutput, included in `to_dict()` |
+| `config.py` | Added 5 new transition detection config params |
+| `persistence.py` | Added `regime_transition_log` DuckDB table + store/get methods |
+| `service.py` | Wired TransitionDetector into `analyze()`, added summary/log methods |
+| `api/routes/regime.py` | Added `/regime/transition` and `/regime/transition/logs` endpoints, enhanced health |
+
+**Test Results: 40/40 PASSED**
+
+| Category | Tests | Coverage |
+|----------|-------|----------|
+| TransitionProbability | 5 | Empty, single regime, matrix forms, probability, multiple transitions |
+| RegimePersistence | 6 | Bar counting, reset on transition, avg duration, ratio, alerts |
+| VolatilitySpike | 4 | Initial, regime vol, confidence vol, stable low-vol |
+| ConfidenceDegradation | 4 | Stable, degrading, improving, insufficient data |
+| StabilityAssessment | 5 | Initial, recent transition, vol spike, confidence degradation, alert format |
+| TransitionDetectorOutput | 2 | Default values, custom values |
+| Integration | 7 | Sequential recording, summary, reset, service wiring, log persistence, summary, output data |
+| RegimeConfig | 2 | New fields, to_dict |
+| EdgeCases | 5 | Single record, confidence vol, high prob transition, max history, all regimes |

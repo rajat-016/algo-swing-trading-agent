@@ -106,6 +106,7 @@ class RegimeOutput:
     signal_breakdown: dict = field(default_factory=dict)
     timestamp: Optional[str] = None
     regime_features: Optional[Dict[str, Dict[str, float]]] = None
+    transition_data: Optional[Dict[str, Any]] = None
 
     def to_dict(self) -> dict:
         base = {
@@ -133,6 +134,8 @@ class RegimeOutput:
             base["volume_context"] = {
                 k: v for k, v in self.volume_context.__dict__.items() if v is not None
             }
+        if self.transition_data:
+            base["transition_data"] = self.transition_data
         return base
 
     @classmethod

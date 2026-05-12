@@ -14,6 +14,10 @@ from intelligence.market_regime.features import (
     compute_sector_strength,
     compute_market_stress,
 )
+from intelligence.market_regime.transition_detector import (
+    TransitionDetector,
+    TransitionDetectorOutput,
+)
 
 __all__ = [
     "RegimeConfig",
@@ -31,4 +35,6 @@ __all__ = [
     "compute_breadth_analytics",
     "compute_sector_strength",
     "compute_market_stress",
+    "TransitionDetector",
+    "TransitionDetectorOutput",
 ]
