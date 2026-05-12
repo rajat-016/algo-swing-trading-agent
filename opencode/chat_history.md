@@ -1524,3 +1524,43 @@ All test files deleted after successful run.
 | Integration | 7 | Sequential recording, summary, reset, service wiring, log persistence, summary, output data |
 | RegimeConfig | 2 | New fields, to_dict |
 | EdgeCases | 5 | Single record, confidence vol, high prob transition, max history, all regimes |
+
+---
+
+## 2026-05-12
+
+### Session: Create Trade Explanation API — Contextual Trade Explanations
+
+**User Request:** Build `POST /trade/explain` endpoint for contextual trade explanations.
+
+**Requirements (from PRD Phase 1):**
+- Response includes: prediction confidence, top positive features, top negative features, regime context, historical trade similarity
+- Must be stable under load
+- Response latency under SLA (<3 seconds)
+
+**Implementation Summary:**
+
+| File | Purpose |
+|------|---------|
+| `backend/intelligence/trade_analysis/__init__.py` | Package exports |
+| `backend/intelligence/trade_analysis/trade_explainer.py` | TradeExplainer service + TradeExplanation dataclass |
+| `backend/api/routes/trade_explain.py` | `POST /trade/explain` endpoint with Pydantic request validation |
+
+**TradeExplainer Architecture:**
+- `_find_prediction()` — looks up PredictionLog by prediction_id, trade_id, or symbol (latest)
+- `_get_prediction_confidence()` — computes confidence level, entropy, margin, probabilities
+- `_get_top_features()` — reads cached SHAP top_features; fallback to on-the-fly SHAP generation
+- `_get_regime_context()` — queries RegimeService for current regime
+- `_get_historical_similarity()` — searches ChromaDB trade_memory via SemanticRetriever
+- Graceful degradation on all external services
+- Per-request latency tracking
+
+**Test Results (35/35 PASSED):**
+
+All test files deleted after successful run.
+
+**Impact Analysis:** Purely additive — no breaking changes.
+
+---
+
+*End of chat history*
