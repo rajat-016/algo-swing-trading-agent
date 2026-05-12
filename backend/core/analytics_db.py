@@ -184,16 +184,24 @@ class AnalyticsDB:
             cols = [row[1] for row in conn.execute(
                 "PRAGMA table_info('trade_memory')"
             ).fetchall()]
+            col_set = set(cols)
             v1_cols = {"prediction", "portfolio_state", "reflection_notes", "schema_version"}
-            missing = v1_cols - set(cols)
+            v2_cols = {"pnl", "pnl_pct", "exit_price", "exit_reason", "closed_at"}
+            all_new = v1_cols | v2_cols
+            missing = all_new - col_set
+            col_types = {
+                "prediction": "VARCHAR",
+                "portfolio_state": "TEXT",
+                "reflection_notes": "TEXT",
+                "schema_version": "VARCHAR DEFAULT '1.0'",
+                "pnl": "DOUBLE",
+                "pnl_pct": "DOUBLE",
+                "exit_price": "DOUBLE",
+                "exit_reason": "VARCHAR",
+                "closed_at": "TIMESTAMP",
+            }
             for col in missing:
-                col_type = {
-                    "prediction": "VARCHAR",
-                    "portfolio_state": "TEXT",
-                    "reflection_notes": "TEXT",
-                    "schema_version": "VARCHAR DEFAULT '1.0'",
-                }[col]
-                conn.execute(f"ALTER TABLE trade_memory ADD COLUMN {col} {col_type}")
+                conn.execute(f"ALTER TABLE trade_memory ADD COLUMN {col} {col_types[col]}")
                 logger.info(f"Migrated trade_memory: added column {col}")
         except Exception as e:
             logger.warning(f"Migration check failed: {e}")

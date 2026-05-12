@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from api.routes import stocks, trading, explanations, regime, trade_explain, trade_intelligence
+from api.routes import stocks, trading, explanations, regime, trade_explain, trade_intelligence, trade_journal
 
 router = APIRouter()
 
@@ -9,3 +9,4 @@ router.include_router(explanations.router)
 router.include_router(regime.router)
 router.include_router(trade_explain.router)
 router.include_router(trade_intelligence.router)
+router.include_router(trade_journal.router)

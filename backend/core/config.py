@@ -144,6 +144,9 @@ class Settings(BaseSettings):
     regime_stability_lookback: int = Field(default=5)
     regime_persist_history: bool = Field(default=True)
 
+    # AI Trade Journal
+    trade_journal_enabled: bool = Field(default=False)
+
     # Explainability Engine
     explainability_enabled: bool = Field(default=True)
     shap_top_features: int = Field(default=15)
