@@ -112,6 +112,41 @@ Generate a reflection covering:
 """,
 )
 
+POST_TRADE_REFLECTION = PromptTemplate(
+    name="post_trade_reflection",
+    description="Generate structured per-trade post-trade reflection",
+    template="""You are a post-trade reflection analyst. Review the following completed trade and produce a structured JSON reflection.
+
+Trade Details:
+- Symbol: $symbol
+- Trade ID: $trade_id
+- Entry Price: $entry_price
+- Exit Price: $exit_price
+- Direction: $direction
+- Confidence: $confidence
+- Market Regime: $regime
+- Outcome: $outcome
+- P&L: $pnl
+- P&L%: $pnl_pct
+- Exit Reason: $exit_reason
+- Feature Snapshot: $feature_snapshot
+- Portfolio State: $portfolio_state
+
+Evaluate the trade across these dimensions and return a JSON object with the following structure:
+{
+    "setup_quality": "Assessment of entry setup technical soundness. Was the risk/reward favorable? Were entry conditions met? Rate as excellent/good/fair/poor with brief explanation.",
+    "execution_quality": "Assessment of execution. Was the entry price good? Was sizing appropriate? Was the exit timely? Rate as excellent/good/fair/poor with brief explanation.",
+    "regime_alignment": "How well the trade aligned with the prevailing market regime. Did the regime support this direction? Rate as aligned/neutral/misaligned with brief explanation.",
+    "volatility_context": "How volatility was factored in. Was volatility favorable for this trade? Were stops appropriately placed? Rate as well-handled/adequate/poorly-handled with brief explanation.",
+    "feature_confirmation_quality": "Whether the ML model features confirmed the trade direction. Did the top features support the decision? Were there contradictory signals? Rate as strong/mixed/weak with brief explanation.",
+    "overall_assessment": "One-paragraph summary of what happened, why, and what could be improved.",
+    "lessons_learned": ["List of 2-4 actionable lessons for future trading"]
+}
+
+Be honest and constructive. Focus on actionable insights.
+""",
+)
+
 RESEARCH_QUERY = PromptTemplate(
     name="research_query",
     description="Answer quant research questions about strategy performance",
@@ -158,4 +193,5 @@ registry.register(TRADE_EXPLANATION)
 registry.register(PORTFOLIO_RISK)
 registry.register(SEMANTIC_SEARCH)
 registry.register(REFLECTION)
+registry.register(POST_TRADE_REFLECTION)
 registry.register(RESEARCH_QUERY)

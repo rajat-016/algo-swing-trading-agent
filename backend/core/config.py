@@ -147,6 +147,9 @@ class Settings(BaseSettings):
     # AI Trade Journal
     trade_journal_enabled: bool = Field(default=False)
 
+    # Reflection Engine
+    reflection_engine_enabled: bool = Field(default=False)
+
     # Explainability Engine
     explainability_enabled: bool = Field(default=True)
     shap_top_features: int = Field(default=15)

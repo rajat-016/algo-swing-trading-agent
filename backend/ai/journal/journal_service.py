@@ -81,6 +81,14 @@ class TradeJournalService:
             logger.debug(f"TradeIntelligenceService not available: {e}")
         return self._trade_intelligence_service
 
+    def _get_reflection_service(self):
+        try:
+            from intelligence.reflection_engine.service import ReflectionService
+            return ReflectionService()
+        except Exception as e:
+            logger.debug(f"ReflectionService not available: {e}")
+            return None
+
     @property
     def enabled(self) -> bool:
         return self._settings.ai_copilot_enabled
@@ -354,6 +362,13 @@ class TradeJournalService:
                     "UPDATE trade_memory SET reflection_notes = ? WHERE trade_id = ?",
                     [reflection_notes, trade_id],
                 )
+
+            reflection_svc = self._get_reflection_service()
+            if reflection_svc and reflection_svc.enabled:
+                try:
+                    await reflection_svc.reflect_trade(trade_data)
+                except Exception as e:
+                    logger.debug(f"Post-trade reflection generation failed: {e}")
 
             logger.debug(f"Post-trade summary stored for {trade_id}")
         except Exception as e:
