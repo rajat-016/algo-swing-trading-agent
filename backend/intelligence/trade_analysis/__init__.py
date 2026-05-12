@@ -1,13 +1,15 @@
 from intelligence.trade_analysis.trade_explainer import TradeExplainer, TradeExplanation
 from intelligence.trade_analysis.reasoning import ReasoningEngine
 from intelligence.trade_analysis.failure_analyzer import FailureAnalyzer
-from intelligence.trade_analysis.similarity import SimilarTradeRetriever
+from intelligence.trade_analysis.similarity import SimilarTradeRetriever, SimilarityMatchFactors, EnhancedSimilarityResult
 from intelligence.trade_analysis.service import TradeIntelligenceService
+from intelligence.trade_analysis.sector_map import get_sector, are_related_sectors
 
 __all__ = [
     "TradeExplainer", "TradeExplanation",
     "ReasoningEngine",
     "FailureAnalyzer",
-    "SimilarTradeRetriever",
+    "SimilarTradeRetriever", "SimilarityMatchFactors", "EnhancedSimilarityResult",
     "TradeIntelligenceService",
+    "get_sector", "are_related_sectors",
 ]
