@@ -12,6 +12,7 @@ class TradeIntelligenceService:
         self._reasoning_engine = None
         self._failure_analyzer = None
         self._similarity = None
+        self._pattern_analyzer = None
 
     def _get_explainer(self):
         if self._explainer is not None:
@@ -41,6 +42,12 @@ class TradeIntelligenceService:
             from intelligence.trade_analysis.similarity import SimilarTradeRetriever
             self._similarity = SimilarTradeRetriever()
         return self._similarity
+
+    def _get_pattern_analyzer(self):
+        if self._pattern_analyzer is None:
+            from intelligence.trade_analysis.failure_patterns import FailurePatternAnalyzer
+            self._pattern_analyzer = FailurePatternAnalyzer()
+        return self._pattern_analyzer
 
     def analyze_trade(self, db: Session, symbol: str,
                        prediction_id: Optional[int] = None,
@@ -142,6 +149,72 @@ class TradeIntelligenceService:
             "latency_ms": round((time.monotonic() - start) * 1000, 2),
         }
         return result
+
+    def generate_post_trade_analysis(self, db: Session, symbol: str,
+                                      prediction_id: Optional[int] = None,
+                                      trade_id: Optional[str] = None) -> dict:
+        start = time.monotonic()
+
+        explainer = self._get_explainer()
+        if explainer is None:
+            return {"symbol": symbol, "status": "error", "message": "TradeExplainer not available"}
+
+        explanation = explainer.explain(db, symbol, prediction_id, trade_id)
+        if explanation.status == "not_found":
+            return {"symbol": symbol, "status": "not_found", "message": explanation.message}
+
+        stock_data = self._get_stock_data(db, symbol, explanation.trade_id)
+        outcome = stock_data.get("actual_outcome") if stock_data else None
+
+        reasoning_engine = self._get_reasoning_engine()
+        reasoning = reasoning_engine.generate_trade_reasoning(
+            prediction=explanation.prediction,
+            top_positive=explanation.top_positive_features,
+            top_negative=explanation.top_negative_features,
+            regime_context=explanation.regime_context,
+            stock_data=stock_data,
+            outcome=outcome,
+        )
+
+        failure_analyzer = self._get_failure_analyzer()
+        failure_analysis = failure_analyzer.analyze_failure(
+            prediction=explanation.prediction,
+            top_positive=explanation.top_positive_features,
+            top_negative=explanation.top_negative_features,
+            regime_context=explanation.regime_context,
+            stock_data=stock_data,
+        )
+
+        pattern_analyzer = self._get_pattern_analyzer()
+        patterns = pattern_analyzer.analyze_patterns(symbol=symbol)
+
+        top_features = [f.get("feature", "") for f in (explanation.top_positive_features or [])]
+        similarity = self._get_similarity()
+        similar_trades = similarity.find_similar_enhanced(
+            symbol=symbol,
+            regime=explanation.regime_context.get("regime") if explanation.regime_context else None,
+            outcome=outcome,
+            feature_names=top_features[:5] if top_features else None,
+            volatility_context=explanation.regime_context,
+            prediction=explanation.prediction.get("decision") if explanation.prediction else None,
+        )
+
+        return {
+            "symbol": symbol,
+            "status": "ok",
+            "trade_summary": {
+                "trade_id": explanation.trade_id,
+                "symbol": explanation.symbol,
+                "timestamp": explanation.timestamp,
+                "decision": explanation.prediction.get("decision") if explanation.prediction else None,
+                "outcome": outcome,
+            },
+            "reasoning": reasoning,
+            "failure_analysis": failure_analysis,
+            "failure_patterns": patterns,
+            "similar_trades": similar_trades,
+            "latency_ms": round((time.monotonic() - start) * 1000, 2),
+        }
 
     def get_reasoning(self, db: Session, symbol: str,
                        prediction_id: Optional[int] = None,

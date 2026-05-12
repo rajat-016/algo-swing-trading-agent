@@ -117,3 +117,34 @@ async def trade_reasoning(
     except Exception as e:
         logger.error(f"Trade reasoning failed: {e}")
         raise HTTPException(500, f"Trade reasoning failed: {str(e)}")
+
+
+@router.post("/intelligence/post-mortem")
+async def trade_post_mortem(
+    request: TradeIntelligenceRequest,
+    db: Session = Depends(get_db),
+):
+    service = _get_intelligence_service()
+    if service is None:
+        raise HTTPException(503, "Trade intelligence engine not available")
+
+    try:
+        result = service.generate_post_trade_analysis(
+            db=db,
+            symbol=request.symbol.upper().strip(),
+            prediction_id=request.prediction_id,
+            trade_id=request.trade_id,
+        )
+
+        if result.get("status") == "not_found":
+            raise HTTPException(404, result.get("message", "No data found"))
+        if result.get("status") == "error":
+            raise HTTPException(503, result.get("message", "Engine error"))
+
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Trade post-mortem failed: {e}")
+        raise HTTPException(500, f"Trade post-mortem failed: {str(e)}")
