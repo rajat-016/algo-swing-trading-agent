@@ -1542,3 +1542,80 @@ curl "http://localhost:8000/explain/feature-ranking?top_n=20&class_label=BUY"
 All test files deleted after successful run. Graphify update skipped (binary not in PATH).
 
 ---
+
+## 2026-05-12
+
+### Session: Market Regime Engine Implementation — Algorithmic Classification, Confidence Scoring, Transition Tracking, Persistence
+
+**User Request:** Implement Market Regime Engine for contextual trading intelligence with 8 regime types (bull_trend, bear_trend, sideways, breakout, mean_reversion, high_volatility, low_volatility, event_driven), confidence scoring, transition tracking, and historical persistence.
+
+**Architecture:**
+
+```
+backend/intelligence/market_regime/
+├── __init__.py                  Package exports (all 8 classes)
+├── config.py                    RegimeConfig dataclass (28 threshold parameters)
+├── regimes.py                   RegimeType enum, RegimeOutput model, VolatilityContext, TrendContext, BreadthContext, VolumeContext
+├── indicators.py                Technical indicators (EMA, SMA, ATR, ADX, MACD, BB width, RSI, volume ratio)
+├── classifier.py                RegimeClassifier — multi-signal algorithmic classification for all 8 regimes
+├── confidence.py                ConfidenceScorer — signal agreement + strength + stability weighted scoring
+├── tracker.py                   RegimeTransitionTracker — transition history deque, regime change detection
+├── persistence.py               RegimePersistence — DuckDB/SQLite storage for regime history
+└── service.py                   RegimeService — unified facade integrating all components
+```
+
+**Files Created (9 new):**
+| File | Purpose |
+|------|---------|
+| `backend/intelligence/market_regime/__init__.py` | Package exports |
+| `backend/intelligence/market_regime/config.py` | Threshold configuration (28 params) |
+| `backend/intelligence/market_regime/regimes.py` | Enum, output models, metadata |
+| `backend/intelligence/market_regime/indicators.py` | 6 indicator computation modules |
+| `backend/intelligence/market_regime/classifier.py` | 8-regime classification logic |
+| `backend/intelligence/market_regime/confidence.py` | Weighted confidence scoring |
+| `backend/intelligence/market_regime/tracker.py` | Transition tracking + stats |
+| `backend/intelligence/market_regime/persistence.py` | DuckDB persistence |
+| `backend/intelligence/market_regime/service.py` | Unified RegimeService |
+| `backend/api/routes/regime.py` | 7 API endpoints |
+
+**Files Modified (5):**
+| File | Change |
+|------|--------|
+| `backend/core/config.py` | Added 10 regime config fields |
+| `backend/api/routes/__init__.py` | Registered regime router |
+| `backend/ai/inference/duckdb_setup.py` | Added REGIME_HISTORY_SCHEMA |
+| `backend/core/analytics_db.py` | Added REGIME_HISTORY_SCHEMA |
+| `backend/api/routes/explanations.py` | Fixed deprecated `regex` -> `pattern` |
+| `opencode/chat_history.md` | Appended this session summary |
+
+**Classification Algorithm:**
+- 8 regime types with multi-signal scoring (each signal 0-1, threshold-gated)
+- Confidence = 0.4×agreement + 0.4×strength + 0.2×stability
+- Stability computed from transition change rate over N lookback periods
+- Transitions tracked with timestamps, transition types (initial/no_change/transition)
+- Persistence to DuckDB `market_regime_history` table with full context columns
+
+**API Endpoints (7):**
+- `GET /regime/current` — current regime
+- `POST /regime/analyze` — analyze with OHLCV JSON data
+- `GET /regime/history` — persisted regime history
+- `GET /regime/stats` — tracker + persistence stats
+- `GET /regime/transitions` — recent transitions
+- `GET /regime/distribution` — regime count distribution
+- `GET /regime/health` — engine health
+
+**Smoke Tests (45/45 PASSED):**
+| Category | Tests | Coverage |
+|----------|-------|----------|
+| RegimeConfig | 5 | Default, custom, to_dict, from_dict, invalid filter |
+| RegimeType | 3 | All types, metadata completeness, risk levels |
+| RegimeOutput | 5 | Default, to_dict, context, from_dict, unknown |
+| ConfidenceScorer | 6 | Empty, high/low agreement, stable/unstable, single |
+| RegimeTransitionTracker | 6 | Initial, no-change, change, recent, stats, reset |
+| RegimeClassifier | 6 | Bull, high-vol, empty, stability, behavior, sorting |
+| RegimeService | 6 | Analyze, empty, current, stats, multi, reset |
+| Indicators | 8 | Trend, vol, volume, momentum, breadth, empty edge cases |
+
+All test files deleted after successful run.
+
+---

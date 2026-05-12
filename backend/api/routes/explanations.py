@@ -248,7 +248,7 @@ async def batch_generate_explanations(
 @router.get("/feature-ranking")
 async def feature_ranking(
     top_n: int = Query(default=20, ge=1, le=81),
-    class_label: str = Query(default="BUY", regex="^(BUY|SELL|HOLD)$"),
+    class_label: str = Query(default="BUY", pattern="^(BUY|SELL|HOLD)$"),
     db: Session = Depends(get_db),
 ):
     """Aggregate SHAP feature importance across all predictions."""
