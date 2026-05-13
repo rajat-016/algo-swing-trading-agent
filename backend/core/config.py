@@ -162,6 +162,15 @@ class Settings(BaseSettings):
     # Portfolio Intelligence Engine
     portfolio_engine_enabled: bool = Field(default=True)
 
+    # Drift Detection Engine
+    drift_detection_enabled: bool = Field(default=True)
+    drift_psi_warning_threshold: float = Field(default=0.1)
+    drift_psi_critical_threshold: float = Field(default=0.25)
+    drift_variance_window_size: int = Field(default=20)
+    drift_variance_zscore_threshold: float = Field(default=2.0)
+    drift_variance_change_threshold: float = Field(default=50.0)
+    drift_contribution_change_threshold: float = Field(default=20.0)
+
     # Explainability Engine
     explainability_enabled: bool = Field(default=True)
     shap_top_features: int = Field(default=15)
