@@ -156,6 +156,9 @@ class Settings(BaseSettings):
     reflection_summary_auto_generate_enabled: bool = Field(default=False)
     reflection_summary_auto_generate_interval_hours: int = Field(default=24)
 
+    # Quant Research Assistant
+    research_assistant_enabled: bool = Field(default=True)
+
     # Portfolio Intelligence Engine
     portfolio_engine_enabled: bool = Field(default=True)
 

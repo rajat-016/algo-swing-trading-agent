@@ -209,6 +209,62 @@ class OrchestrationEngine:
             context_data=context_data,
         )
 
+    async def analyze_feature_drift(
+        self,
+        total_features: str,
+        drifted_count: str,
+        warning_count: str,
+        drift_ratio: str,
+        drifted_features: str,
+        regime_context: str = "",
+    ) -> str:
+        return await self.inference.render_and_generate(
+            "feature_drift_analysis",
+            config_key="analysis",
+            total_features=total_features,
+            drifted_count=drifted_count,
+            warning_count=warning_count,
+            drift_ratio=drift_ratio,
+            drifted_features=drifted_features,
+            regime_context=regime_context,
+        )
+
+    async def deep_compare_strategies(
+        self,
+        strategies: str,
+        performance_data: str,
+        gap_analysis: str,
+        regime_context: str = "",
+    ) -> str:
+        return await self.inference.render_and_generate(
+            "strategy_deep_compare",
+            config_key="analysis",
+            strategies=strategies,
+            performance_data=performance_data,
+            gap_analysis=gap_analysis,
+            regime_context=regime_context,
+        )
+
+    async def analyze_experiment(
+        self,
+        experiment_name: str,
+        total_runs: str,
+        metric_trends: str,
+        parameter_sensitivity: str,
+        best_params: str = "",
+        worst_params: str = "",
+    ) -> str:
+        return await self.inference.render_and_generate(
+            "experiment_analysis",
+            config_key="analysis",
+            experiment_name=experiment_name,
+            total_runs=total_runs,
+            metric_trends=metric_trends,
+            parameter_sensitivity=parameter_sensitivity,
+            best_params=best_params,
+            worst_params=worst_params,
+        )
+
     async def process_query(self, question: str) -> str:
         search_prompt = prompt_registry.render(
             "semantic_search",
