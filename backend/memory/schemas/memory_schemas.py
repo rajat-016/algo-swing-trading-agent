@@ -140,7 +140,7 @@ class MemoryType(str, enum.Enum):
 
 
 class TradeMemory(BaseModel):
-    SCHEMA_VERSION: ClassVar[str] = "1.0"
+    SCHEMA_VERSION: ClassVar[str] = "1.1"
 
     trade_id: str = Field(description="Unique trade identifier")
     ticker: str = Field(description="Stock ticker symbol")
@@ -154,6 +154,7 @@ class TradeMemory(BaseModel):
     portfolio_state: Optional[dict[str, Any]] = Field(default=None, description="Portfolio snapshot at trade time")
     reflection_notes: Optional[str] = Field(default=None, description="Post-trade analysis and reflection")
     schema_version: str = Field(default=SCHEMA_VERSION, description="Schema version identifier")
+    integrity_hash: Optional[str] = Field(default=None, description="SHA-256 integrity hash for governance validation")
 
     @field_validator("timestamp")
     @classmethod
@@ -244,6 +245,12 @@ class TradeMemory(BaseModel):
         except Exception as e:
             return False, str(e)
 
+    @staticmethod
+    def compute_integrity_hash(fields: dict[str, Any], text: str = "") -> str:
+        import hashlib, json
+        content = json.dumps(fields, sort_keys=True, default=str) + text
+        return hashlib.sha256(content.encode("utf-8")).hexdigest()
+
     def to_embedding_text(self) -> str:
         parts = [
             f"Trade {self.trade_id}: {self.ticker}",
@@ -288,6 +295,14 @@ class TradeMemory(BaseModel):
             meta["outcome"] = self.outcome
         if self.confidence is not None:
             meta["confidence"] = self.confidence
+        core_fields = {
+            "trade_id": self.trade_id,
+            "ticker": self.ticker,
+            "timestamp": self.timestamp,
+            "reasoning": self.reasoning,
+        }
+        embedding_text = self.to_embedding_text()
+        meta["integrity_hash"] = self.compute_integrity_hash(core_fields, embedding_text)
         return meta
 
     def collection_id(self) -> str:
@@ -303,6 +318,7 @@ class MarketMemory(BaseModel):
     description: str = Field(description="Detailed market observation")
     indicators: Optional[dict[str, float]] = Field(default=None, description="Key indicator values")
     metadata: Optional[dict[str, Any]] = Field(default=None, description="Additional metadata")
+    integrity_hash: Optional[str] = Field(default=None, description="SHA-256 integrity hash for governance validation")
 
     def to_embedding_text(self) -> str:
         parts = [
@@ -332,6 +348,8 @@ class MarketMemory(BaseModel):
             meta["event_type"] = self.event_type
         if self.metadata:
             meta.update(self.metadata)
+        core_fields = {"regime_type": self.regime_type, "timestamp": self.timestamp}
+        meta["integrity_hash"] = TradeMemory.compute_integrity_hash(core_fields, self.to_embedding_text())
         return meta
 
     def collection_id(self) -> str:
@@ -347,6 +365,7 @@ class ResearchMemory(BaseModel):
     strategy: Optional[str] = Field(default=None, description="Related strategy")
     metric_value: Optional[float] = Field(default=None, description="Key metric value")
     metadata: Optional[dict[str, Any]] = Field(default=None, description="Additional metadata")
+    integrity_hash: Optional[str] = Field(default=None, description="SHA-256 integrity hash for governance validation")
 
     def to_embedding_text(self) -> str:
         parts = [f"Finding: {self.finding}"]
@@ -377,6 +396,8 @@ class ResearchMemory(BaseModel):
             meta["metric_value"] = self.metric_value
         if self.metadata:
             meta.update(self.metadata)
+        core_fields = {"timestamp": self.timestamp, "finding": self.finding}
+        meta["integrity_hash"] = TradeMemory.compute_integrity_hash(core_fields, self.to_embedding_text())
         return meta
 
     def collection_id(self) -> str:

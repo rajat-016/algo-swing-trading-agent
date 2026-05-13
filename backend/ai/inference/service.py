@@ -13,6 +13,7 @@ from ai.llm.models import CHAT_CONFIGS, ModelConfig
 from ai.orchestration.circuit_breaker import AICircuitBreaker
 from ai.prompts.registry import registry as prompt_registry
 from core.monitoring import get_metrics_collector
+from core.governance import get_governance_manager
 
 
 class InferenceService:
@@ -32,6 +33,7 @@ class InferenceService:
             reset_seconds=ai_settings.inference_circuit_breaker_reset_seconds,
         )
         self._metrics = get_metrics_collector()
+        self._governance = get_governance_manager()
         self._initialized = False
 
     async def initialize(self):
@@ -62,12 +64,35 @@ class InferenceService:
             latency = time.monotonic() - start
             self.circuit_breaker.record_success()
             self._metrics.record_latency("inference.generate", latency * 1000)
+
+            self._governance.log_ai_output(
+                action="generate",
+                component="inference_service",
+                details={
+                    "config_key": config_key,
+                    "prompt_length": len(prompt),
+                    "response_length": len(result),
+                    "result_preview": result[:200],
+                },
+                start_time=start,
+            )
+
             logger.debug(f"AI generate: {latency:.2f}s, prompt={len(prompt)} chars")
             return result
         except Exception as e:
             latency = time.monotonic() - start
             self.circuit_breaker.record_failure()
             self._metrics.record_error("inference.generate", str(e))
+
+            self._governance.log_ai_output(
+                action="generate",
+                component="inference_service",
+                details={"config_key": config_key, "prompt_length": len(prompt)},
+                start_time=start,
+                status="error",
+                error=str(e),
+            )
+
             logger.error(f"AI generate failed after {latency:.2f}s: {e}")
             raise
 
@@ -91,12 +116,35 @@ class InferenceService:
             latency = time.monotonic() - start
             self.circuit_breaker.record_success()
             self._metrics.record_latency("inference.chat", latency * 1000)
+
+            self._governance.log_ai_output(
+                action="chat",
+                component="inference_service",
+                details={
+                    "config_key": config_key,
+                    "message_count": len(messages),
+                    "response_length": len(result),
+                    "result_preview": result[:200],
+                },
+                start_time=start,
+            )
+
             logger.debug(f"AI chat: {latency:.2f}s, {len(messages)} messages")
             return result
         except Exception as e:
             latency = time.monotonic() - start
             self.circuit_breaker.record_failure()
             self._metrics.record_error("inference.chat", str(e))
+
+            self._governance.log_ai_output(
+                action="chat",
+                component="inference_service",
+                details={"config_key": config_key, "message_count": len(messages)},
+                start_time=start,
+                status="error",
+                error=str(e),
+            )
+
             logger.error(f"AI chat failed after {latency:.2f}s: {e}")
             raise
 
@@ -230,8 +278,57 @@ class InferenceService:
         config_key: str = "default",
         **kwargs,
     ) -> str:
+        component = prompt_name.replace("_", ".")
+        confidence_val = kwargs.pop("_confidence", None)
+        if confidence_val is not None:
+            ok, msg = self._governance.confidence.check_confidence(
+                confidence_val, component=component
+            )
+            if not ok:
+                self._governance.log_ai_output(
+                    action="render_and_generate_blocked",
+                    component=component,
+                    details={
+                        "prompt_name": prompt_name,
+                        "confidence": confidence_val,
+                        "reason": msg,
+                    },
+                    status="blocked",
+                    error=msg,
+                )
+                raise ValueError(
+                    f"Confidence {confidence_val:.3f} below threshold "
+                    f"for component '{component}': {msg}"
+                )
+
+        start = time.monotonic()
         prompt = prompt_registry.render(prompt_name, **kwargs)
-        return await self.generate(prompt, config_key=config_key)
+        try:
+            result = await self.generate(prompt, config_key=config_key)
+
+            self._governance.log_ai_output(
+                action="render_and_generate",
+                component=component,
+                details={
+                    "prompt_name": prompt_name,
+                    "config_key": config_key,
+                    "response_length": len(result),
+                    "result_preview": result[:300],
+                },
+                start_time=start,
+            )
+
+            return result
+        except Exception as e:
+            self._governance.log_ai_output(
+                action="render_and_generate",
+                component=component,
+                details={"prompt_name": prompt_name, "config_key": config_key},
+                start_time=start,
+                status="error",
+                error=str(e),
+            )
+            raise
 
     def cache_stats(self) -> dict:
         return self.embedding.cache_stats()
@@ -248,6 +345,7 @@ class InferenceService:
             "circuit_breaker": self.circuit_breaker.state,
             "initialized": self._initialized,
             "embedding_cache": self.cache_stats(),
+            "governance": self._governance.check_health(),
         }
 
     async def close(self):

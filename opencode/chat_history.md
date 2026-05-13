@@ -2497,3 +2497,79 @@ All 36 tests passed. Test file deleted after successful verification.
 **Testing:**
 - 26 unit tests created and passed (loading state, sub-tab navigation, breadth indicators, risk warnings, distribution, ATR/ADX/EMA diff, volume, recommendations, empty states, API call verification, partial null data, unstable regime warnings)
 - Test file deleted after successful run
+
+---
+
+## 2026-05-13
+
+### Session: Implement Security & Governance Controls
+
+**User Request:** Implement Security & Governance Controls for Phase 1 (PRD Section 15). Dependencies: APIs, AI outputs, reflection workflows. Reason: Should happen BEFORE production rollout.
+
+**Requirements:**
+1. Audit logging — centralized logging of ALL AI-generated outputs
+2. Memory integrity validation — SHA-256 hash verification on memory store/retrieve
+3. Confidence threshold enforcement — global min confidence gating per component
+4. Retrieval safety checks — SQL injection, PII, max-length blocking on search queries
+5. No autonomous execution permissions — execution intent detection and blocking
+
+**Acceptance Criteria:**
+- AC-1: Governance controls enforced (all 5 pillars active)
+- AC-2: AI outputs auditable (queryable audit trail with stats)
+- AC-3: Unsafe actions blocked (injection, PII, execution intent, low confidence, tampered memory)
+
+**Architecture: New `backend/core/governance/` module:**
+
+| File | Purpose |
+|------|---------|
+| `core/governance/__init__.py` | Package exports, public API |
+| `core/governance/config.py` | `GovernanceConfig` — 18 config fields with defaults |
+| `core/governance/audit_logger.py` | `AiAuditLogger` + `AuditEntry` — centralized audit with persist/load/query/redaction |
+| `core/governance/integrity_validator.py` | `MemoryIntegrityValidator` — SHA-256 hash, store/retrieve validation, batch support |
+| `core/governance/confidence_enforcer.py` | `ConfidenceThresholdEnforcer` — per-component thresholds (research=0.50, trade_explain=0.40, reflection=0.35) |
+| `core/governance/safety_checker.py` | `RetrievalSafetyChecker` — 11 SQL injection patterns, 4 PII patterns, 6 execution intent patterns, max-length guard |
+| `core/governance/execution_guard.py` | `ExecutionPermissionGuard` — blocks AI outputs containing execution intent, tracks blocked attempts |
+| `core/governance/manager.py` | `GovernanceManager` — unified facade + `get_governance_manager()` singleton |
+
+**Files Modified (8):**
+
+| File | Change |
+|------|--------|
+| `memory/schemas/memory_schemas.py` | Added `integrity_hash` field to TradeMemory/MarketMemory/ResearchMemory; `compute_integrity_hash()` static method; auto-computed in `to_metadata()` |
+| `memory/retrieval/semantic_retriever.py` | Added `_validate_integrity()` and `_apply_safety_check()` methods; safety check on all 3 search methods (search/search_by_text/advanced_search); integrity validation post-retrieval; governance audit logging on every search |
+| `ai/inference/service.py` | Governance audit logging on `generate()`/`chat()`; confidence enforcement + audit logging on `render_and_generate()`; governance health in `check_health()` |
+| `ai/orchestration/engine.py` | Governance audit logging on `run_workflow()`; execution guard on `process_query()` |
+| `api/routes/__init__.py` | Registered `governance.router` |
+| `api/routes/governance.py` | **NEW** — 5 governance API endpoints |
+| `api/routes/research.py` | Governance audit logging on all 6 research endpoints |
+| `api/routes/memory.py` | Safety check + governance audit logging on memory search/text search endpoints |
+| `api/routes/intelligence.py` | Governance health check in intelligence health endpoint |
+
+**API Endpoints (5 new):**
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /governance/health` | Governance system health (all 5 pillars status + stats) |
+| `GET /governance/audit/logs` | Queryable audit log with action/component/status filters |
+| `GET /governance/audit/stats` | Audit log statistics (total, error rate, top actions/components) |
+| `GET /governance/execution/blocked` | Blocked execution attempts with source and reason |
+| `GET /governance/integrity/stats` | Integrity validation status |
+
+**Test Results: 56/56 PASSED**
+
+| Test Class | Tests | Coverage |
+|-----------|-------|----------|
+| TestGovernanceConfig | 2 | Default/custom config |
+| TestAiAuditLogger | 10 | Basic/error/disabled/timed/recent/stats/persist/load/query/redaction/truncation |
+| TestMemoryIntegrityValidator | 8 | Hash consistency, store/retrieve valid/tampered/no-hash/warn/disabled/batch |
+| TestConfidenceThresholdEnforcer | 6 | Thresholds, pass/fail/None/disabled/custom |
+| TestRetrievalSafetyChecker | 7 | Safe/SQL-injection/PII/max-length/disabled/execution-intent/multi-pattern |
+| TestExecutionPermissionGuard | 5 | Blocked/safe/tracked/disabled/multi-pattern |
+| TestGovernanceManager | 4 | Init/health/log/timing |
+| TestAcceptanceScenarios | 3 | AC-1 controls enforced, AC-2 outputs auditable, AC-3 unsafe blocked |
+| TestEdgeCases | 5 | Empty stats, max entries, disabled integrity, confidence edge, empty query, blocked limit |
+
+All 56 tests passed. Test file deleted after successful verification.
+
+**Branch:** Current working branch
+**Status:** Ready for production rollout. Governance is actively blocking SQL injection, PII, execution intent, low-confidence outputs, and tampered memory.
