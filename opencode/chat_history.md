@@ -2054,4 +2054,110 @@ All test files deleted after successful run.
 
 ---
 
-*End of chat history*
+## 2026-05-13
+
+### Session: Build Reflection Summary Generator — Periodic Intelligence Summaries from Historical Memory
+
+**User Request:** Generate periodic intelligence summaries from historical memory. Example outputs: strategy degradation reports, recurring volatility failure reports, regime instability summaries. Acceptance criteria: summaries generated automatically, summaries persisted to memory system.
+
+**Branch:** `feature/build-reflection-summary-generator`
+
+**Implementation Summary:**
+
+1. **Analyzed PRD Phase 1** (Section 8.8 Reflection Engine, Sprint 5 "AI summarization workflows"), chat history, graphify knowledge graph, and existing LLM infrastructure
+2. **Built development plan** with 6 tasks — LLM-powered summary generator with template fallback
+3. **Impact analysis** — no breaking changes; all existing imports, APIs, and patterns remain intact
+4. **Created 2 new modules:**
+
+| File | Purpose |
+|------|---------|
+| `backend/ai/prompts/intelligence_summary.py` | `INTELLIGENCE_SUMMARY` prompt template — structured JSON output with executive summary, key findings, trends, actionable insights, risk flags |
+| `backend/intelligence/reflection_engine/intelligence_summary_generator.py` | `IntelligenceSummaryGenerator` — LLM-powered summary generation with DuckDB persistence + ChromaDB storage + auto-scheduler |
+
+**Modified 5 existing files:**
+
+| File | Change |
+|------|--------|
+| `ai/prompts/registry.py` | Registered `intelligence_summary` prompt |
+| `reflection_engine/__init__.py` | Added 3 new exports: `IntelligenceSummaryGenerator`, `IntelligenceSummary`, `IntelligenceSummaryReport` |
+| `reflection_engine/service.py` | Added `generate_intelligence_summaries()`, `start_auto_summary_generation()`, `stop_auto_summary_generation()` to `ReflectionService` |
+| `core/config.py` | Added `reflection_summary_auto_generate_enabled`, `reflection_summary_auto_generate_interval_hours` |
+| `api/routes/reflection.py` | Added `POST /reflection/summaries` endpoint |
+
+**Architecture:**
+
+```
+POST /reflection/summaries
+  └─ ReflectionService.generate_intelligence_summaries()
+       ├─ detect_recurring_patterns()     ─┐
+       ├─ analyze_degradation()            ├─ all 5 statistical reports
+       ├─ detect_regime_mismatches()       │
+       ├─ generate_instability_report()    │
+       └─ generate_investigation_recommendations() ─┘
+       └─ IntelligenceSummaryGenerator.generate_periodic_summaries()
+            ├─ LLM path: InferenceService.render_and_generate("intelligence_summary")
+            │    → 4 summary types: strategy_degradation_report, volatility_failure_report,
+            │      regime_instability_summary, comprehensive_periodic_summary
+            │    → Falls back to template-based if LLM unavailable
+            └─ Template path: _template_degradation_summary, _template_volatility_summary,
+                 _template_regime_summary
+            └─ _persist_summaries() → DuckDB reflection_log table
+       └─ Auto-scheduler: asyncio background task, configurable interval
+```
+
+**Summary Types Generated:**
+| Type | Source Data |
+|------|-------------|
+| `strategy_degradation_report` | `StrategyDegradationReport` — degradation score, signals, win rate deltas |
+| `volatility_failure_report` | `RecurringPatternReport` — volatility_expansion + stop_loss_hunting pattern data |
+| `regime_instability_summary` | `RegimeMismatchReport` + `InstabilityReport` — elevated risk regimes, instability factors |
+| `comprehensive_periodic_summary` | All 5 reports aggregated — full system health |
+
+**LLM Output Schema (structured JSON):**
+```json
+{
+  "summary_type": "...",
+  "period": "...",
+  "executive_summary": "2-3 sentence overview",
+  "key_findings": [{ "area": "...", "finding": "...", "severity": "...", "confidence": 0.0-1.0 }],
+  "trends": [{ "direction": "improving/stable/deteriorating", "metric": "...", "detail": "..." }],
+  "actionable_insights": [{ "priority": int, "insight": "...", "suggested_action": "...", "expected_impact": "..." }],
+  "risk_flags": ["..."],
+  "generated_at": "ISO timestamp"
+}
+```
+
+**Persistence:**
+- DuckDB `reflection_log` table — `reflection_type = "intelligence_summary_{type}"`
+- JSON content stored in `content` column with metrics_snapshot metadata
+
+**Test Coverage: 25/25 PASSED**
+
+| Test Class | Tests | Coverage |
+|-----------|-------|----------|
+| `TestFormatMethods` | 10 | Format methods with data + None for all 5 report types |
+| `TestTemplateSummaries` | 6 | Template degradation/volatility/regime summaries with data + empty |
+| `TestParseLLMOutput` | 2 | Valid JSON parsing + invalid text fallback |
+| `TestGeneratePeriodicSummaries` | 3 | Full pipeline with all reports, empty reports, single report |
+| `TestAutoGeneration` | 2 | Start/stop cycle, duplicate start prevention |
+| `TestPydanticModels` | 2 | Default field values for both Pydantic models |
+
+All 25 tests passed. Test file deleted after successful verification.
+
+**Config (new fields):**
+| Field | Default | Description |
+|-------|---------|-------------|
+| `reflection_summary_auto_generate_enabled` | `False` | Enable periodic auto-generation |
+| `reflection_summary_auto_generate_interval_hours` | `24` | Interval between auto-generations |
+
+**API (new endpoint):**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/reflection/summaries` | POST | Generate periodic intelligence summaries on demand |
+
+**Dependencies:**
+- LLM: `InferenceService` → `OllamaClient` (optional — falls back to template-based)
+- Storage: `AnalyticsDB` → DuckDB `reflection_log` table
+- Reporting: All 5 existing reflection engine detectors
+
+---

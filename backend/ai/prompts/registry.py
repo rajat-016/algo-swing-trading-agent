@@ -1,6 +1,7 @@
 from loguru import logger
 from typing import Optional
 from ai.prompts.base import PromptTemplate
+from ai.prompts.intelligence_summary import INTELLIGENCE_SUMMARY
 
 
 MARKET_REGIME = PromptTemplate(
@@ -195,3 +196,4 @@ registry.register(SEMANTIC_SEARCH)
 registry.register(REFLECTION)
 registry.register(POST_TRADE_REFLECTION)
 registry.register(RESEARCH_QUERY)
+registry.register(INTELLIGENCE_SUMMARY)

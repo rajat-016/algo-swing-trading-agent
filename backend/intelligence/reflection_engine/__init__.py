@@ -26,6 +26,11 @@ from intelligence.reflection_engine.investigation_recommender import (
     InvestigationReport,
     InvestigationRecommendation,
 )
+from intelligence.reflection_engine.intelligence_summary_generator import (
+    IntelligenceSummaryGenerator,
+    IntelligenceSummary,
+    IntelligenceSummaryReport,
+)
 
 __all__ = [
     "PostTradeReflector",
@@ -47,4 +52,7 @@ __all__ = [
     "InvestigationRecommender",
     "InvestigationReport",
     "InvestigationRecommendation",
+    "IntelligenceSummaryGenerator",
+    "IntelligenceSummary",
+    "IntelligenceSummaryReport",
 ]
