@@ -187,6 +187,17 @@ class Settings(BaseSettings):
     shap_max_display_features: int = Field(default=20)
     explanation_cache_ttl_seconds: int = Field(default=3600)
 
+    # AI Evaluation Framework
+    evaluation_enabled: bool = Field(default=True)
+    evaluation_metrics_window_days: int = Field(default=30)
+    evaluation_auto_benchmark_interval_hours: int = Field(default=24)
+    evaluation_latency_warn_threshold_ms: float = Field(default=2000.0)
+    evaluation_latency_critical_threshold_ms: float = Field(default=5000.0)
+    evaluation_regression_zscore_threshold: float = Field(default=2.0)
+    evaluation_min_samples_for_regression: int = Field(default=5)
+    evaluation_benchmark_warmup_runs: int = Field(default=1)
+    evaluation_benchmark_n_runs: int = Field(default=3)
+
     model_config = ConfigDict(
         extra="ignore",
         env_file=".env",

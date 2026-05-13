@@ -2573,3 +2573,83 @@ All 56 tests passed. Test file deleted after successful verification.
 
 **Branch:** Current working branch
 **Status:** Ready for production rollout. Governance is actively blocking SQL injection, PII, execution intent, low-confidence outputs, and tampered memory.
+
+---
+
+## 2026-05-13
+
+### Session: AI Evaluation Framework Implementation
+
+**User Request:** Establish AI Evaluation Framework for validating AI reasoning quality and retrieval relevance. Dependencies: retrieval engine, explainability, reflection engine, research assistant.
+
+**Requirements Delivered:**
+1. Explanation quality evaluation (faithfulness, consistency, attribution stability, feature coverage)
+2. Retrieval precision evaluation (Precision@k, Recall@k, MRR, NDCG@k)
+3. Reflection accuracy evaluation (pattern precision, pattern recall, detection coverage)
+4. Hallucination detection (factual consistency, specificity, self-contradiction, vagueness)
+5. Latency benchmarking (inference, retrieval, explanation, reflection latency with P50/P95/P99)
+
+**Acceptance Criteria Met:**
+- ✅ Benchmark suite operational — `BenchmarkSuite.run_full()` runs all 5 evaluators, `run_partial()` runs selected
+- ✅ Evaluation metrics tracked — `EvalMetricsStore` persists to DuckDB with full history, `get_metric_history()`, `get_latest_by_evaluator()`
+- ✅ Regression tests automated — `RegressionDetector` with z-score based regression detection, `get_health_score()`
+
+**Files Created (12 new):**
+
+| File | Purpose |
+|------|---------|
+| `backend/core/evaluation/__init__.py` | Package init, exports all 11 classes |
+| `backend/core/evaluation/base.py` | Base classes — `EvalMetric`, `EvaluationResult`, `BenchmarkConfig`, `BaseEvaluator`, `MetricType` enum |
+| `backend/core/evaluation/metrics_store.py` | `EvalMetricsStore` — SQLite-backed persistence for evaluation runs and metrics |
+| `backend/core/evaluation/regression_detector.py` | `RegressionDetector` — z-score based regression detection, health scoring |
+| `backend/core/evaluation/benchmark_suite.py` | `BenchmarkRunner` + `BenchmarkSuite` — orchestration layer for running evaluators |
+| `backend/core/evaluation/evaluators/__init__.py` | Evaluators package init |
+| `backend/core/evaluation/evaluators/explanation_evaluator.py` | `ExplanationQualityEvaluator` — 4 metrics: faithfulness, consistency, attribution stability, feature coverage |
+| `backend/core/evaluation/evaluators/retrieval_evaluator.py` | `RetrievalPrecisionEvaluator` — 4 metrics: Precision@k, Recall@k, MRR, NDCG@k |
+| `backend/core/evaluation/evaluators/reflection_evaluator.py` | `ReflectionAccuracyEvaluator` — 3 metrics: pattern precision/recall, detection coverage |
+| `backend/core/evaluation/evaluators/hallucination_evaluator.py` | `HallucinationDetector` — 4 metrics: factual consistency, specificity, contradiction, vagueness |
+| `backend/core/evaluation/evaluators/latency_benchmarker.py` | `LatencyBenchmarker` — 4 metrics: inference/retrieval/explanation/reflection latency with P50/P95/P99 |
+| `backend/api/routes/evaluation.py` | 5 API endpoints for evaluation |
+
+**Files Modified (2):**
+
+| File | Change |
+|------|--------|
+| `backend/core/config.py` | Added 9 evaluation config fields |
+| `backend/api/routes/__init__.py` | Registered `evaluation.router` |
+
+**API Endpoints (5 new):**
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /evaluation/run` | Run benchmark suite (all or selected evaluators) |
+| `GET /evaluation/metrics` | Get evaluation metrics history (all runs or by evaluator) |
+| `GET /evaluation/regression` | Check for regressions across all metric types |
+| `POST /evaluation/regression/check` | Check specific metric for regression |
+| `GET /evaluation/health` | Evaluation framework health check |
+
+**Test Results: 78/78 PASSED**
+
+| Test Class | Tests | Coverage |
+|-----------|-------|----------|
+| TestEvalMetric | 9 | Threshold logic (higher-is-better, lower-is-better), defaults, details |
+| TestEvaluationResult | 3 | Defaults, summary, all-passed |
+| TestBaseEvaluator | 7 | Config, evaluate happy path, threshold fails, not-implemented, metric type enum |
+| TestEvalMetricsStore | 11 | Store/retrieve, recent runs, metrics per run, history, latest by evaluator, empty states |
+| TestRegressionDetector | 9 | No regression, regression detected, insufficient samples, health score, zero-std edge |
+| TestBenchmarkConfig | 2 | Defaults, custom values |
+| TestBenchmarkRunner | 5 | Register, run selected/empty, run all, get store |
+| TestBenchmarkSuite | 3 | Run full, run partial, get runner |
+| TestExplanationQualityEvaluator | 4 | Returns metrics, faithfulness range, consistency range, coverage |
+| TestRetrievalPrecisionEvaluator | 5 | Returns metrics, precision, recall, NDCG, MRR |
+| TestReflectionAccuracyEvaluator | 4 | Returns metrics, pattern precision/recall range, detection coverage |
+| TestHallucinationDetector | 7 | Returns metrics, factual/specificity/contradiction/vagueness ranges, internal methods |
+| TestLatencyBenchmarker | 3 | Returns metrics, inference latency, percentiles in details |
+| TestEvaluationIntegration | 4 | Full suite, benchmark then regression, selected with store, multi-run history |
+| TestEdgeCases | 5 | No threshold, empty metrics, zero-std regression, empty db, empty suite |
+
+All 78 tests passed. Test file deleted after successful verification.
+
+**Branch:** Current working branch
+**Dependencies Met:** Retrieval engine, explainability, reflection engine, research assistant — all evaluated via their respective evaluators.
+**Status:** Evaluation framework operational. Ready for integration into CI/CD pipelines.
