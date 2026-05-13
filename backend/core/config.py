@@ -149,6 +149,10 @@ class Settings(BaseSettings):
 
     # Reflection Engine
     reflection_engine_enabled: bool = Field(default=False)
+    reflection_recurring_window_days: int = Field(default=30)
+    reflection_degradation_baseline_days: int = Field(default=60)
+    reflection_min_trades_for_pattern: int = Field(default=5)
+    reflection_pattern_frequency_threshold: float = Field(default=0.15)
 
     # Portfolio Intelligence Engine
     portfolio_engine_enabled: bool = Field(default=True)
