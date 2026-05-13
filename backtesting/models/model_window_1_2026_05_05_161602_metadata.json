@@ -1,0 +1,64 @@
+{
+  "metrics": {
+    "total_trades": 3,
+    "win_count": 3,
+    "loss_count": 0,
+    "win_rate": 1.0,
+    "avg_pnl": 1993.720437377932,
+    "avg_pnl_pct": 0.10189391713268448,
+    "gross_profit": 5981.161312133796,
+    "gross_loss": 0,
+    "profit_factor": Infinity,
+    "cagr": 0.11918676552449425,
+    "sharpe_ratio": 1.3778186685307223,
+    "max_drawdown": 0.006333836308477541,
+    "accuracy": 0.48,
+    "precision": 0.4919855072463768,
+    "recall": 0.48,
+    "f1_score": 0.4819913893446646,
+    "precision_buy": 0.375,
+    "confidence_buckets": {
+      "low": {
+        "count": 63,
+        "correct": 29
+      },
+      "medium": {
+        "count": 46,
+        "correct": 24
+      },
+      "high": {
+        "count": 16,
+        "correct": 7
+      }
+    },
+    "trade_expectancy": {
+      "expectancy": 1993.720437377932,
+      "avg_win": 1993.720437377932,
+      "avg_loss": 0,
+      "win_rate": 1.0,
+      "total_trades": 3
+    },
+    "optimal_confidence_threshold": {
+      "optimal_threshold": 0.5,
+      "expected_return": 0,
+      "trade_count": 3,
+      "all_negative_expectancy": true
+    },
+    "prediction_counts": {
+      "0": 32,
+      "1": 69,
+      "2": 24
+    },
+    "window_index": 1,
+    "symbol": "HAL.NS",
+    "train_accuracy": 0.8700980392156863,
+    "val_accuracy": 0.6097560975609756,
+    "train_test_gap": 0.3900980392156863,
+    "val_test_gap": 0.12975609756097561
+  },
+  "window_index": 1,
+  "total_windows_evaluated": 813,
+  "model_type": "XGBClassifier",
+  "model_file": "model_window_1_2026_05_05_161602.pkl",
+  "saved_at": "2026-05-05T16:16:02.079042"
+}

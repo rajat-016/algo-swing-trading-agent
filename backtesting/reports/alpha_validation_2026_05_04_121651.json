@@ -1,0 +1,261 @@
+{
+  "generated_at": "2026-05-04T12:16:51.868137",
+  "total_windows": 376,
+  "per_symbol_stats": {
+    "RELIANCE.NS": {
+      "trades": 15,
+      "avg_sharpe": -4.6651228357271854,
+      "avg_precision_buy": 0.14870470342128347
+    },
+    "HDFCBANK.NS": {
+      "trades": 15,
+      "avg_sharpe": -3.6416481559080003,
+      "avg_precision_buy": 0.21203366379996813
+    },
+    "BHARTIARTL.NS": {
+      "trades": 15,
+      "avg_sharpe": -2.445827031004778,
+      "avg_precision_buy": 0.2886856169453152
+    },
+    "SBIN.NS": {
+      "trades": 11,
+      "avg_sharpe": -3.178481358490206,
+      "avg_precision_buy": 0.22134284906024038
+    },
+    "ICICIBANK.NS": {
+      "trades": 14,
+      "avg_sharpe": -1.2276771056302234,
+      "avg_precision_buy": 0.2484472049689441
+    },
+    "TCS.NS": {
+      "trades": 13,
+      "avg_sharpe": -2.2189974327407183,
+      "avg_precision_buy": 0.28337842712842715
+    },
+    "BAJFINANCE.NS": {
+      "trades": 12,
+      "avg_sharpe": -5.423754552055536,
+      "avg_precision_buy": 0.2898566028724947
+    },
+    "LT.NS": {
+      "trades": 13,
+      "avg_sharpe": -2.7358205765347643,
+      "avg_precision_buy": 0.3821208592132505
+    },
+    "HINDUNILVR.NS": {
+      "trades": 11,
+      "avg_sharpe": -1.7178534938958232,
+      "avg_precision_buy": 0.12477055187501435
+    },
+    "INFY.NS": {
+      "trades": 13,
+      "avg_sharpe": -9.237653499837311,
+      "avg_precision_buy": 0.38484848484848483
+    },
+    "SUNPHARMA.NS": {
+      "trades": 12,
+      "avg_sharpe": -2.0096579390267593,
+      "avg_precision_buy": 0.20833333333333334
+    },
+    "MARUTI.NS": {
+      "trades": 9,
+      "avg_sharpe": -6.429848043669948,
+      "avg_precision_buy": 0.4033653846153846
+    },
+    "AXISBANK.NS": {
+      "trades": 11,
+      "avg_sharpe": -2.3898739694749045,
+      "avg_precision_buy": 0.3779820762865976
+    },
+    "ITC.NS": {
+      "trades": 14,
+      "avg_sharpe": -3.3484536834919307,
+      "avg_precision_buy": 0.2534722222222222
+    },
+    "ADANIPORTS.NS": {
+      "trades": 14,
+      "avg_sharpe": -4.025639268336488,
+      "avg_precision_buy": 0.317116647720096
+    },
+    "TITAN.NS": {
+      "trades": 18,
+      "avg_sharpe": -3.566892339618649,
+      "avg_precision_buy": 0.20817981038569275
+    },
+    "NTPC.NS": {
+      "trades": 11,
+      "avg_sharpe": -3.399894004098198,
+      "avg_precision_buy": 0.10246697746697746
+    },
+    "KOTAKBANK.NS": {
+      "trades": 13,
+      "avg_sharpe": -1.5845969429668256,
+      "avg_precision_buy": 0.32230820649938297
+    },
+    "ONGC.NS": {
+      "trades": 14,
+      "avg_sharpe": -2.3133170570455457,
+      "avg_precision_buy": 0.2776570048309179
+    },
+    "ULTRACEMCO.NS": {
+      "trades": 15,
+      "avg_sharpe": -7.329498613089762,
+      "avg_precision_buy": 0.19327420112781954
+    },
+    "HCLTECH.NS": {
+      "trades": 13,
+      "avg_sharpe": -5.886038030846899,
+      "avg_precision_buy": 0.29795776295776294
+    },
+    "BEL.NS": {
+      "trades": 14,
+      "avg_sharpe": -1.8745937791868303,
+      "avg_precision_buy": 0.18908579846079845
+    },
+    "ADANIENT.NS": {
+      "trades": 17,
+      "avg_sharpe": -2.619621206470602,
+      "avg_precision_buy": 0.3184519200487669
+    },
+    "JSWSTEEL.NS": {
+      "trades": 9,
+      "avg_sharpe": -4.274415630284585,
+      "avg_precision_buy": 0.2661830357142857
+    },
+    "POWERGRID.NS": {
+      "trades": 13,
+      "avg_sharpe": -1.957057879219998,
+      "avg_precision_buy": 0.2570699228307924
+    },
+    "COALINDIA.NS": {
+      "trades": 12,
+      "avg_sharpe": -9.923083094709622,
+      "avg_precision_buy": 0.1128512224782386
+    },
+    "BAJAJ-AUTO.NS": {
+      "trades": 9,
+      "avg_sharpe": -2.9478408018053948,
+      "avg_precision_buy": 0.21036570804962312
+    },
+    "BAJAJFINSV.NS": {
+      "trades": 8,
+      "avg_sharpe": -2.1356296332158022,
+      "avg_precision_buy": 0.21758021390374332
+    },
+    "NESTLEIND.NS": {
+      "trades": 11,
+      "avg_sharpe": -3.0908754779832917,
+      "avg_precision_buy": 0.25830176767676766
+    },
+    "TATASTEEL.NS": {
+      "trades": 11,
+      "avg_sharpe": -2.966660850649114,
+      "avg_precision_buy": 0.18917797888386123
+    },
+    "ETERNAL.NS": {
+      "trades": 3,
+      "avg_sharpe": -3.261046202717086,
+      "avg_precision_buy": 0.2222222222222222
+    },
+    "ASIANPAINT.NS": {
+      "trades": 14,
+      "avg_sharpe": -5.036505016128797,
+      "avg_precision_buy": 0.1632160501829286
+    },
+    "HINDALCO.NS": {
+      "trades": 14,
+      "avg_sharpe": -2.505493251875797,
+      "avg_precision_buy": 0.09845281862745098
+    },
+    "SHRIRAMFIN.NS": {
+      "trades": 11,
+      "avg_sharpe": -3.106353823368202,
+      "avg_precision_buy": 0.27211538461538465
+    },
+    "WIPRO.NS": {
+      "trades": 9,
+      "avg_sharpe": -3.2669922336490314,
+      "avg_precision_buy": 0.19342785843920146
+    },
+    "EICHERMOT.NS": {
+      "trades": 11,
+      "avg_sharpe": -0.8147594353591514,
+      "avg_precision_buy": 0.09862012987012987
+    },
+    "GRASIM.NS": {
+      "trades": 21,
+      "avg_sharpe": -2.6265588143609992,
+      "avg_precision_buy": 0.18291943393082435
+    },
+    "SBILIFE.NS": {
+      "trades": 9,
+      "avg_sharpe": -3.09507563161242,
+      "avg_precision_buy": 0.1175
+    },
+    "INDIGO.NS": {
+      "trades": 15,
+      "avg_sharpe": -3.211361398833736,
+      "avg_precision_buy": 0.3453548644338118
+    },
+    "TRENT.NS": {
+      "trades": 17,
+      "avg_sharpe": -3.3483714394514803,
+      "avg_precision_buy": 0.42586445190611855
+    },
+    "TECHM.NS": {
+      "trades": 13,
+      "avg_sharpe": -3.409628551195949,
+      "avg_precision_buy": 0.23552562422537812
+    },
+    "HDFCLIFE.NS": {
+      "trades": 10,
+      "avg_sharpe": -0.7861113483105677,
+      "avg_precision_buy": 0.13617424242424242
+    },
+    "TATACONSUM.NS": {
+      "trades": 14,
+      "avg_sharpe": -2.4654104525060205,
+      "avg_precision_buy": 0.16206267357583148
+    },
+    "APOLLOHOSP.NS": {
+      "trades": 15,
+      "avg_sharpe": -3.177948542299139,
+      "avg_precision_buy": 0.18915672741892253
+    },
+    "DRREDDY.NS": {
+      "trades": 14,
+      "avg_sharpe": -5.627956223857572,
+      "avg_precision_buy": 0.13968359226979915
+    },
+    "CIPLA.NS": {
+      "trades": 11,
+      "avg_sharpe": -2.209461259262805,
+      "avg_precision_buy": 0.1294191919191919
+    },
+    "MAXHEALTH.NS": {
+      "trades": 7,
+      "avg_sharpe": -3.4209398997060836,
+      "avg_precision_buy": 0.1957963089542037
+    },
+    "M&M.NS": {
+      "trades": 18,
+      "avg_sharpe": -2.8422982218725705,
+      "avg_precision_buy": 0.1902408037971418
+    }
+  },
+  "confidence_bucket_analysis": {
+    "low": {
+      "count": 5912,
+      "correct": 2377
+    },
+    "medium": {
+      "count": 14151,
+      "correct": 6265
+    },
+    "high": {
+      "count": 26227,
+      "correct": 13673
+    }
+  },
+  "alpha_validated": true
+}

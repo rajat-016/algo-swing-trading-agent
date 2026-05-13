@@ -1,0 +1,36 @@
+============================================================
+EXECUTIVE SUMMARY - WALK-FORWARD BACKTEST
+============================================================
+Generated: 2026-05-04T12:16:51.865695
+Total Windows: 376
+Windows with Trades: 315/376
+Total Trades: 606
+
+--- Strategy Metrics (Aggregated Across All Windows) ---
+Avg Sharpe Ratio: -3.44 (Target: >= 1.0)
+Avg Max Drawdown: 0.96% (Target: <= 25%)
+Avg Precision(BUY): 23.09%
+
+--- Trade Expectancy (Aggregated) ---
+Avg Expectancy/Window: 147.91
+Avg Gross Profit/Window: 712.48
+Avg Gross Loss/Window: 498.33
+System Win Rate: 56.27% (341 wins / 606 trades)
+
+--- Optimal Confidence Threshold ---
+Average Optimal Threshold: 0.50
+Windows with Valid Threshold: 315/376
+
+--- Overfitting Check ---
+Avg Train Accuracy: 99.99%
+Avg Test Accuracy:  48.23%
+Train-Test Gap:     51.76%
+  --> Overfitting!
+
+--- Best Model (Selected) ---
+Symbol: TRENT.NS
+Window: 3
+Sharpe: 1.34
+DD: 0.45%
+Precision(BUY): 87.50%
+============================================================
