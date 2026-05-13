@@ -7,6 +7,10 @@ import {
   PerformanceMetrics,
 } from './components/Charts';
 import Monitoring from './components/Monitoring';
+import MarketIntelligence from './components/MarketIntelligence';
+import PortfolioIntelligence from './components/PortfolioIntelligence';
+import TradeIntelligence from './components/TradeIntelligence';
+import ResearchIntelligence from './components/ResearchIntelligence';
 
 function App() {
   const [stocks, setStocks] = useState([]);
@@ -207,6 +211,10 @@ function App() {
     { id: 'positions', label: 'Positions', icon: '▲' },
     { id: 'history', label: 'History', icon: '◷' },
     { id: 'analytics', label: 'Analytics', icon: '◇' },
+    { id: 'market-intel', label: 'Market Intel', icon: '📊' },
+    { id: 'portfolio-intel', label: 'Portfolio Intel', icon: '📋' },
+    { id: 'trade-intel', label: 'Trade Intel', icon: '🔍' },
+    { id: 'research', label: 'Research', icon: '🔬' },
     { id: 'monitoring', label: 'Monitoring', icon: '◎' },
   ];
 
@@ -340,7 +348,23 @@ function App() {
           </div>
         </div>
         
-        {activeTab === 'monitoring' ? (
+        {activeTab === 'market-intel' ? (
+          <section className="intelSection">
+            <MarketIntelligence />
+          </section>
+        ) : activeTab === 'portfolio-intel' ? (
+          <section className="intelSection">
+            <PortfolioIntelligence />
+          </section>
+        ) : activeTab === 'trade-intel' ? (
+          <section className="intelSection">
+            <TradeIntelligence />
+          </section>
+        ) : activeTab === 'research' ? (
+          <section className="intelSection">
+            <ResearchIntelligence />
+          </section>
+        ) : activeTab === 'monitoring' ? (
           <section className="monitoringSection">
             <Monitoring />
           </section>

@@ -132,4 +132,86 @@ export const stressTestApi = {
   runMonteCarlo: (params) => api.post('/stress/monte-carlo', params),
 };
 
+export const regimeApi = {
+  getCurrent: () => api.get('/regime/current'),
+  analyze: (data) => api.post('/regime/analyze', data),
+  getHistory: () => api.get('/regime/history'),
+  getStats: () => api.get('/regime/stats'),
+  getTransitions: () => api.get('/regime/transitions'),
+  getDistribution: () => api.get('/regime/distribution'),
+  getTransitionData: () => api.get('/regime/transition'),
+  getHealth: () => api.get('/regime/health'),
+};
+
+export const portfolioApi = {
+  getRisk: () => api.get('/portfolio/risk'),
+  getExposure: () => api.get('/portfolio/exposure'),
+  getCorrelation: () => api.get('/portfolio/correlation'),
+  getHistory: () => api.get('/portfolio/history'),
+  getLatest: () => api.get('/portfolio/latest'),
+  getHealth: () => api.get('/portfolio/health'),
+};
+
+export const correlationApi = {
+  analyze: (data) => api.post('/correlation/analyze', data),
+  getRolling: () => api.get('/correlation/rolling'),
+  getClusters: () => api.get('/correlation/clusters'),
+  getInstability: () => api.get('/correlation/instability'),
+  getDiversification: () => api.get('/correlation/diversification'),
+  getHistory: () => api.get('/correlation/history'),
+  getLatest: () => api.get('/correlation/latest'),
+};
+
+export const tradeApi = {
+  explain: (data) => api.post('/trade/explain', data),
+  getIntelligence: (data) => api.post('/trade/intelligence', data),
+  getFailure: (data) => api.post('/trade/intelligence/failure', data),
+  getReasoning: (data) => api.post('/trade/intelligence/reasoning', data),
+  getPostMortem: (data) => api.post('/trade/intelligence/post-mortem', data),
+};
+
+export const journalApi = {
+  getTrades: () => api.get('/journal/trades'),
+  getTrade: (id) => api.get(`/journal/trades/${id}`),
+  search: (data) => api.post('/journal/search', data),
+  getStats: () => api.get('/journal/stats'),
+  searchText: (q) => api.post('/journal/search/text', q ? { query: q } : null),
+};
+
+export const researchApi = {
+  query: (data) => api.post('/research/query', data),
+  getDrift: (data) => api.post('/research/drift', data),
+  compareStrategies: (data) => api.post('/research/strategies/compare', data),
+  summarizeExperiment: (data) => api.post('/research/experiment/summarize', data),
+  getHypotheses: (data) => api.post('/research/hypotheses', data),
+  getRegimeDegradation: (data) => api.post('/research/regime/degradation', data),
+  health: () => api.get('/research/health'),
+};
+
+export const intelligenceApi = {
+  getHealth: () => api.get('/intelligence/health'),
+  getCapabilities: () => api.get('/intelligence/capabilities'),
+};
+
+export const reflectionApi = {
+  reflectTrade: (tradeId) => api.post(`/reflection/trade/${tradeId}`),
+  batchReflect: (data) => api.post('/reflection/batch', data),
+  generateSummaries: () => api.post('/reflection/summaries'),
+  getLogs: () => api.get('/reflection/logs'),
+};
+
+export const driftApi = {
+  getStatus: () => api.get('/drift/status'),
+  getAlerts: () => api.get('/drift/alerts'),
+  getAlertSummary: () => api.get('/drift/alerts/summary'),
+  getBaselines: () => api.get('/drift/baselines'),
+};
+
+export const memoryApi = {
+  search: (data) => api.post('/memory/search', data),
+  searchText: (data) => api.post('/memory/search/text', data),
+  getStats: () => api.get('/memory/stats'),
+  getHealth: () => api.get('/memory/health'),
+};
+
 export const wsManager = new WebSocketManager();

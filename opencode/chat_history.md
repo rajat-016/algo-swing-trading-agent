@@ -2400,3 +2400,63 @@ All 33 tests passed. Test file deleted after successful verification.
 - `opencode/chat_history.md` — Appended this session summary
 
 ---
+
+---
+
+## 2026-05-13
+
+### Session: Build Intelligence Dashboards Frontend (Market, Portfolio, Trade, Research)
+
+**User Request:** Build Intelligence Dashboards (Market, Portfolio/Correlation Explained Trade, Research) based on Phase 1 Intelligence APIs.
+
+**Branch:** feature/build-intelligence-dashboards
+
+**Implementation Summary:**
+
+| Step | Description |
+|------|-------------|
+| 1 | Analyzed PRD Phase 1 (Sprint 2-5), chat history, existing codebase, graphify knowledge graph |
+| 2 | Created impact analysis - 7 files (3 modified, 4 created, 1 test file created then deleted) |
+| 3 | Extended API client with 10 API objects for all intelligence endpoints |
+| 4 | Built 4 dashboard components with sub-tab navigation |
+| 5 | Added ~500 lines of dashboard-specific CSS |
+| 6 | Added 4 new tabs to App.js sidebar |
+| 7 | Created + iterated 36 test scenarios until 36/36 passed |
+| 8 | Deleted test file, saved chat history, committed |
+
+**Files Created (4 new):**
+
+| File | Purpose |
+|------|---------|
+| frontend/src/components/MarketIntelligence.jsx | Regime intelligence dashboard - current regime, distribution, history, transitions, health |
+| frontend/src/components/PortfolioIntelligence.jsx | Portfolio risk/exposure/correlation - risk score, sector heatmap, correlation pairs, diversification |
+| frontend/src/components/TradeIntelligence.jsx | Trade explanation/journal/memory/regime context - feature bars, similar trades, journal table |
+| frontend/src/components/ResearchIntelligence.jsx | Drift/degradation/compare/hypotheses - drift status, alerts, degradation, strategy comparison |
+
+**Files Modified (3):**
+
+| File | Change |
+|------|--------|
+| frontend/src/api/index.js | Added 10 API objects for all intelligence endpoints |
+| frontend/src/App.js | Added 4 dashboard tabs (Market Intel, Portfolio Intel, Trade Intel, Research) |
+| frontend/src/index.css | ~500 new lines of dashboard-specific styles |
+
+**3 Bug Fixes During Testing:**
+
+| Bug | Root Cause | Fix |
+|-----|-----------|-----|
+| Bull Trend found multiple elements | Text appears in both Current Regime card and distribution list | getByText -> getAllByText with length >= 1 |
+| Correlation tab showed empty state | correlationData.pairs was nested under correlation_analysis in mock | Mock returns .analysis.correlation_analysis directly |
+| Explain button disabled check failed | className?.includes('actionBtn') didn't match in JSDOM | container.querySelector('.actionBtn') |
+
+**Test Results: 36/36 PASSED**
+
+| Suite | Tests | Coverage |
+|-------|-------|----------|
+| MarketIntelligence Dashboard | 9 | Loading, current regime, distribution, history, transitions, health, API error, empty history, probabilities |
+| PortfolioIntelligence Dashboard | 7 | Loading, risk, exposure, correlation, diversification, overexposed, empty |
+| TradeIntelligence Dashboard | 5 | Form, journal, disabled button, memory search, regime context |
+| ResearchIntelligence Dashboard | 9 | Loading, drift status, alerts, degradation, compare (default/with names), hypotheses, empty drift, feature groups |
+| API Client Integration | 6 | All API objects callable, defined |
+
+All 36 tests passed. Test file deleted after successful verification.
