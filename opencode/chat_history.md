@@ -2236,3 +2236,105 @@ All 25 tests passed. Test file deleted after successful verification.
 - Reporting: All 5 existing reflection engine detectors
 
 ---
+## 2026-05-13
+
+### Session: Feature Drift Detection Framework Build
+
+**User Request:** Build feature drift detection with PSI, distribution-shift, variance-tracking, and prediction-contribution degradation across rolling periods.
+
+**Implementation Summary:**
+
+Created ackend/intelligence/drift_detection/ package (7 modules + __init__.py):
+
+| Module | Key Classes | Purpose |
+|--------|------------|---------|
+| distribution_shift.py | DistributionShiftAnalyzer, ShiftResult | PSI, KL divergence, JS divergence, sliding-window analysis with trend summarization |
+| variance_tracker.py | VarianceTracker, VarianceReport, FeatureVarianceSnapshot | Rolling variance monitoring, z-score anomaly detection, batch analysis |
+| prediction_contribution.py | PredictionContributionAnalyzer, ContributionDriftReport, FeatureContribution | SHAP-based feature importance drift, rank shift detection, confidence trend analysis |
+| alerting.py | DriftAlertManager, DriftAlert, AlertRule | Severity-based alerting (INFO/WARNING/CRITICAL), cooldown suppression, acknowledge workflows |
+| baseline_manager.py | BaselineManager | Persistent DB-backed baseline storage with statistics (mean/std/percentiles), JSON-serialized values |
+| service.py | DriftDetectionService | Unified facade with run_full_pipeline(), 4 default alert rules, factory methods for all sub-analyzers |
+
+**Wiring Changes:**
+
+| File | Change |
+|------|--------|
+| backend/intelligence/__init__.py | Exports all drift detection classes |
+| backend/core/config.py | Added 7 drift detection config fields |
+| backend/api/routes/__init__.py | Registered drift.router |
+| backend/api/routes/drift.py | 17 endpoints: status, baselines (init/store/list), shift analyze, variance, contribution, pipeline, alerts (get/acknowledge/summary), rules (CRUD) |
+
+**Test Results: 82/82 PASSED**
+
+76 tests across 6 test classes + 6 service integration tests. All modules tested: distribution shift (19), variance tracker (12), prediction contribution (10), alert manager (12), baseline manager (7), service (16). No temp files created (all in-memory tests).
+
+**Branch:** feature/build-feature-drift-detection-framework
+
+---
+
+## 2026-05-13
+
+### Session: Build Intelligence APIs Layer — Unified API Surface for AI-Native Trading Copilot
+
+**User Request:** Implement the Intelligence APIs Layer for Phase 1 of the AI-Native Trading Copilot. Reason: Avoid repeated API rewrites as the project evolves through Phase 2 (Autonomous Agent Framework) and Phase 3 (AI Hedge Fund Infrastructure).
+
+**PRD Section 12.1 Analysis:**
+
+| PRD Endpoint | Status Before | Status After |
+|---|---|---|
+| `/regime/current` | ✅ Existing (regime.py) | ✅ Unchanged |
+| `/trade/explain` | ✅ Existing (trade_explain.py) | ✅ Unchanged |
+| `/portfolio/risk` | ✅ Existing (portfolio.py) | ✅ Unchanged |
+| **`/memory/search`** | ❌ **Missing — no API endpoint** | ✅ **Created** |
+| `/research/query` | ✅ Existing (research.py) | ✅ Unchanged |
+| `/reflection/generate` | ✅ Existing (reflection.py) | ✅ Unchanged |
+
+**Files Created (2 new):**
+
+| File | Purpose |
+|------|---------|
+| `backend/api/routes/memory.py` | `/memory/search` (POST — semantic search), `/memory/search/text` (POST — text search), `/memory/stats` (GET — memory stats), `/memory/health` (GET — health check). Exposes `SemanticRetriever.advanced_search()` with metadata filtering via `MemoryFilter`, pagination, hybrid search, and relevance thresholding. |
+| `backend/api/routes/intelligence.py` | `/intelligence/health` (GET — unified health check across 8 intelligence modules), `/intelligence/capabilities` (GET — versioned API capability listing with all 9 module endpoints). |
+
+**Files Modified (1):**
+
+| File | Change |
+|------|--------|
+| `backend/api/routes/__init__.py` | Registered `memory.router` and `intelligence.router` |
+
+**Memory API Design:**
+
+- `POST /memory/search` — semantic vector search across `trade_memory`, `market_memory`, `research_memory` collections
+  - Query params: `query`, `memory_type`, `ticker`, `outcome`, `regime`, `event_type`, `feature_name`, `strategy`, `min_confidence`, `limit`, `offset`, `min_relevance`, `use_hybrid`
+  - Response: `{"status": "ok", "results": [...], "count": N}`
+  - 503 when ChromaDB/Ollama unavailable, 400 on invalid memory_type, 422 on validation errors
+- `POST /memory/search/text` — text-based (non-vector) search with same filter capabilities
+- `GET /memory/stats` — per-collection document counts, embedding cache stats, audit logs
+- `GET /memory/health` — `available`/`degraded`/`unavailable` status with collection breakdown
+
+**Intelligence Router Design:**
+
+- Single entry point at `/intelligence/` for all AI-Native Trading Copilot capabilities
+- Health check probes all 8 modules (regime, trade_explainer, portfolio, research, reflection, memory, drift, correlation) via dynamic imports — never crashes on missing deps
+- Capabilities endpoint returns versioned (`1.0.0`, phase=1) listing of all 9 capability groups with 57+ documented endpoints — serves as live API reference for Phase 2/3 consumers
+
+**Test Results: 33/33 PASSED**
+
+| Test Suite | Tests | Coverage |
+|---|---|---|
+| TestMemoryEndpoints | 14 | Success search, filter building, empty results, 503/400/422 errors, text search, stats, health (available/unavailable/degraded), hybrid mode |
+| TestIntelligenceEndpoints | 3 | Health structure, capabilities listing, endpoint documentation |
+| TestMemoryRequestValidation | 8 | Limit bounds, confidence bounds, offset bounds, relevance bounds |
+| TestMemoryServiceErrorHandling | 3 | Internal errors for search, text search, stats |
+| TestSearchResultSerialization | 2 | Full field serialization, multi-result consistency |
+| TestRouterRegistration | 3 | Prefix/tag correctness, main app registration |
+
+All 33 tests passed. Test file deleted after successful verification.
+
+**Files Modified:**
+- `backend/api/routes/memory.py` — **CREATE** (114 lines)
+- `backend/api/routes/intelligence.py` — **CREATE** (157 lines)
+- `backend/api/routes/__init__.py` — Added memory + intelligence router imports
+- `opencode/chat_history.md` — Appended this session summary
+
+---
