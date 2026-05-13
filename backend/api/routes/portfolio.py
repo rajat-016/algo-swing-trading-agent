@@ -87,6 +87,34 @@ async def get_latest_portfolio_snapshot():
         raise HTTPException(500, str(e))
 
 
+@router.get("/exposure")
+async def get_portfolio_exposure(db: Session = Depends(get_db)):
+    service = _get_portfolio_service(db)
+    if service is None:
+        raise HTTPException(503, "Portfolio intelligence engine not available")
+
+    try:
+        exposure = service.analyze_exposure(db)
+        return exposure
+    except Exception as e:
+        logger.error(f"Portfolio exposure analysis failed: {e}")
+        raise HTTPException(500, f"Exposure analysis failed: {str(e)}")
+
+
+@router.get("/correlation")
+async def get_portfolio_correlation(db: Session = Depends(get_db)):
+    service = _get_portfolio_service(db)
+    if service is None:
+        raise HTTPException(503, "Portfolio intelligence engine not available")
+
+    try:
+        correlation = service.analyze_correlation(db)
+        return correlation
+    except Exception as e:
+        logger.error(f"Portfolio correlation analysis failed: {e}")
+        raise HTTPException(500, f"Correlation analysis failed: {str(e)}")
+
+
 @router.get("/health")
 async def portfolio_health():
     service = _get_portfolio_service()
