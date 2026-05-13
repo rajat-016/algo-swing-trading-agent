@@ -2,6 +2,7 @@ from loguru import logger
 from typing import Optional
 from ai.prompts.base import PromptTemplate
 from ai.prompts.intelligence_summary import INTELLIGENCE_SUMMARY
+from ai.prompts.research_assistant_prompts import FEATURE_DRIFT_ANALYSIS, STRATEGY_DEEP_COMPARE, EXPERIMENT_ANALYSIS, HYPOTHESIS_REFINEMENT
 
 
 MARKET_REGIME = PromptTemplate(
@@ -197,3 +198,12 @@ registry.register(REFLECTION)
 registry.register(POST_TRADE_REFLECTION)
 registry.register(RESEARCH_QUERY)
 registry.register(INTELLIGENCE_SUMMARY)
+
+feature_drift_analysis = PromptTemplate(**FEATURE_DRIFT_ANALYSIS)
+strategy_deep_compare = PromptTemplate(**STRATEGY_DEEP_COMPARE)
+experiment_analysis = PromptTemplate(**EXPERIMENT_ANALYSIS)
+hypothesis_refinement = PromptTemplate(**HYPOTHESIS_REFINEMENT)
+registry.register(feature_drift_analysis)
+registry.register(strategy_deep_compare)
+registry.register(experiment_analysis)
+registry.register(hypothesis_refinement)
