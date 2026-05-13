@@ -180,6 +180,11 @@ class Settings(BaseSettings):
     monitoring_error_rate_critical: float = Field(default=0.15)
     monitoring_health_check_interval_seconds: int = Field(default=60)
 
+    # Orchestration Engine
+    orchestration_enabled: bool = Field(default=True)
+    orchestration_pipeline_timeout_seconds: int = Field(default=30)
+    orchestration_context_cache_ttl_seconds: int = Field(default=60)
+
     # Explainability Engine
     explainability_enabled: bool = Field(default=True)
     shap_top_features: int = Field(default=15)

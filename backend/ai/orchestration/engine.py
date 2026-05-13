@@ -1,7 +1,8 @@
 import asyncio
 import time
+import json as _json
 from loguru import logger
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
 from ai.prompts.registry import registry as prompt_registry
 from core.governance import get_governance_manager
@@ -35,6 +36,32 @@ class OrchestrationEngine:
         self.inference = inference or InferenceService()
         self._workflows: dict[str, list[WorkflowStep]] = {}
         self._governance = get_governance_manager()
+        self._context_injector = None
+        self._retrieval_orchestrator = None
+        self._pipeline = None
+
+    def _lazy_init_pipeline(self):
+        if self._pipeline is not None:
+            return
+        from ai.orchestration.context import ContextInjector
+        from ai.orchestration.retrieval_orchestrator import RetrievalOrchestrator
+        from ai.orchestration.pipelines import IntelligencePipeline
+
+        self._context_injector = ContextInjector(inference=self.inference)
+        self._retrieval_orchestrator = RetrievalOrchestrator(context_injector=self._context_injector)
+        self._pipeline = IntelligencePipeline(inference=self.inference)
+
+    def get_context_injector(self) -> Any:
+        self._lazy_init_pipeline()
+        return self._context_injector
+
+    def get_retrieval_orchestrator(self) -> Any:
+        self._lazy_init_pipeline()
+        return self._retrieval_orchestrator
+
+    def get_pipeline(self) -> Any:
+        self._lazy_init_pipeline()
+        return self._pipeline
 
     def register_workflow(self, name: str, steps: list[WorkflowStep]):
         self._workflows[name] = steps
@@ -97,6 +124,48 @@ class OrchestrationEngine:
         )
 
         return result
+
+    async def run_pipeline(self, pipeline_name: str, symbol: str = "",
+                           query: str = "") -> dict:
+        self._lazy_init_pipeline()
+        pipeline = self._pipeline
+        pipeline_map = {
+            "trade_explanation": lambda: pipeline.trade_explanation_pipeline(symbol),
+            "portfolio_risk": lambda: pipeline.portfolio_risk_pipeline(),
+            "market_analysis": lambda: pipeline.market_analysis_pipeline(),
+            "research_workflow": lambda: pipeline.research_workflow_pipeline(query),
+            "reflection": lambda: pipeline.reflection_pipeline(),
+        }
+        fn = pipeline_map.get(pipeline_name)
+        if fn is None:
+            valid = list(pipeline_map.keys())
+            raise ValueError(f"Unknown pipeline '{pipeline_name}'. Valid: {valid}")
+
+        pipeline_result = await fn()
+        return pipeline_result.to_dict()
+
+    async def retrieve_intelligence(self, sources: list[str], symbol: str = "",
+                                     query: str = "") -> dict:
+        self._lazy_init_pipeline()
+        result = await self._retrieval_orchestrator.multi_source_retrieve(
+            sources, symbol=symbol, query=query,
+        )
+        return result.to_dict()
+
+    async def get_context_bundle(self, symbol: str = "", query: str = "") -> dict:
+        self._lazy_init_pipeline()
+        bundle = await self._context_injector.get_all_context(symbol=symbol, query=query)
+        return bundle.to_dict()
+
+    async def enriched_llm_call(self, prompt_type: str, symbol: str = "",
+                                 query: str = "", **kwargs) -> str:
+        self._lazy_init_pipeline()
+        enriched = await self._context_injector.inject_into_kwargs(
+            prompt_type, symbol=symbol, query=query, **kwargs,
+        )
+        return await self.inference.render_and_generate(
+            prompt_type, config_key="analysis", **enriched,
+        )
 
     async def analyze_market_regime(
         self,
@@ -317,7 +386,6 @@ class OrchestrationEngine:
             config_key="precise",
         )
 
-        import json as _json
         try:
             parsed = _json.loads(search_result)
             query_text = parsed.get("search_query", question)
