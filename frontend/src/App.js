@@ -6,6 +6,7 @@ import {
   PositionDistributionChart,
   PerformanceMetrics,
 } from './components/Charts';
+import Monitoring from './components/Monitoring';
 
 function App() {
   const [stocks, setStocks] = useState([]);
@@ -206,6 +207,7 @@ function App() {
     { id: 'positions', label: 'Positions', icon: '▲' },
     { id: 'history', label: 'History', icon: '◷' },
     { id: 'analytics', label: 'Analytics', icon: '◇' },
+    { id: 'monitoring', label: 'Monitoring', icon: '◎' },
   ];
 
   if (loading && stocks.length === 0) {
@@ -338,7 +340,11 @@ function App() {
           </div>
         </div>
         
-        {activeTab === 'analytics' ? (
+        {activeTab === 'monitoring' ? (
+          <section className="monitoringSection">
+            <Monitoring />
+          </section>
+        ) : activeTab === 'analytics' ? (
           <section className="analyticsSection">
             <h2 className="sectionTitle">Performance Analytics</h2>
             {!analytics ? (
