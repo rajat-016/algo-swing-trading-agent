@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from core.logging import logger
+from core.governance import get_governance_manager
 
 router = APIRouter(prefix="/intelligence", tags=["intelligence"])
 
@@ -58,6 +59,9 @@ async def intelligence_health():
     )
     checks["drift"] = drift_ok
 
+    governance_ok = _check_governance()
+    checks["governance"] = governance_ok
+
     available_count = sum(1 for c in checks.values() if c.get("available"))
     total = len(checks)
     overall = "healthy" if available_count == total else "degraded" if available_count > 0 else "unavailable"
@@ -68,6 +72,23 @@ async def intelligence_health():
         "total_modules": total,
         "modules": checks,
     }
+
+
+def _check_governance() -> dict:
+    try:
+        gov = get_governance_manager()
+        health = gov.check_health()
+        return {
+            "available": True,
+            "audit_enabled": gov.audit.enabled,
+            "integrity_enabled": gov.integrity.enabled,
+            "confidence_enabled": gov.confidence.enabled,
+            "safety_enabled": gov.safety.enabled,
+            "execution_guard_enabled": gov.execution.enabled,
+            "audit_entries": health["audit"]["stats"].get("total_entries", 0),
+        }
+    except Exception as e:
+        return {"available": False, "error": str(e)}
 
 
 @router.get("/capabilities")

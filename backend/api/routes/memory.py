@@ -1,9 +1,11 @@
+import time
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from core.logging import logger
+from core.governance import get_governance_manager
 
 
 class MemorySearchRequest(BaseModel):
@@ -84,7 +86,22 @@ async def memory_search(request: MemorySearchRequest):
     if retriever is None:
         raise HTTPException(503, "Semantic memory system not available")
 
+    start = time.monotonic()
     try:
+        governance = get_governance_manager()
+        safe, safe_result = governance.safety.check_query(request.query)
+        if not safe:
+            governance.log_ai_output(
+                action="memory_search_blocked",
+                component="api.memory",
+                details={
+                    "query": request.query[:200],
+                    "reason": str(safe_result.get("checks", {})),
+                },
+                status="blocked",
+            )
+            raise HTTPException(400, f"Query blocked by safety check: {safe_result}")
+
         memory_filter = _build_memory_filter(request)
         results = await retriever.advanced_search(
             query=request.query,
@@ -92,6 +109,16 @@ async def memory_search(request: MemorySearchRequest):
             n_results=request.limit,
             use_hybrid=request.use_hybrid,
             min_relevance=request.min_relevance,
+        )
+        governance.log_ai_output(
+            action="memory_search",
+            component="api.memory",
+            details={
+                "query": request.query[:200],
+                "n_results": len(results),
+                "memory_type": request.memory_type,
+            },
+            start_time=start,
         )
         return {
             "status": "ok",
@@ -111,12 +138,36 @@ async def memory_text_search(request: MemorySearchRequest):
     if retriever is None:
         raise HTTPException(503, "Semantic memory system not available")
 
+    start = time.monotonic()
     try:
+        governance = get_governance_manager()
+        safe, safe_result = governance.safety.check_query(request.query)
+        if not safe:
+            governance.log_ai_output(
+                action="memory_text_search_blocked",
+                component="api.memory",
+                details={
+                    "query": request.query[:200],
+                    "reason": str(safe_result.get("checks", {})),
+                },
+                status="blocked",
+            )
+            raise HTTPException(400, f"Query blocked by safety check: {safe_result}")
+
         memory_filter = _build_memory_filter(request)
         results = await retriever.search_by_text(
             query=request.query,
             memory_filter=memory_filter,
             n_results=request.limit,
+        )
+        governance.log_ai_output(
+            action="memory_text_search",
+            component="api.memory",
+            details={
+                "query": request.query[:200],
+                "n_results": len(results),
+            },
+            start_time=start,
         )
         return {
             "status": "ok",

@@ -4,6 +4,7 @@ from loguru import logger
 from typing import Optional, TYPE_CHECKING
 from dataclasses import dataclass, field
 from ai.prompts.registry import registry as prompt_registry
+from core.governance import get_governance_manager
 
 if TYPE_CHECKING:
     from ai.inference.service import InferenceService
@@ -33,6 +34,7 @@ class OrchestrationEngine:
         from ai.inference.service import InferenceService
         self.inference = inference or InferenceService()
         self._workflows: dict[str, list[WorkflowStep]] = {}
+        self._governance = get_governance_manager()
 
     def register_workflow(self, name: str, steps: list[WorkflowStep]):
         self._workflows[name] = steps
@@ -81,6 +83,19 @@ class OrchestrationEngine:
 
         result.total_latency = time.monotonic() - start
         result.success = len(result.errors) == 0
+
+        self._governance.log_ai_output(
+            action="workflow_completed",
+            component=f"orchestration.{name}",
+            details={
+                "workflow": name,
+                "steps_completed": len(result.step_results),
+                "steps_failed": len(result.errors),
+                "step_names": list(result.step_results.keys()),
+            },
+            status="success" if result.success else "partial",
+        )
+
         return result
 
     async def analyze_market_regime(
@@ -92,16 +107,42 @@ class OrchestrationEngine:
         vix_level: str,
         sector_rotation: str,
     ) -> str:
-        return await self.inference.render_and_generate(
-            "market_regime",
-            config_key="analysis",
-            trend_status=trend_status,
-            volatility=volatility,
-            volume_trend=volume_trend,
-            breadth=breadth,
-            vix_level=vix_level,
-            sector_rotation=sector_rotation,
-        )
+        start = time.monotonic()
+        try:
+            result = await self.inference.render_and_generate(
+                "market_regime",
+                config_key="analysis",
+                trend_status=trend_status,
+                volatility=volatility,
+                volume_trend=volume_trend,
+                breadth=breadth,
+                vix_level=vix_level,
+                sector_rotation=sector_rotation,
+            )
+            self._governance.log_ai_output(
+                action="analyze_market_regime",
+                component="orchestration",
+                details={
+                    "trend_status": trend_status,
+                    "volatility": volatility,
+                    "volume_trend": volume_trend,
+                },
+                start_time=start,
+            )
+            return result
+        except Exception as e:
+            self._governance.log_ai_output(
+                action="analyze_market_regime",
+                component="orchestration",
+                details={
+                    "trend_status": trend_status,
+                    "volatility": volatility,
+                },
+                start_time=start,
+                status="error",
+                error=str(e),
+            )
+            raise
 
     async def explain_trade(
         self,
@@ -266,6 +307,7 @@ class OrchestrationEngine:
         )
 
     async def process_query(self, question: str) -> str:
+        start = time.monotonic()
         search_prompt = prompt_registry.render(
             "semantic_search",
             question=question,
@@ -292,9 +334,42 @@ class OrchestrationEngine:
 
         context = _json.dumps(similar, indent=2) if similar else "No relevant memories found."
 
-        return await self.inference.render_and_generate(
+        result = await self.inference.render_and_generate(
             "research_query",
             config_key="analysis",
             question=question,
             context_data=context,
         )
+
+        exec_ok, exec_reason = self._governance.execution.check_output(
+            result, source="process_query"
+        )
+        if not exec_ok:
+            self._governance.log_ai_output(
+                action="process_query_blocked",
+                component="orchestration",
+                details={
+                    "question": question[:200],
+                    "reason": exec_reason,
+                    "output_preview": result[:200],
+                },
+                start_time=start,
+                status="blocked",
+                error=exec_reason,
+            )
+            raise RuntimeError(
+                f"AI output contained execution intent and was blocked: {exec_reason}"
+            )
+
+        self._governance.log_ai_output(
+            action="process_query",
+            component="orchestration",
+            details={
+                "question": question[:200],
+                "memory_types": memory_types,
+                "response_length": len(result),
+            },
+            start_time=start,
+        )
+
+        return result

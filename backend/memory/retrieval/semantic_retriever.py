@@ -16,6 +16,7 @@ from memory.retrieval.scoring import (
     normalize_scores,
 )
 from core.monitoring import get_metrics_collector
+from core.governance import get_governance_manager
 from memory.schemas.memory_schemas import (
     MarketMemory,
     MemoryFilter,
@@ -38,6 +39,7 @@ class SemanticRetriever:
         self._embedder = memory_embedder or MemoryEmbedder()
         self._auditor = auditor or RetrievalAuditor()
         self._metrics = get_metrics_collector()
+        self._governance = get_governance_manager()
         self._initialized = False
 
     async def initialize(self):
@@ -55,6 +57,32 @@ class SemanticRetriever:
         if memory_filter and memory_filter.memory_type:
             return [memory_filter.memory_type]
         return list(MemoryType)
+
+    def _validate_integrity(
+        self, results: list[SearchResult]
+    ) -> list[SearchResult]:
+        valid: list[SearchResult] = []
+        for r in results:
+            ok, _ = self._governance.integrity.validate_on_retrieve(
+                r.metadata, r.text
+            )
+            if ok:
+                valid.append(r)
+        return valid
+
+    def _apply_safety_check(self, query: str) -> tuple[bool, Optional[str]]:
+        safe, check_result = self._governance.safety.check_query(query)
+        if not safe:
+            reason = str(check_result.get("checks", {}))
+            self._governance.log_ai_output(
+                action="retrieval_blocked",
+                component="semantic_retriever",
+                details={"query": query[:200], "reason": reason},
+                status="blocked",
+                error=reason,
+            )
+            return False, reason
+        return True, None
 
     async def store_trade(self, trade: TradeMemory):
         self._require_initialized()
@@ -195,6 +223,15 @@ class SemanticRetriever:
         start = time.monotonic()
         error = None
 
+        safe, safe_reason = self._apply_safety_check(query)
+        if not safe:
+            self._auditor.log_search(
+                query=query, results=[], latency_ms=0,
+                mem_types=[], n_requested=n_results,
+                error=f"Safety check failed: {safe_reason}",
+            )
+            return []
+
         mem_types = self._resolve_memory_types(memory_filter)
         query_embedding = await self._embedder._service.embed(query)
         where_clause = memory_filter.to_chroma_where() if memory_filter else None
@@ -218,6 +255,7 @@ class SemanticRetriever:
                     error = str(e)
 
         if all_results:
+            all_results = self._validate_integrity(all_results)
             all_results = normalize_scores(all_results, "relevance_score")
             all_results = compute_cross_collection_similarity(all_results)
             all_results = rank_results(all_results, memory_filter.ranking_config if memory_filter else None)
@@ -240,6 +278,20 @@ class SemanticRetriever:
             error=error,
         )
 
+        self._governance.log_ai_output(
+            action="semantic_search",
+            component="semantic_retriever",
+            details={
+                "query": query[:200],
+                "n_requested": effective_n,
+                "n_returned": len(paginated),
+                "mem_types": [m.value for m in mem_types],
+            },
+            start_time=start,
+            status="error" if error else "success",
+            error=error,
+        )
+
         logger.info(
             f"Semantic search '{query[:50]}' returned "
             f"{len(paginated)} results in {elapsed:.3f}s"
@@ -255,6 +307,15 @@ class SemanticRetriever:
         self._require_initialized()
         start = time.monotonic()
         error = None
+
+        safe, safe_reason = self._apply_safety_check(query)
+        if not safe:
+            self._auditor.log_search(
+                query=query, results=[], latency_ms=0,
+                mem_types=[], n_requested=n_results,
+                error=f"Safety check failed: {safe_reason}",
+            )
+            return []
 
         mem_types = self._resolve_memory_types(memory_filter)
         where_clause = memory_filter.to_chroma_where() if memory_filter else None
@@ -278,6 +339,7 @@ class SemanticRetriever:
                     error = str(e)
 
         if all_results:
+            all_results = self._validate_integrity(all_results)
             all_results = normalize_scores(all_results, "relevance_score")
             all_results = rank_results(all_results, memory_filter.ranking_config if memory_filter else None)
 
@@ -299,6 +361,20 @@ class SemanticRetriever:
             error=error,
         )
 
+        self._governance.log_ai_output(
+            action="text_search",
+            component="semantic_retriever",
+            details={
+                "query": query[:200],
+                "n_requested": effective_n,
+                "n_returned": len(paginated),
+                "mem_types": [m.value for m in mem_types],
+            },
+            start_time=start,
+            status="error" if error else "success",
+            error=error,
+        )
+
         logger.info(
             f"Text search '{query[:50]}' returned "
             f"{len(paginated)} results in {elapsed:.3f}s"
@@ -316,6 +392,15 @@ class SemanticRetriever:
         self._require_initialized()
         start = time.monotonic()
         error = None
+
+        safe, safe_reason = self._apply_safety_check(query)
+        if not safe:
+            self._auditor.log_search(
+                query=query, results=[], latency_ms=0,
+                mem_types=[], n_requested=n_results,
+                error=f"Safety check failed: {safe_reason}",
+            )
+            return []
 
         mem_types = self._resolve_memory_types(memory_filter)
         query_embedding = await self._embedder._service.embed(query)
@@ -360,6 +445,7 @@ class SemanticRetriever:
                     error = str(e)
 
         if all_results:
+            all_results = self._validate_integrity(all_results)
             all_results = normalize_scores(all_results, "relevance_score")
             all_results = compute_cross_collection_similarity(all_results)
             all_results = rank_results(all_results, memory_filter.ranking_config if memory_filter else None)
@@ -382,6 +468,21 @@ class SemanticRetriever:
             mem_types=mem_types,
             n_requested=effective_n,
             filters_applied=memory_filter.model_dump(exclude_none=True) if memory_filter else None,
+            error=error,
+        )
+
+        self._governance.log_ai_output(
+            action="advanced_search",
+            component="semantic_retriever",
+            details={
+                "query": query[:200],
+                "n_requested": effective_n,
+                "n_returned": len(paginated),
+                "mem_types": [m.value for m in mem_types],
+                "use_hybrid": use_hybrid,
+            },
+            start_time=start,
+            status="error" if error else "success",
             error=error,
         )
 
