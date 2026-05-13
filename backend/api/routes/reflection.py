@@ -92,6 +92,92 @@ async def batch_reflection(
         raise HTTPException(500, f"Batch reflection failed: {str(e)}")
 
 
+@router.post("/system")
+async def system_reflection():
+    service = _get_reflection_service()
+    if service is None:
+        raise HTTPException(503, "Reflection engine not available")
+
+    try:
+        result = await service.generate_system_reflection()
+        return result
+    except Exception as e:
+        logger.error(f"System reflection failed: {e}")
+        raise HTTPException(500, f"System reflection failed: {str(e)}")
+
+
+@router.get("/patterns")
+async def recurring_patterns(
+    window_days: int = Query(default=30, ge=7, le=365),
+):
+    service = _get_reflection_service()
+    if service is None:
+        raise HTTPException(503, "Reflection engine not available")
+
+    try:
+        report = await service.detect_recurring_patterns(window_days=window_days)
+        return {"status": "ok", "report": report.model_dump()}
+    except Exception as e:
+        logger.error(f"Recurring pattern detection failed: {e}")
+        raise HTTPException(500, f"Recurring pattern detection failed: {str(e)}")
+
+
+@router.get("/degradation")
+async def strategy_degradation():
+    service = _get_reflection_service()
+    if service is None:
+        raise HTTPException(503, "Reflection engine not available")
+
+    try:
+        report = await service.analyze_degradation()
+        return {"status": "ok", "report": report.model_dump()}
+    except Exception as e:
+        logger.error(f"Degradation analysis failed: {e}")
+        raise HTTPException(500, f"Degradation analysis failed: {str(e)}")
+
+
+@router.get("/regime-mismatches")
+async def regime_mismatches():
+    service = _get_reflection_service()
+    if service is None:
+        raise HTTPException(503, "Reflection engine not available")
+
+    try:
+        report = await service.detect_regime_mismatches()
+        return {"status": "ok", "report": report.model_dump()}
+    except Exception as e:
+        logger.error(f"Regime mismatch detection failed: {e}")
+        raise HTTPException(500, f"Regime mismatch detection failed: {str(e)}")
+
+
+@router.get("/instability")
+async def instability_report():
+    service = _get_reflection_service()
+    if service is None:
+        raise HTTPException(503, "Reflection engine not available")
+
+    try:
+        report = await service.generate_instability_report()
+        return {"status": "ok", "report": report.model_dump()}
+    except Exception as e:
+        logger.error(f"Instability report generation failed: {e}")
+        raise HTTPException(500, f"Instability report generation failed: {str(e)}")
+
+
+@router.get("/recommendations")
+async def investigation_recommendations():
+    service = _get_reflection_service()
+    if service is None:
+        raise HTTPException(503, "Reflection engine not available")
+
+    try:
+        report = await service.generate_investigation_recommendations()
+        return {"status": "ok", "report": report.model_dump()}
+    except Exception as e:
+        logger.error(f"Investigation recommendations failed: {e}")
+        raise HTTPException(500, f"Investigation recommendations failed: {str(e)}")
+
+
 @router.get("/logs")
 async def list_reflection_logs(
     limit: int = Query(default=50, ge=1, le=200),
