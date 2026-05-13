@@ -2017,4 +2017,41 @@ All test files deleted after successful run.
 
 ---
 
+## 2026-05-13
+
+### Session: Create Portfolio Risk APIs — Exposure & Correlation Endpoints
+
+**User Request:** Create Portfolio Risk APIs with endpoints for portfolio intelligence workflows: `GET /portfolio/risk`, `GET /portfolio/exposure`, `GET /portfolio/correlation`.
+
+**Analysis:**
+- Portfolio Intelligence Engine already existed at `backend/intelligence/portfolio_analysis/` with `ExposureAnalyzer`, `CorrelationAnalyzer`, `VolatilityAnalyzer`, `DirectionalBiasAnalyzer`, `RiskInsightsGenerator`, and `PortfolioIntelligenceService`
+- `GET /portfolio/risk` already existed (returning full analysis)
+- Missing dedicated `GET /portfolio/exposure` and `GET /portfolio/correlation` endpoints
+
+**Enhancements Made:**
+
+| File | Change |
+|------|--------|
+| `backend/intelligence/portfolio_analysis/service.py` | Added `analyze_exposure()` and `analyze_correlation()` methods — call full `analyze()` and return focused views with regime context, position count, timestamp, latency |
+| `backend/api/routes/portfolio.py` | Added `GET /portfolio/exposure` (sector exposures, capital concentrations, top holdings, HHI) and `GET /portfolio/correlation` (pairs, clusters, high correlation pairs) endpoints |
+
+**API Endpoints (2 new, 1 existing):**
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /portfolio/risk` | Full portfolio analysis (existing — exposure + correlation + volatility + directional bias + risk insights) |
+| `GET /portfolio/exposure` | Sector exposure breakdown, capital concentration, top holdings, Herfindahl index, regime context |
+| `GET /portfolio/correlation` | Pairwise correlations, correlation clusters, high correlation pairs, regime context |
+
+**Test Results: 26/26 PASSED**
+- Service methods (6 tests): exposure structure/grouping/concentration/empty, correlation structure/with-price/empty
+- Risk endpoint (3 tests): full analysis, service unavailable (503), analysis failure (500)
+- Exposure endpoint (5 tests): sector data, overexposure flag, empty holdings, 503, 500
+- Correlation endpoint (7 tests): pairs/clusters, high pair detection, strength classification, empty/single holdings, 503, 500
+- Consistency (5 tests): all endpoints available, all 503 on service down, regime context, latency
+
+All test files deleted after successful run.
+
+---
+
 *End of chat history*

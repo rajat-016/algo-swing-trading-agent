@@ -176,6 +176,28 @@ class PortfolioIntelligenceService:
     def get_history(self, limit: int = 20) -> list[dict[str, Any]]:
         return self._persistence.get_history(limit=limit)
 
+    def analyze_exposure(self, db: Session,
+                         holdings: Optional[list[dict[str, Any]]] = None,
+                         total_capital: Optional[float] = None) -> dict[str, Any]:
+        result = self.analyze(db, holdings=holdings, total_capital=total_capital, persist=False)
+        exposure = result.get("exposure", {})
+        exposure["regime_label"] = result.get("regime_label")
+        exposure["num_positions"] = result.get("num_positions", 0)
+        exposure["timestamp"] = result.get("timestamp")
+        exposure["latency_seconds"] = result.get("latency_seconds", 0)
+        return exposure
+
+    def analyze_correlation(self, db: Session,
+                            holdings: Optional[list[dict[str, Any]]] = None,
+                            total_capital: Optional[float] = None) -> dict[str, Any]:
+        result = self.analyze(db, holdings=holdings, total_capital=total_capital, persist=False)
+        correlation = result.get("correlation", {})
+        correlation["regime_label"] = result.get("regime_label")
+        correlation["num_positions"] = result.get("num_positions", 0)
+        correlation["timestamp"] = result.get("timestamp")
+        correlation["latency_seconds"] = result.get("latency_seconds", 0)
+        return correlation
+
     def get_latest_snapshot(self) -> Optional[dict[str, Any]]:
         return self._persistence.get_latest()
 
