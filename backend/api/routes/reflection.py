@@ -178,6 +178,20 @@ async def investigation_recommendations():
         raise HTTPException(500, f"Investigation recommendations failed: {str(e)}")
 
 
+@router.post("/summaries")
+async def generate_intelligence_summaries():
+    service = _get_reflection_service()
+    if service is None:
+        raise HTTPException(503, "Reflection engine not available")
+
+    try:
+        report = await service.generate_intelligence_summaries()
+        return {"status": "ok", "report": report.model_dump()}
+    except Exception as e:
+        logger.error(f"Intelligence summary generation failed: {e}")
+        raise HTTPException(500, f"Intelligence summary generation failed: {str(e)}")
+
+
 @router.get("/logs")
 async def list_reflection_logs(
     limit: int = Query(default=50, ge=1, le=200),

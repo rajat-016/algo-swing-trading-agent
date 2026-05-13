@@ -26,6 +26,10 @@ from intelligence.reflection_engine.investigation_recommender import (
     InvestigationRecommender,
     InvestigationReport,
 )
+from intelligence.reflection_engine.intelligence_summary_generator import (
+    IntelligenceSummaryGenerator,
+    IntelligenceSummaryReport,
+)
 
 
 class ReflectionService:
@@ -37,6 +41,7 @@ class ReflectionService:
         self._mismatch_detector: Optional[RegimeMismatchDetector] = None
         self._instability_reporter: Optional[InstabilityReporter] = None
         self._investigation_recommender: Optional[InvestigationRecommender] = None
+        self._summary_generator: Optional[IntelligenceSummaryGenerator] = None
         self._settings = None
 
     @property
@@ -85,6 +90,11 @@ class ReflectionService:
         if self._investigation_recommender is None:
             self._investigation_recommender = InvestigationRecommender()
         return self._investigation_recommender
+
+    async def get_summary_generator(self) -> IntelligenceSummaryGenerator:
+        if self._summary_generator is None:
+            self._summary_generator = IntelligenceSummaryGenerator()
+        return self._summary_generator
 
     def _apply_pattern_config(self, detector: RecurringPatternDetector):
         try:
@@ -218,6 +228,47 @@ class ReflectionService:
                 __import__("datetime", fromlist=["timezone"]).timezone.utc
             ).isoformat(),
         }
+
+    async def generate_intelligence_summaries(
+        self,
+        period_days: int = 30,
+    ) -> IntelligenceSummaryReport:
+        if not self.enabled:
+            logger.warning("Reflection engine disabled, using template-based summaries")
+        pattern_report = await self.detect_recurring_patterns()
+        degradation_report = await self.analyze_degradation()
+        mismatch_report = await self.detect_regime_mismatches()
+        instability_report = await self.generate_instability_report()
+        recommendations = await self.generate_investigation_recommendations(
+            pattern_report=pattern_report,
+            degradation_report=degradation_report,
+            mismatch_report=mismatch_report,
+            instability_report=instability_report,
+        )
+        generator = await self.get_summary_generator()
+        report = await generator.generate_periodic_summaries(
+            pattern_report=pattern_report,
+            degradation_report=degradation_report,
+            mismatch_report=mismatch_report,
+            instability_report=instability_report,
+            recommendation_report=recommendations,
+            period_days=period_days,
+        )
+        return report
+
+    async def start_auto_summary_generation(self, interval_hours: int = 24):
+        try:
+            from core.config import get_settings
+            settings = get_settings()
+            interval_hours = getattr(settings, "reflection_summary_auto_generate_interval_hours", interval_hours)
+        except Exception:
+            pass
+        generator = await self.get_summary_generator()
+        await generator.start_auto_generation(interval_hours=interval_hours)
+
+    async def stop_auto_summary_generation(self):
+        generator = await self.get_summary_generator()
+        await generator.stop_auto_generation()
 
     def _get_db(self):
         from core.analytics_db import AnalyticsDB

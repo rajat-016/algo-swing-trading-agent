@@ -153,6 +153,8 @@ class Settings(BaseSettings):
     reflection_degradation_baseline_days: int = Field(default=60)
     reflection_min_trades_for_pattern: int = Field(default=5)
     reflection_pattern_frequency_threshold: float = Field(default=0.15)
+    reflection_summary_auto_generate_enabled: bool = Field(default=False)
+    reflection_summary_auto_generate_interval_hours: int = Field(default=24)
 
     # Portfolio Intelligence Engine
     portfolio_engine_enabled: bool = Field(default=True)
