@@ -15,6 +15,7 @@ from memory.retrieval.scoring import (
     compute_cross_collection_similarity,
     normalize_scores,
 )
+from core.monitoring import get_metrics_collector
 from memory.schemas.memory_schemas import (
     MarketMemory,
     MemoryFilter,
@@ -36,6 +37,7 @@ class SemanticRetriever:
         self._collections = collection_manager or MemoryCollectionManager()
         self._embedder = memory_embedder or MemoryEmbedder()
         self._auditor = auditor or RetrievalAuditor()
+        self._metrics = get_metrics_collector()
         self._initialized = False
 
     async def initialize(self):
@@ -56,84 +58,132 @@ class SemanticRetriever:
 
     async def store_trade(self, trade: TradeMemory):
         self._require_initialized()
-        doc_id, embedding, metadata = await self._embedder.embed_trade(trade)
-        text = trade.to_embedding_text()
-        self._collections.add_memory(
-            MemoryType.TRADE,
-            documents=[text],
-            embeddings=[embedding],
-            metadatas=[metadata],
-            ids=[doc_id],
-        )
-        logger.debug(f"Stored trade memory: {doc_id}")
+        start = time.monotonic()
+        try:
+            doc_id, embedding, metadata = await self._embedder.embed_trade(trade)
+            text = trade.to_embedding_text()
+            self._collections.add_memory(
+                MemoryType.TRADE,
+                documents=[text],
+                embeddings=[embedding],
+                metadatas=[metadata],
+                ids=[doc_id],
+            )
+            latency = time.monotonic() - start
+            self._metrics.record_latency("retriever.store_trade", latency * 1000)
+            logger.debug(f"Stored trade memory: {doc_id}")
+        except Exception as e:
+            latency = time.monotonic() - start
+            self._metrics.record_error("retriever.store_trade", str(e))
+            raise
 
     async def store_trades(self, trades: list[TradeMemory]):
         self._require_initialized()
         if not trades:
             return
-        ids, embeddings, metadatas, texts = await self._embedder.embed_trades(trades)
-        self._collections.add_memory(
-            MemoryType.TRADE,
-            documents=texts,
-            embeddings=embeddings,
-            metadatas=metadatas,
-            ids=ids,
-        )
-        logger.info(f"Stored {len(trades)} trade memories")
+        start = time.monotonic()
+        try:
+            ids, embeddings, metadatas, texts = await self._embedder.embed_trades(trades)
+            self._collections.add_memory(
+                MemoryType.TRADE,
+                documents=texts,
+                embeddings=embeddings,
+                metadatas=metadatas,
+                ids=ids,
+            )
+            latency = time.monotonic() - start
+            self._metrics.record_latency("retriever.store_trades", latency * 1000)
+            logger.info(f"Stored {len(trades)} trade memories")
+        except Exception as e:
+            latency = time.monotonic() - start
+            self._metrics.record_error("retriever.store_trades", str(e))
+            raise
 
     async def store_market(self, market: MarketMemory):
         self._require_initialized()
-        doc_id, embedding, metadata = await self._embedder.embed_market(market)
-        text = market.to_embedding_text()
-        self._collections.add_memory(
-            MemoryType.MARKET,
-            documents=[text],
-            embeddings=[embedding],
-            metadatas=[metadata],
-            ids=[doc_id],
-        )
-        logger.debug(f"Stored market memory: {doc_id}")
+        start = time.monotonic()
+        try:
+            doc_id, embedding, metadata = await self._embedder.embed_market(market)
+            text = market.to_embedding_text()
+            self._collections.add_memory(
+                MemoryType.MARKET,
+                documents=[text],
+                embeddings=[embedding],
+                metadatas=[metadata],
+                ids=[doc_id],
+            )
+            latency = time.monotonic() - start
+            self._metrics.record_latency("retriever.store_market", latency * 1000)
+            logger.debug(f"Stored market memory: {doc_id}")
+        except Exception as e:
+            latency = time.monotonic() - start
+            self._metrics.record_error("retriever.store_market", str(e))
+            raise
 
     async def store_markets(self, markets: list[MarketMemory]):
         self._require_initialized()
         if not markets:
             return
-        ids, embeddings, metadatas, texts = await self._embedder.embed_markets(markets)
-        self._collections.add_memory(
-            MemoryType.MARKET,
-            documents=texts,
-            embeddings=embeddings,
-            metadatas=metadatas,
-            ids=ids,
-        )
-        logger.info(f"Stored {len(markets)} market memories")
+        start = time.monotonic()
+        try:
+            ids, embeddings, metadatas, texts = await self._embedder.embed_markets(markets)
+            self._collections.add_memory(
+                MemoryType.MARKET,
+                documents=texts,
+                embeddings=embeddings,
+                metadatas=metadatas,
+                ids=ids,
+            )
+            latency = time.monotonic() - start
+            self._metrics.record_latency("retriever.store_markets", latency * 1000)
+            logger.info(f"Stored {len(markets)} market memories")
+        except Exception as e:
+            latency = time.monotonic() - start
+            self._metrics.record_error("retriever.store_markets", str(e))
+            raise
 
     async def store_research(self, research: ResearchMemory):
         self._require_initialized()
-        doc_id, embedding, metadata = await self._embedder.embed_research(research)
-        text = research.to_embedding_text()
-        self._collections.add_memory(
-            MemoryType.RESEARCH,
-            documents=[text],
-            embeddings=[embedding],
-            metadatas=[metadata],
-            ids=[doc_id],
-        )
-        logger.debug(f"Stored research memory: {doc_id}")
+        start = time.monotonic()
+        try:
+            doc_id, embedding, metadata = await self._embedder.embed_research(research)
+            text = research.to_embedding_text()
+            self._collections.add_memory(
+                MemoryType.RESEARCH,
+                documents=[text],
+                embeddings=[embedding],
+                metadatas=[metadata],
+                ids=[doc_id],
+            )
+            latency = time.monotonic() - start
+            self._metrics.record_latency("retriever.store_research", latency * 1000)
+            logger.debug(f"Stored research memory: {doc_id}")
+        except Exception as e:
+            latency = time.monotonic() - start
+            self._metrics.record_error("retriever.store_research", str(e))
+            raise
 
     async def store_researches(self, researches: list[ResearchMemory]):
         self._require_initialized()
         if not researches:
             return
-        ids, embeddings, metadatas, texts = await self._embedder.embed_researches(researches)
-        self._collections.add_memory(
-            MemoryType.RESEARCH,
-            documents=texts,
-            embeddings=embeddings,
-            metadatas=metadatas,
-            ids=ids,
-        )
-        logger.info(f"Stored {len(researches)} research memories")
+        start = time.monotonic()
+        try:
+            ids, embeddings, metadatas, texts = await self._embedder.embed_researches(researches)
+            self._collections.add_memory(
+                MemoryType.RESEARCH,
+                documents=texts,
+                embeddings=embeddings,
+                metadatas=metadatas,
+                ids=ids,
+            )
+            latency = time.monotonic() - start
+            self._metrics.record_latency("retriever.store_researches", latency * 1000)
+            logger.info(f"Stored {len(researches)} research memories")
+        except Exception as e:
+            latency = time.monotonic() - start
+            self._metrics.record_error("retriever.store_researches", str(e))
+            raise
 
     async def search(
         self,
@@ -176,6 +226,10 @@ class SemanticRetriever:
         paginated = all_results[offset:offset + effective_n]
 
         elapsed = time.monotonic() - start
+        if error:
+            self._metrics.record_error("retriever.search", error)
+        else:
+            self._metrics.record_latency("retriever.search", elapsed * 1000)
         self._auditor.log_search(
             query=query,
             results=paginated,
@@ -231,6 +285,10 @@ class SemanticRetriever:
         paginated = all_results[offset:offset + effective_n]
 
         elapsed = time.monotonic() - start
+        if error:
+            self._metrics.record_error("retriever.search_by_text", error)
+        else:
+            self._metrics.record_latency("retriever.search_by_text", elapsed * 1000)
         self._auditor.log_search(
             query=query,
             results=paginated,
@@ -313,6 +371,10 @@ class SemanticRetriever:
             paginated = clip_relevance(paginated, threshold=min_relevance)
 
         elapsed = time.monotonic() - start
+        if error:
+            self._metrics.record_error("retriever.advanced_search", error)
+        else:
+            self._metrics.record_latency("retriever.advanced_search", elapsed * 1000)
         self._auditor.log_search(
             query=query,
             results=paginated,

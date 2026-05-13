@@ -115,4 +115,21 @@ export class WebSocketManager {
   }
 }
 
+export const monitoringApi = {
+  getPredictions: (limit = 50) => api.get(`/monitoring/predictions?limit=${limit}`),
+  getAccuracy: (lookbackDays = 30) => api.get(`/monitoring/accuracy?lookback_days=${lookbackDays}`),
+  getDriftStatus: () => api.get('/monitoring/drift'),
+  createBaseline: () => api.post('/monitoring/drift/baseline'),
+  getHealthDashboard: () => api.get('/monitoring/health'),
+  getMetrics: () => api.get('/monitoring/metrics'),
+  getLatency: () => api.get('/monitoring/latency'),
+  getPerformance: () => api.get('/monitoring/performance'),
+  getSystemHealth: () => api.get('/health'),
+};
+
+export const stressTestApi = {
+  runScenario: (scenario) => api.post(`/stress/run/${scenario}`),
+  runMonteCarlo: (params) => api.post('/stress/monte-carlo', params),
+};
+
 export const wsManager = new WebSocketManager();

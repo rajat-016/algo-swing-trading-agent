@@ -14,6 +14,7 @@ from loguru import logger
 
 from ai.config.settings import ai_settings
 from ai.llm.client import OllamaClient
+from core.monitoring import get_metrics_collector
 
 
 class EmbeddingCache:
@@ -139,6 +140,7 @@ class EmbeddingService:
         self._batch_size = ai_settings.embedding_batch_size
         self._max_concurrency = ai_settings.embedding_max_concurrency
         self._semaphore = asyncio.Semaphore(self._max_concurrency)
+        self._metrics = get_metrics_collector()
         self._cache = EmbeddingCache(
             max_size=ai_settings.embedding_cache_max_size,
             ttl_seconds=ai_settings.embedding_cache_ttl_seconds,
@@ -187,12 +189,20 @@ class EmbeddingService:
             if cached is not None:
                 return cached
 
-        embedding = await self._get_embedding_with_retry(text, embed_model)
+        start = time.monotonic()
+        try:
+            embedding = await self._get_embedding_with_retry(text, embed_model)
+            latency = time.monotonic() - start
+            self._metrics.record_latency("embedding.embed", latency * 1000)
 
-        if use_cache:
-            self._cache.set(text, embed_model, embedding)
+            if use_cache:
+                self._cache.set(text, embed_model, embedding)
 
-        return embedding
+            return embedding
+        except Exception as e:
+            latency = time.monotonic() - start
+            self._metrics.record_error("embedding.embed", str(e))
+            raise
 
     async def embed_batch(
         self,
@@ -201,19 +211,20 @@ class EmbeddingService:
         model: Optional[str] = None,
         progress_callback: Optional[Callable[[int, int], None]] = None,
     ) -> list[list[float]]:
+        start = time.monotonic()
         embed_model = model or self._model
         results: list[Optional[list[float]]] = [None] * len(texts)
+        fail_count = 0
 
         async def _process_one(idx: int, t: str):
+            nonlocal fail_count
             async with self._semaphore:
                 try:
                     results[idx] = await self.embed(t, use_cache=use_cache, model=embed_model)
                 except Exception as e:
+                    fail_count += 1
                     logger.error(f"Embedding failed for item {idx}: {e}")
-                    dim = ai_settings.embedding_dimension
-                    if hasattr(self._ollama, "get_embedding") and embed_model:
-                        pass
-                    results[idx] = [0.0] * dim
+                    results[idx] = [0.0] * ai_settings.embedding_dimension
 
         total = len(texts)
         done = 0
@@ -228,6 +239,9 @@ class EmbeddingService:
             if progress_callback:
                 progress_callback(done, total)
 
+        latency = time.monotonic() - start
+        self._metrics.record_latency("embedding.embed_batch", latency * 1000)
+
         return [r for r in results if r is not None]
 
     async def embed_documents(
@@ -239,6 +253,7 @@ class EmbeddingService:
         progress_callback: Optional[Callable[[int, int], None]] = None,
         auto_metadata: bool = True,
     ) -> list[dict]:
+        start = time.monotonic()
         texts = [doc[text_key] for doc in documents]
         embeddings = await self.embed_batch(
             texts,
@@ -246,6 +261,8 @@ class EmbeddingService:
             model=model,
             progress_callback=progress_callback,
         )
+        latency = time.monotonic() - start
+        self._metrics.record_latency("embedding.embed_documents", latency * 1000)
         now = datetime.now(timezone.utc).isoformat()
         result = []
         for doc, emb in zip(documents, embeddings):

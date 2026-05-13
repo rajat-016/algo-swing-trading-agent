@@ -2270,6 +2270,68 @@ Created ackend/intelligence/drift_detection/ package (7 modules + __init__.py):
 
 **Branch:** feature/build-feature-drift-detection-framework
 
+## 2026-05-13
+
+### Session: Implement Monitoring & Observability Stack — MetricsService, SystemHealthAggregator, Enhanced Dashboard
+
+**User Request:** Implement Monitoring & Observability Stack for the AI-Native Trading Copilot Phase 1. Reason: "Monitoring becomes meaningful only after core systems exist."
+
+**Branch:** Current working branch (enhancing/developing/implementing Monitoring & Observability)
+
+**Enhancements Implemented:**
+
+**Backend (4 new/modified files):**
+
+| File | Change | Purpose |
+|------|--------|---------|
+| `backend/core/monitoring/metrics_service.py` | **NEW** | `MetricsCollector` — thread-safe singleton collecting latency records (min/max/avg/p50/p95/p99), error counts, API call metrics, throughput (requests/min), degraded service detection (>5s median), error log (50 recent), record/retrieve methods per service |
+| `backend/core/monitoring/health_aggregator.py` | **NEW** | `SystemHealthAggregator` — register check functions, run all checks in parallel, aggregate status (healthy/degraded/unhealthy) with priority (unhealthy > degraded > healthy), component-level latency tracking |
+| `backend/core/monitoring/__init__.py` | **MODIFY** | Added `MetricsCollector`, `get_metrics_collector`, `SystemHealthAggregator`, `get_health_aggregator`, `HealthComponent` exports |
+| `backend/api/routes/monitoring.py` | **MODIFY** | Added `GET /monitoring/health` (aggregated system health with 8 checks: settings, database, model, drift, broker, ai_copilot, memory, system), `GET /monitoring/metrics` (per-service metrics + API metrics + summary), `GET /monitoring/latency` (latency breakdown by service), `GET /monitoring/performance` (combined metrics + status). Registered default health checks. |
+
+**Config Updates (1 file):**
+
+| File | Change |
+|------|--------|
+| `backend/core/config.py` | Added 6 monitoring config fields: `monitoring_enabled`, `monitoring_metrics_window_seconds`, `monitoring_latency_warn_ms`, `monitoring_latency_critical_ms`, `monitoring_error_rate_warn/critical`, `monitoring_health_check_interval_seconds` |
+| `backend/requirements.txt` | Added `psutil>=5.9.0` for system resource checks |
+
+**Frontend (3 files):**
+
+| File | Change |
+|------|--------|
+| `frontend/src/api/index.js` | Added `monitoringApi` (getPredictions, getAccuracy, getDriftStatus, createBaseline, getHealthDashboard, getMetrics, getLatency, getPerformance, getSystemHealth) and `stressTestApi` (runScenario, runMonteCarlo) |
+| `frontend/src/components/Monitoring.jsx` | **REWRITTEN** — Added System Health tab (overall status, component grid with healthy/degraded/unhealthy badges, latency, detail rows), Metrics tab (table of per-service metrics + API endpoint metrics), Latency tab (card grid with P50/P95/P99/Min/Max/throughput). Retained all 4 original tabs (Predictions, Accuracy, Drift Detection, Stress Test). 7 sub-tabs total. |
+| `frontend/src/App.js` | Added `Monitoring` import, Monitoring tab to sidebar navigation (icon: ◎), render condition for `activeTab === 'monitoring'` |
+| `frontend/src/index.css` | Added ~400 lines of monitoring CSS: decision badges (BUY/HOLD/SELL), confidence badges (HIGH/MED/LOW), health dashboard (status banner, summary grid, component cards with detail rows), metrics tables, latency cards with colored borders, calibration grid, drift status cards, stress test buttons, general monitoring layout |
+
+**Unit Testing (28/28 PASSED):**
+
+| Test Class | Tests | Coverage |
+|-----------|-------|----------|
+| TestMetricsCollector | 14 | record_latency (basic/multi/p95/p99), record_error (basic/mixed), record_api_call, get_all_metrics empty, get_service_metrics nonexistent, health summary, latency summary, throughput calculation, concurrent recording, error_log_limit, degraded_detection |
+| TestSystemHealthAggregator | 9 | healthy/degraded/unhealthy propagation, exception handling, latency tracking, response time, empty, component details/defaults |
+| TestMetricsCollectorSingleton | 2 | Singleton pattern, isolated instances |
+| TestMonitorIntegration | 2 | Route importability, __init__ exports |
+
+All 28 tests passed in 3.62s. Test file deleted after successful completion.
+
+**Existing Test Suite:** All 82 pre-existing tests continue to pass.
+
+**Files Modified (9):**
+- `backend/core/monitoring/metrics_service.py` — NEW
+- `backend/core/monitoring/health_aggregator.py` — NEW
+- `backend/core/monitoring/__init__.py` — Updated exports
+- `backend/core/monitoring/drift_detector.py` — Fixed deprecated datetime.utcnow()
+- `backend/api/routes/monitoring.py` — Added 4 new endpoints + health checks
+- `backend/core/config.py` — Added 6 monitoring config fields
+- `backend/requirements.txt` — Added psutil
+- `frontend/src/api/index.js` — Added monitoringApi + stressTestApi exports
+- `frontend/src/components/Monitoring.jsx` — Enhanced with 7 sub-tabs
+- `frontend/src/App.js` — Added Monitoring tab to navigation
+- `frontend/src/index.css` — Added ~400 lines monitoring styles
+- `opencode/chat_history.md` — Appended this session summary
+
 ---
 
 ## 2026-05-13

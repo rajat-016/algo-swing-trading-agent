@@ -171,6 +171,15 @@ class Settings(BaseSettings):
     drift_variance_change_threshold: float = Field(default=50.0)
     drift_contribution_change_threshold: float = Field(default=20.0)
 
+    # Monitoring & Observability
+    monitoring_enabled: bool = Field(default=True)
+    monitoring_metrics_window_seconds: int = Field(default=3600)
+    monitoring_latency_warn_ms: float = Field(default=3000.0)
+    monitoring_latency_critical_ms: float = Field(default=10000.0)
+    monitoring_error_rate_warn: float = Field(default=0.05)
+    monitoring_error_rate_critical: float = Field(default=0.15)
+    monitoring_health_check_interval_seconds: int = Field(default=60)
+
     # Explainability Engine
     explainability_enabled: bool = Field(default=True)
     shap_top_features: int = Field(default=15)

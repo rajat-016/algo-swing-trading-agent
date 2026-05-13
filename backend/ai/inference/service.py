@@ -12,6 +12,7 @@ from ai.llm.client import OllamaClient
 from ai.llm.models import CHAT_CONFIGS, ModelConfig
 from ai.orchestration.circuit_breaker import AICircuitBreaker
 from ai.prompts.registry import registry as prompt_registry
+from core.monitoring import get_metrics_collector
 
 
 class InferenceService:
@@ -30,6 +31,7 @@ class InferenceService:
             threshold=ai_settings.inference_circuit_breaker_threshold,
             reset_seconds=ai_settings.inference_circuit_breaker_reset_seconds,
         )
+        self._metrics = get_metrics_collector()
         self._initialized = False
 
     async def initialize(self):
@@ -59,11 +61,13 @@ class InferenceService:
             result = await self.ollama.generate(prompt, model_config=model_config)
             latency = time.monotonic() - start
             self.circuit_breaker.record_success()
+            self._metrics.record_latency("inference.generate", latency * 1000)
             logger.debug(f"AI generate: {latency:.2f}s, prompt={len(prompt)} chars")
             return result
         except Exception as e:
             latency = time.monotonic() - start
             self.circuit_breaker.record_failure()
+            self._metrics.record_error("inference.generate", str(e))
             logger.error(f"AI generate failed after {latency:.2f}s: {e}")
             raise
 
@@ -86,11 +90,13 @@ class InferenceService:
             result = await self.ollama.chat(messages, model_config=model_config)
             latency = time.monotonic() - start
             self.circuit_breaker.record_success()
+            self._metrics.record_latency("inference.chat", latency * 1000)
             logger.debug(f"AI chat: {latency:.2f}s, {len(messages)} messages")
             return result
         except Exception as e:
             latency = time.monotonic() - start
             self.circuit_breaker.record_failure()
+            self._metrics.record_error("inference.chat", str(e))
             logger.error(f"AI chat failed after {latency:.2f}s: {e}")
             raise
 
@@ -142,14 +148,23 @@ class InferenceService:
         where: Optional[dict] = None,
         where_document: Optional[dict] = None,
     ) -> dict:
-        query_embedding = await self.embed(query)
-        return self.chroma.query(
-            collection_name=collection,
-            query_embedding=query_embedding,
-            n_results=n_results,
-            where=where,
-            where_document=where_document,
-        )
+        start = time.monotonic()
+        try:
+            query_embedding = await self.embed(query)
+            result = self.chroma.query(
+                collection_name=collection,
+                query_embedding=query_embedding,
+                n_results=n_results,
+                where=where,
+                where_document=where_document,
+            )
+            latency = time.monotonic() - start
+            self._metrics.record_latency("inference.semantic_search", latency * 1000)
+            return result
+        except Exception as e:
+            latency = time.monotonic() - start
+            self._metrics.record_error("inference.semantic_search", str(e))
+            raise
 
     async def store_memory(
         self,
@@ -175,31 +190,39 @@ class InferenceService:
         use_cache: bool = True,
         upsert: bool = False,
     ) -> int:
-        enriched = await self.embed_documents(
-            documents, text_key=text_key, use_cache=use_cache, auto_metadata=True,
-        )
-        texts = [d[text_key] for d in enriched]
-        embeddings = [d["embedding"] for d in enriched]
-        metadatas = [d.get("metadata", {}) for d in enriched]
-        ids = [d.get("id") for d in enriched]
+        start = time.monotonic()
+        try:
+            enriched = await self.embed_documents(
+                documents, text_key=text_key, use_cache=use_cache, auto_metadata=True,
+            )
+            texts = [d[text_key] for d in enriched]
+            embeddings = [d["embedding"] for d in enriched]
+            metadatas = [d.get("metadata", {}) for d in enriched]
+            ids = [d.get("id") for d in enriched]
 
-        if upsert:
-            self.chroma.upsert_documents(
-                collection_name=collection,
-                documents=texts,
-                embeddings=embeddings,
-                metadatas=metadatas,
-                ids=ids,
-            )
-        else:
-            self.chroma.add_documents(
-                collection_name=collection,
-                documents=texts,
-                embeddings=embeddings,
-                metadatas=metadatas,
-                ids=ids,
-            )
-        return len(texts)
+            if upsert:
+                self.chroma.upsert_documents(
+                    collection_name=collection,
+                    documents=texts,
+                    embeddings=embeddings,
+                    metadatas=metadatas,
+                    ids=ids,
+                )
+            else:
+                self.chroma.add_documents(
+                    collection_name=collection,
+                    documents=texts,
+                    embeddings=embeddings,
+                    metadatas=metadatas,
+                    ids=ids,
+                )
+            latency = time.monotonic() - start
+            self._metrics.record_latency("inference.store_with_metadata", latency * 1000)
+            return len(texts)
+        except Exception as e:
+            latency = time.monotonic() - start
+            self._metrics.record_error("inference.store_with_metadata", str(e))
+            raise
 
     async def render_and_generate(
         self,
