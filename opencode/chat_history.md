@@ -2460,3 +2460,40 @@ All 33 tests passed. Test file deleted after successful verification.
 | API Client Integration | 6 | All API objects callable, defined |
 
 All 36 tests passed. Test file deleted after successful verification.
+
+## 2026-05-13
+
+### Session: Market Intelligence Dashboard — Breadth Indicators, Risk Warnings, Real-Time Updates, Enhanced Regime Visualization
+
+**Changes Made:**
+
+1. **MarketIntelligence.jsx** — Major enhancement:
+   - Added **breadth indicators** section (adv/decl ratio gauge, % above MA50 gauge) with color-coded visual bars
+   - Added **risk warnings** section showing instability, transitioning, volatility spike, and confidence degradation flags with styled alert boxes
+   - Added **auto-refresh polling** (30-second interval with countdown indicator, pause/resume toggle button)
+   - Added **enhanced regime visualization**: confidence progress bar, volatility gauge (color-coded by level), trend context (EMA diff %, ADX, MACD histogram), volume context (ratio + spike indicator), BB width
+   - Added health sub-tab showing engine status, transition detector flags, confidence bar, persistence readiness
+   - Retained all existing overview/history/transitions/health sub-tabs
+
+2. **index.css** — Added ~150 lines of new styles:
+   - `.breadthGauge*` — horizontal bar gauges with color states
+   - `.vizConfidenceBar*` — confidence progress bar with label
+   - `.vizVolGauge*` — volatility level gauge
+   - `.pollIndicator`, `.pollDot`, `.pollToggle` — auto-refresh UI
+   - `.riskFlags`, `.noData` — risk section and empty state
+   - `.detailVal.positive/.negative` — colored detail values
+
+3. **No backend changes** — All data flows through existing `/regime/current` endpoint:
+   - `breadth_context` (adv_decl_ratio, pct_above_ma50)
+   - `transition_data` (is_unstable, is_transitioning, vol_spike_detected, confidence_degraded, etc.)
+   - `volatility_context` (atr_pct, bb_width, vix_level)
+   - `trend_context` (ema_diff_pct, adx, macd_histogram)
+   - `volume_context` (volume_ratio, is_spike)
+
+**Acceptance Criteria Met:**
+- Real-time updates functional via 30s polling with countdown and pause/resume
+- Regime visualization stable via confidence bar + volatility gauge + breadth gauges + transition detection
+
+**Testing:**
+- 26 unit tests created and passed (loading state, sub-tab navigation, breadth indicators, risk warnings, distribution, ATR/ADX/EMA diff, volume, recommendations, empty states, API call verification, partial null data, unstable regime warnings)
+- Test file deleted after successful run
