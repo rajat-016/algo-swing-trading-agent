@@ -1,0 +1,269 @@
+
+=============================================================
+  BACKTESTING HEALTH REPORT
+  Generated: 2026-05-05 05:25 PM
+  Report analyzed: C:\Users\asus\Documents\Projects\trading\algo-swing-trading-agent\backtesting\reports\full_report_2026_05_05_172543.json
+=============================================================
+
+-------------------------------------------------------------
+  EXECUTIVE SUMMARY
+-------------------------------------------------------------
+
+Overall Verdict: [FAIL] NOT WORKING AS EXPECTED
+  [PASS] Walk-Forward Time Splits
+  [PASS] Lookahead Bias
+  [PASS] Trade Activity
+  [PASS] Prediction Distribution
+  [PASS] Simulator Signal Handling
+
+What's Broken:
+  [FAIL] Overfitting Detection
+
+
+-------------------------------------------------------------
+  WALK-FORWARD VALIDATION
+-------------------------------------------------------------
+
+[PASS] TIME SPLITS: PASS
+
+   What this means: The backtest never uses future data to make decisions.
+
+   How it works (simple version):
+   - Take 3 years of data -> Train the model
+   - Take next 6 months -> Test the model (without retraining)
+   - Slide forward 6 months -> Repeat
+
+   This is like: Study 2019-2021, take a test on Jan-Jun 2022,
+   then study 2020-2022, take a test on Jul-Dec 2022, etc.
+
+   Verdict: Time splits are correct, no future peeking
+
+-------------------------------------------------------------
+  LOOKAHEAD BIAS CHECK
+-------------------------------------------------------------
+
+[PASS] NO LOOKAHEAD BIAS: PASS
+
+   What this means: The model doesn't "cheat" by seeing future prices.
+
+   The labels (BUY/SELL/HOLD) are created using future returns:
+   "If price goes up 10% in 5 days -> BUY signal"
+
+   But this label creation happens AFTER the train/test split,
+   so the model never sees these future returns during training.
+
+   Verdict: No future data leakage detected
+
+-------------------------------------------------------------
+  TRADE ACTIVITY (THE PROBLEM)
+-------------------------------------------------------------
+
+[PASS] TRADE ACTIVITY: PASS
+
+   Numbers:
+   - Total windows tested: 813
+   - Windows with trades: 587
+   - Windows without trades: 226
+   - Total trades: 1112
+
+   Verdict: Trades executed during backtest
+
+-------------------------------------------------------------
+  MODEL PREDICTION ANALYSIS
+-------------------------------------------------------------
+
+[PASS] PREDICTION DISTRIBUTION: PASS
+
+   Prediction breakdown:
+   +----------------+----------+--------------------------+
+   | Prediction      | Count    | What it means            |
+   +----------------+----------+--------------------------+
+   | Strong Sell    | 0        | Never predicted          |
+   | Sell           | 0        | Never predicted          |
+   | HOLD           | 10       | Most predictions!         |
+   | Buy            | 89       | Rarely predicted         |
+   | Strong Buy     | 24       | Never predicted          |
+   +----------------+----------+--------------------------+
+
+   Verdict: Model uses all prediction classes appropriately
+
+-------------------------------------------------------------
+  SIMULATOR SIGNAL HANDLING
+-------------------------------------------------------------
+
+[PASS] SIMULATOR SIGNAL HANDLING: PASS
+
+   Verdict: Simulator handles multiple prediction classes
+
+-------------------------------------------------------------
+  OVERFITTING CHECK
+-------------------------------------------------------------
+
+[FAIL] OVERFITTING: FAIL
+
+   Test Accuracy (on unseen data):
+   - Min: 0.09
+   - Max: 0.79
+   - Average: 0.42
+   - Variance: 0.70
+
+   Train Accuracy (on training data):
+   - Min: 0.81
+   - Max: 0.93
+   - Average: 0.87
+
+   Val Accuracy (held-out from training):
+   - Min: 0.50
+   - Max: 0.81
+   - Average: 0.63
+
+   Train-Test Gap: 44.41%
+   Val-Test Gap:   20.89%
+   (Healthy = <10%, Warning = 10-15%, Overfitting = >15%)
+
+   What is overfitting?
+   Like a student who memorizes practice exam answers instead of
+   understanding the concepts. They ace practice tests but fail
+   the real exam because the questions are different.
+
+   This is a problem:
+   - The model performs much better on training data than test data
+   - It has memorized patterns that don't apply to new market conditions
+   - Live trading performance will likely be worse than backtest results
+
+   Issues:
+   [FAIL] Val-Test gap: 20.89% (>15%) - strong overfitting detected
+   [FAIL] At least one window has a 79% train-test gap - unstable across regimes
+
+   Verdict: The model scores 63% on validation data but only 42% on test data. This 21% gap means the model learned patterns that don't generalize to new time periods.
+
+-------------------------------------------------------------
+  PER-STOCK BREAKDOWN
+-------------------------------------------------------------
+
+   Stock           | Windows | Trades | Avg Accuracy | Verdict
+   ---------------|---------|---------|--------------|----------
+   ABB.NS          |    9    |    18    |     36.9%    | [PASS]
+   ADANIENT.NS     |    9    |    11    |     40.9%    | [PASS]
+   ADANIGREEN.NS   |    9    |     8    |     41.7%    | [PASS]
+   ADANIPORTS.NS   |    9    |    12    |     38.6%    | [PASS]
+   ADANIPOWER.NS   |    9    |    13    |     39.0%    | [PASS]
+   AMBUJACEM.NS    |    9    |    11    |     40.2%    | [PASS]
+   APOLLOHOSP.NS   |    9    |    12    |     43.7%    | [PASS]
+   ASIANPAINT.NS   |    9    |    16    |     44.9%    | [PASS]
+   AXISBANK.NS     |    9    |    10    |     49.0%    | [PASS]
+   BAJAJ-AUTO.NS   |    9    |    18    |     45.8%    | [PASS]
+   BAJAJFINSV.NS   |    9    |    10    |     41.7%    | [PASS]
+   BAJAJHLDNG.NS   |    9    |    10    |     43.5%    | [PASS]
+   BAJFINANCE.NS   |    9    |    12    |     44.5%    | [PASS]
+   BANKBARODA.NS   |    9    |    10    |     40.0%    | [PASS]
+   BEL.NS          |    9    |    12    |     43.6%    | [PASS]
+   BHARTIARTL.NS   |    9    |    14    |     46.6%    | [PASS]
+   BOSCHLTD.NS     |    9    |     5    |     46.3%    | [PASS]
+   BPCL.NS         |    9    |    10    |     41.3%    | [PASS]
+   BRITANNIA.NS    |    9    |    13    |     51.4%    | [PASS]
+   CANBK.NS        |    9    |     7    |     37.7%    | [PASS]
+   CGPOWER.NS      |    9    |    10    |     50.2%    | [PASS]
+   CHOLAFIN.NS     |    9    |    10    |     43.8%    | [PASS]
+   CIPLA.NS        |    9    |    10    |     47.4%    | [PASS]
+   COALINDIA.NS    |    9    |    10    |     40.1%    | [PASS]
+   DABUR.NS        |    9    |    18    |     38.1%    | [PASS]
+   DIVISLAB.NS     |    9    |    17    |     47.7%    | [PASS]
+   DLF.NS          |    9    |    13    |     41.4%    | [PASS]
+   DMART.NS        |    9    |     8    |     39.5%    | [PASS]
+   DRREDDY.NS      |    9    |    18    |     48.8%    | [PASS]
+   EICHERMOT.NS    |    9    |    10    |     44.4%    | [PASS]
+   ETERNAL.NS      |    4    |     2    |     35.7%    | [PASS]
+   GAIL.NS         |    9    |    10    |     43.3%    | [PASS]
+   GODREJCP.NS     |    9    |    14    |     44.4%    | [PASS]
+   GRASIM.NS       |    9    |    15    |     39.9%    | [PASS]
+   HAL.NS          |    9    |    22    |     38.5%    | [PASS]
+   HAVELLS.NS      |    9    |     9    |     46.9%    | [PASS]
+   HCLTECH.NS      |    9    |    13    |     43.7%    | [PASS]
+   HDFCBANK.NS     |    9    |    12    |     37.3%    | [PASS]
+   HDFCLIFE.NS     |    9    |    13    |     42.8%    | [PASS]
+   HEROMOTOCO.NS   |    9    |    11    |     37.8%    | [PASS]
+   HINDALCO.NS     |    9    |    12    |     42.1%    | [PASS]
+   HINDUNILVR.NS   |    9    |    17    |     43.8%    | [PASS]
+   ICICIBANK.NS    |    9    |    10    |     43.8%    | [PASS]
+   ICICIGI.NS      |    9    |    12    |     38.4%    | [PASS]
+   ICICIPRULI.NS   |    9    |    13    |     42.2%    | [PASS]
+   INDHOTEL.NS     |    9    |    16    |     42.4%    | [PASS]
+   INDIGO.NS       |    9    |    13    |     41.6%    | [PASS]
+   INDUSINDBK.NS   |    9    |    13    |     39.4%    | [PASS]
+   INFY.NS         |    9    |    11    |     43.9%    | [PASS]
+   IOC.NS          |    9    |     8    |     43.4%    | [PASS]
+   IRFC.NS         |    5    |     6    |     35.5%    | [PASS]
+   ITC.NS          |    9    |    16    |     48.9%    | [PASS]
+   JINDALSTEL.NS   |    9    |     6    |     47.0%    | [PASS]
+   JSWENERGY.NS    |    9    |    13    |     35.4%    | [PASS]
+   JSWSTEEL.NS     |    9    |     8    |     43.4%    | [PASS]
+   KOTAKBANK.NS    |    9    |    15    |     44.5%    | [PASS]
+   LICI.NS         |    2    |     0    |     33.4%    | [FAIL] No trades
+   LODHA.NS        |    4    |     9    |     32.0%    | [PASS]
+   LT.NS           |    9    |    15    |     39.0%    | [PASS]
+   M&M.NS          |    9    |    19    |     37.8%    | [PASS]
+   MARUTI.NS       |    9    |     7    |     36.5%    | [PASS]
+   MAXHEALTH.NS    |    6    |    11    |     41.1%    | [PASS]
+   MOTHERSON.NS    |    9    |     9    |     38.8%    | [PASS]
+   NAUKRI.NS       |    9    |    20    |     33.2%    | [PASS]
+   NESTLEIND.NS    |    9    |    11    |     50.5%    | [PASS]
+   NTPC.NS         |    9    |    12    |     42.4%    | [PASS]
+   ONGC.NS         |    9    |    10    |     44.2%    | [PASS]
+   PFC.NS          |    9    |    17    |     35.3%    | [PASS]
+   PIDILITIND.NS   |    9    |    12    |     42.9%    | [PASS]
+   PNB.NS          |    9    |     9    |     36.3%    | [PASS]
+   POWERGRID.NS    |    9    |    13    |     47.7%    | [PASS]
+   RECLTD.NS       |    9    |    14    |     35.0%    | [PASS]
+   RELIANCE.NS     |    9    |    15    |     39.8%    | [PASS]
+   SBILIFE.NS      |    9    |    12    |     48.2%    | [PASS]
+   SBIN.NS         |    9    |    14    |     41.6%    | [PASS]
+   SHREECEM.NS     |    9    |     8    |     44.4%    | [PASS]
+   SHRIRAMFIN.NS   |    9    |    12    |     35.9%    | [PASS]
+   SIEMENS.NS      |    9    |    14    |     40.6%    | [PASS]
+   SUNPHARMA.NS    |    9    |    11    |     51.2%    | [PASS]
+   TATACONSUM.NS   |    9    |    13    |     41.6%    | [PASS]
+   TATAPOWER.NS    |    9    |    11    |     42.7%    | [PASS]
+   TATASTEEL.NS    |    9    |     8    |     37.6%    | [PASS]
+   TCS.NS          |    9    |    14    |     39.7%    | [PASS]
+   TECHM.NS        |    9    |    10    |     37.8%    | [PASS]
+   TITAN.NS        |    9    |    20    |     43.8%    | [PASS]
+   TORNTPHARM.NS   |    9    |    10    |     55.9%    | [PASS]
+   TRENT.NS        |    9    |    12    |     42.5%    | [PASS]
+   TVSMOTOR.NS     |    9    |    10    |     43.4%    | [PASS]
+   ULTRACEMCO.NS   |    9    |    16    |     37.3%    | [PASS]
+   VBL.NS          |    9    |    13    |     43.0%    | [PASS]
+   VEDL.NS         |    9    |     6    |     41.7%    | [PASS]
+   WIPRO.NS        |    9    |    19    |     38.8%    | [PASS]
+   ZYDUSLIFE.NS    |    9    |    10    |     44.9%    | [PASS]
+
+-------------------------------------------------------------
+  RECOMMENDED FIXES
+-------------------------------------------------------------
+
+[FIX 4] Reduce model overfitting (Train-Test Gap: 44.41%)
+
+   Problem: Model memorizes training data, fails on unseen data
+   Fixes:
+   - Reduce max_depth (currently 6, try 4)
+   - Increase min_child_weight (currently 3, try 5)
+   - Add early_stopping_rounds to XGBoost
+   - Reduce n_estimators (currently 300, try 100)
+   - Add L1/L2 regularization (reg_alpha, reg_lambda)
+
+   File: backtesting/config/backtest_config.yaml (training.parameters)
+   File: backtesting/training/model_trainer.py (add early stopping)
+
+-------------------------------------------------------------
+  SUMMARY FOR NON-TECHNICAL STAKEHOLDERS
+-------------------------------------------------------------
+
+The backtesting system has good architecture (correct time splits,
+no future peeking), but has 1 issue(s) that need attention:
+
+- Overfitting Detection: Val-Test gap: 20.89% (>15%) - strong overfitting detected; At least one window has a 79% train-test gap - unstable across regimes
+
+Review the recommended fixes above and re-run the backtest after
+making changes. Do not deploy to live trading until all checks pass.
+
+=============================================================

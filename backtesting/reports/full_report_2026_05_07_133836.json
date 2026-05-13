@@ -1,0 +1,6450 @@
+{
+  "generated_at": "2026-05-07T13:38:36.847744",
+  "total_windows": 112,
+  "windows": [
+    {
+      "total_trades": 3,
+      "win_count": 0,
+      "loss_count": 3,
+      "win_rate": 0.0,
+      "avg_pnl": -961.1836706949838,
+      "avg_pnl_pct": -0.04469036843687069,
+      "gross_profit": 0,
+      "gross_loss": 2883.5510120849513,
+      "profit_factor": 0.0,
+      "cagr": -0.0634424873492998,
+      "sharpe_ratio": -4.0666608151364105,
+      "max_drawdown": 0.03478094307570369,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.4146341463414634,
+      "precision": 0.37526894965919355,
+      "recall": 0.4146341463414634,
+      "f1_score": 0.38767292031575357,
+      "precision_buy": 0.2,
+      "confidence_buckets": {
+        "low": {
+          "count": 19,
+          "correct": 0
+        },
+        "medium": {
+          "count": 38,
+          "correct": 0
+        },
+        "high": {
+          "count": 66,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -961.1836706949838,
+        "avg_win": 0,
+        "avg_loss": 961.1836706949838,
+        "win_rate": 0.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 36,
+        "1": 77,
+        "2": 10
+      },
+      "window_index": 0,
+      "symbol": "RELIANCE.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 2,
+      "loss_count": 1,
+      "win_rate": 0.6666666666666666,
+      "avg_pnl": 280.22262780761963,
+      "avg_pnl_pct": 0.019959954111766615,
+      "gross_profit": 944.188221313482,
+      "gross_loss": 103.52033789062307,
+      "profit_factor": 9.120799260828216,
+      "cagr": 0.01341525750569006,
+      "sharpe_ratio": -3.0270140261027567,
+      "max_drawdown": 0.0072206296153434,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.456,
+      "precision": 0.5228942136854743,
+      "recall": 0.456,
+      "f1_score": 0.4686359171508937,
+      "precision_buy": 0.36,
+      "confidence_buckets": {
+        "low": {
+          "count": 26,
+          "correct": 0
+        },
+        "medium": {
+          "count": 38,
+          "correct": 0
+        },
+        "high": {
+          "count": 61,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 280.22262780761963,
+        "avg_win": 472.094110656741,
+        "avg_loss": 103.52033789062307,
+        "win_rate": 0.6666666666666666,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 49,
+        "1": 51,
+        "2": 25
+      },
+      "window_index": 1,
+      "symbol": "RELIANCE.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 0,
+      "loss_count": 3,
+      "win_rate": 0.0,
+      "avg_pnl": -777.7197834472646,
+      "avg_pnl_pct": -0.032954795287219556,
+      "gross_profit": 0,
+      "gross_loss": 2333.159350341794,
+      "profit_factor": 0.0,
+      "cagr": -0.052184831279894706,
+      "sharpe_ratio": -5.0572070106605675,
+      "max_drawdown": 0.03018099883156858,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.3114754098360656,
+      "precision": 0.3164452179554358,
+      "recall": 0.3114754098360656,
+      "f1_score": 0.26486108100361316,
+      "precision_buy": 0.273972602739726,
+      "confidence_buckets": {
+        "low": {
+          "count": 13,
+          "correct": 0
+        },
+        "medium": {
+          "count": 32,
+          "correct": 0
+        },
+        "high": {
+          "count": 77,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -777.7197834472646,
+        "avg_win": 0,
+        "avg_loss": 777.7197834472646,
+        "win_rate": 0.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 4,
+        "1": 45,
+        "2": 73
+      },
+      "window_index": 2,
+      "symbol": "RELIANCE.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 0,
+      "loss_count": 1,
+      "win_rate": 0.0,
+      "avg_pnl": -245.35915466307415,
+      "avg_pnl_pct": -0.004624804030981021,
+      "gross_profit": 0,
+      "gross_loss": 245.35915466307415,
+      "profit_factor": 0.0,
+      "cagr": -0.008774500523374806,
+      "sharpe_ratio": -15.003846907513815,
+      "max_drawdown": 0.004309828807859594,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.4065040650406504,
+      "precision": 0.44202251031519324,
+      "recall": 0.4065040650406504,
+      "f1_score": 0.381316754344014,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 33,
+          "correct": 0
+        },
+        "medium": {
+          "count": 41,
+          "correct": 0
+        },
+        "high": {
+          "count": 49,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -245.35915466307415,
+        "avg_win": 0,
+        "avg_loss": 245.35915466307415,
+        "win_rate": 0.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 74,
+        "1": 45,
+        "2": 4
+      },
+      "window_index": 3,
+      "symbol": "RELIANCE.NS"
+    },
+    {
+      "total_trades": 0,
+      "win_rate": 0,
+      "avg_pnl": 0,
+      "cagr": 0,
+      "sharpe_ratio": 0,
+      "max_drawdown": 0,
+      "profit_factor": 0,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.525,
+      "precision": 0.44479166666666664,
+      "recall": 0.525,
+      "f1_score": 0.4804273504273505,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 17,
+          "correct": 0
+        },
+        "medium": {
+          "count": 29,
+          "correct": 0
+        },
+        "high": {
+          "count": 74,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 0,
+        "avg_win": 0,
+        "avg_loss": 0,
+        "win_rate": 0
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 0
+      },
+      "prediction_counts": {
+        "0": 32,
+        "1": 88
+      },
+      "window_index": 4,
+      "symbol": "RELIANCE.NS"
+    },
+    {
+      "total_trades": 2,
+      "win_count": 2,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 930.1249127197299,
+      "avg_pnl_pct": 0.029165946898205453,
+      "gross_profit": 1860.2498254394598,
+      "gross_loss": 1,
+      "profit_factor": 1860.2498254394598,
+      "cagr": 0.03278566872902977,
+      "sharpe_ratio": -1.9849458776803357,
+      "max_drawdown": 0.0014785370202666673,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.49206349206349204,
+      "precision": 0.5663481872149609,
+      "recall": 0.49206349206349204,
+      "f1_score": 0.4412132229735623,
+      "precision_buy": 0.11428571428571428,
+      "confidence_buckets": {
+        "low": {
+          "count": 8,
+          "correct": 0
+        },
+        "medium": {
+          "count": 38,
+          "correct": 0
+        },
+        "high": {
+          "count": 80,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 930.1249127197299,
+        "avg_win": 930.1249127197299,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 2
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 2,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 2,
+        "1": 89,
+        "2": 35
+      },
+      "window_index": 5,
+      "symbol": "RELIANCE.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 769.9029609374984,
+      "avg_pnl_pct": 0.023608051650564277,
+      "gross_profit": 769.9029609374984,
+      "gross_loss": 1,
+      "profit_factor": 769.9029609374984,
+      "cagr": 0.013347464101575168,
+      "sharpe_ratio": -2.902239425395886,
+      "max_drawdown": 0.004980847738166967,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.29508196721311475,
+      "precision": 0.3304158143855177,
+      "recall": 0.29508196721311475,
+      "f1_score": 0.278185210610097,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 7,
+          "correct": 0
+        },
+        "medium": {
+          "count": 49,
+          "correct": 0
+        },
+        "high": {
+          "count": 66,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 769.9029609374984,
+        "avg_win": 769.9029609374984,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 79,
+        "1": 42,
+        "2": 1
+      },
+      "window_index": 6,
+      "symbol": "RELIANCE.NS"
+    },
+    {
+      "total_trades": 2,
+      "win_count": 0,
+      "loss_count": 2,
+      "win_rate": 0.0,
+      "avg_pnl": -793.9249870605422,
+      "avg_pnl_pct": -0.02622954145765631,
+      "gross_profit": 0,
+      "gross_loss": 1587.8499741210844,
+      "profit_factor": 0.0,
+      "cagr": -0.03590542110110462,
+      "sharpe_ratio": -5.279068623327708,
+      "max_drawdown": 0.02301462765110325,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.568,
+      "precision": 0.6775724137931035,
+      "recall": 0.568,
+      "f1_score": 0.5062616487455197,
+      "precision_buy": 0.3103448275862069,
+      "confidence_buckets": {
+        "low": {
+          "count": 21,
+          "correct": 0
+        },
+        "medium": {
+          "count": 47,
+          "correct": 0
+        },
+        "high": {
+          "count": 57,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -793.9249870605422,
+        "avg_win": 0,
+        "avg_loss": 793.9249870605422,
+        "win_rate": 0.0,
+        "total_trades": 2
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 2,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 1,
+        "1": 95,
+        "2": 29
+      },
+      "window_index": 7,
+      "symbol": "RELIANCE.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 3,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 448.54272892252885,
+      "avg_pnl_pct": 0.027889339682770697,
+      "gross_profit": 1345.6281867675866,
+      "gross_loss": 1,
+      "profit_factor": 1345.6281867675866,
+      "cagr": 0.022170938636887794,
+      "sharpe_ratio": -1.1904993812519253,
+      "max_drawdown": 0.013840666714250983,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5609756097560976,
+      "precision": 0.5178534202924446,
+      "recall": 0.5609756097560976,
+      "f1_score": 0.525692193984877,
+      "precision_buy": 0.21428571428571427,
+      "confidence_buckets": {
+        "low": {
+          "count": 9,
+          "correct": 0
+        },
+        "medium": {
+          "count": 25,
+          "correct": 0
+        },
+        "high": {
+          "count": 89,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 448.54272892252885,
+        "avg_win": 448.54272892252885,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 18,
+        "1": 91,
+        "2": 14
+      },
+      "window_index": 0,
+      "symbol": "TCS.NS"
+    },
+    {
+      "total_trades": 2,
+      "win_count": 2,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 1014.9206137695328,
+      "avg_pnl_pct": 0.04721754300233287,
+      "gross_profit": 2029.8412275390656,
+      "gross_loss": 1,
+      "profit_factor": 2029.8412275390656,
+      "cagr": 0.03813398013878788,
+      "sharpe_ratio": -0.9333610175095985,
+      "max_drawdown": 0.005144149631975595,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.536,
+      "precision": 0.5347998297147722,
+      "recall": 0.536,
+      "f1_score": 0.5348084529505582,
+      "precision_buy": 0.4666666666666667,
+      "confidence_buckets": {
+        "low": {
+          "count": 21,
+          "correct": 0
+        },
+        "medium": {
+          "count": 39,
+          "correct": 0
+        },
+        "high": {
+          "count": 65,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 1014.9206137695328,
+        "avg_win": 1014.9206137695328,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 2
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 2,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 29,
+        "1": 81,
+        "2": 15
+      },
+      "window_index": 1,
+      "symbol": "TCS.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 246.92878417969405,
+      "avg_pnl_pct": 0.0059198115364064085,
+      "gross_profit": 246.92878417969405,
+      "gross_loss": 1,
+      "profit_factor": 246.92878417969405,
+      "cagr": 0.0020594191147256247,
+      "sharpe_ratio": -4.3423313442020595,
+      "max_drawdown": 0.006964925344744424,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5737704918032787,
+      "precision": 0.5846994535519126,
+      "recall": 0.5737704918032787,
+      "f1_score": 0.570647931303669,
+      "precision_buy": 0.2222222222222222,
+      "confidence_buckets": {
+        "low": {
+          "count": 16,
+          "correct": 0
+        },
+        "medium": {
+          "count": 27,
+          "correct": 0
+        },
+        "high": {
+          "count": 79,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 246.92878417969405,
+        "avg_win": 246.92878417969405,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 12,
+        "1": 83,
+        "2": 27
+      },
+      "window_index": 2,
+      "symbol": "TCS.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 2167.3319453125077,
+      "avg_pnl_pct": 0.03931634489609233,
+      "gross_profit": 2167.3319453125077,
+      "gross_loss": 1,
+      "profit_factor": 2167.3319453125077,
+      "cagr": 0.04069019261091511,
+      "sharpe_ratio": -0.8282448736196376,
+      "max_drawdown": 0.001515399689003825,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5121951219512195,
+      "precision": 0.5549162671113891,
+      "recall": 0.5121951219512195,
+      "f1_score": 0.4745377751740424,
+      "precision_buy": 0.8,
+      "confidence_buckets": {
+        "low": {
+          "count": 11,
+          "correct": 0
+        },
+        "medium": {
+          "count": 42,
+          "correct": 0
+        },
+        "high": {
+          "count": 70,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 2167.3319453125077,
+        "avg_win": 2167.3319453125077,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 27,
+        "1": 91,
+        "2": 5
+      },
+      "window_index": 3,
+      "symbol": "TCS.NS"
+    },
+    {
+      "total_trades": 0,
+      "win_rate": 0,
+      "avg_pnl": 0,
+      "cagr": 0,
+      "sharpe_ratio": 0,
+      "max_drawdown": 0,
+      "profit_factor": 0,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.49166666666666664,
+      "precision": 0.404883542078664,
+      "recall": 0.49166666666666664,
+      "f1_score": 0.443300792303339,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 6,
+          "correct": 0
+        },
+        "medium": {
+          "count": 43,
+          "correct": 0
+        },
+        "high": {
+          "count": 71,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 0,
+        "avg_win": 0,
+        "avg_loss": 0,
+        "win_rate": 0
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 0
+      },
+      "prediction_counts": {
+        "0": 37,
+        "1": 82,
+        "2": 1
+      },
+      "window_index": 4,
+      "symbol": "TCS.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 2306.938897705083,
+      "avg_pnl_pct": 0.06526250144057485,
+      "gross_profit": 2306.938897705083,
+      "gross_loss": 1,
+      "profit_factor": 2306.938897705083,
+      "cagr": 0.044036841752325584,
+      "sharpe_ratio": -0.4917442649032226,
+      "max_drawdown": 0.0009717337206573575,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5238095238095238,
+      "precision": 0.45912738617905796,
+      "recall": 0.5238095238095238,
+      "f1_score": 0.47967852241550807,
+      "precision_buy": 0.09090909090909091,
+      "confidence_buckets": {
+        "low": {
+          "count": 14,
+          "correct": 0
+        },
+        "medium": {
+          "count": 47,
+          "correct": 0
+        },
+        "high": {
+          "count": 65,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 2306.938897705083,
+        "avg_win": 2306.938897705083,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 21,
+        "1": 94,
+        "2": 11
+      },
+      "window_index": 5,
+      "symbol": "TCS.NS"
+    },
+    {
+      "total_trades": 2,
+      "win_count": 0,
+      "loss_count": 2,
+      "win_rate": 0.0,
+      "avg_pnl": -288.09499340819934,
+      "avg_pnl_pct": -0.012768298270423431,
+      "gross_profit": 0,
+      "gross_loss": 576.1899868163987,
+      "profit_factor": 0.0,
+      "cagr": -0.015132566613426102,
+      "sharpe_ratio": -6.8308176704373365,
+      "max_drawdown": 0.0075046679047888025,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.2786885245901639,
+      "precision": 0.31803481452193394,
+      "recall": 0.2786885245901639,
+      "f1_score": 0.26251297850148964,
+      "precision_buy": 0.15151515151515152,
+      "confidence_buckets": {
+        "low": {
+          "count": 23,
+          "correct": 0
+        },
+        "medium": {
+          "count": 41,
+          "correct": 0
+        },
+        "high": {
+          "count": 58,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -288.09499340819934,
+        "avg_win": 0,
+        "avg_loss": 288.09499340819934,
+        "win_rate": 0.0,
+        "total_trades": 2
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 2,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 7,
+        "1": 49,
+        "2": 66
+      },
+      "window_index": 6,
+      "symbol": "TCS.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 0,
+      "loss_count": 3,
+      "win_rate": 0.0,
+      "avg_pnl": -1190.6786896972626,
+      "avg_pnl_pct": -0.04051919355895669,
+      "gross_profit": 0,
+      "gross_loss": 3572.036069091788,
+      "profit_factor": 0.0,
+      "cagr": -0.07614159447171565,
+      "sharpe_ratio": -3.1349809100019654,
+      "max_drawdown": 0.038694201863163614,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.456,
+      "precision": 0.5097507598784194,
+      "recall": 0.456,
+      "f1_score": 0.38580086580086576,
+      "precision_buy": 0.32142857142857145,
+      "confidence_buckets": {
+        "low": {
+          "count": 11,
+          "correct": 0
+        },
+        "medium": {
+          "count": 41,
+          "correct": 0
+        },
+        "high": {
+          "count": 73,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -1190.6786896972626,
+        "avg_win": 0,
+        "avg_loss": 1190.6786896972626,
+        "win_rate": 0.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 3,
+        "1": 94,
+        "2": 28
+      },
+      "window_index": 7,
+      "symbol": "TCS.NS"
+    },
+    {
+      "total_trades": 2,
+      "win_count": 0,
+      "loss_count": 2,
+      "win_rate": 0.0,
+      "avg_pnl": -415.2186508178694,
+      "avg_pnl_pct": -0.020756371292488935,
+      "gross_profit": 0,
+      "gross_loss": 830.4373016357388,
+      "profit_factor": 0.0,
+      "cagr": -0.02039269849120373,
+      "sharpe_ratio": -2.8448413031367226,
+      "max_drawdown": 0.018362277595137005,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.36585365853658536,
+      "precision": 0.4202603982561565,
+      "recall": 0.36585365853658536,
+      "f1_score": 0.38089900807670846,
+      "precision_buy": 0.08333333333333333,
+      "confidence_buckets": {
+        "low": {
+          "count": 21,
+          "correct": 0
+        },
+        "medium": {
+          "count": 47,
+          "correct": 0
+        },
+        "high": {
+          "count": 55,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -415.2186508178694,
+        "avg_win": 0,
+        "avg_loss": 415.2186508178694,
+        "win_rate": 0.0,
+        "total_trades": 2
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 2,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 18,
+        "1": 69,
+        "2": 36
+      },
+      "window_index": 0,
+      "symbol": "INFY.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 1208.1129541015662,
+      "avg_pnl_pct": 0.04177735777810633,
+      "gross_profit": 1208.1129541015662,
+      "gross_loss": 1,
+      "profit_factor": 1208.1129541015662,
+      "cagr": 0.022331692550848325,
+      "sharpe_ratio": -1.6975591609806582,
+      "max_drawdown": 0.0057322320266676805,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.536,
+      "precision": 0.4939476230191827,
+      "recall": 0.536,
+      "f1_score": 0.44638004402054293,
+      "precision_buy": 0.4,
+      "confidence_buckets": {
+        "low": {
+          "count": 21,
+          "correct": 0
+        },
+        "medium": {
+          "count": 34,
+          "correct": 0
+        },
+        "high": {
+          "count": 70,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 1208.1129541015662,
+        "avg_win": 1208.1129541015662,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 11,
+        "1": 109,
+        "2": 5
+      },
+      "window_index": 1,
+      "symbol": "INFY.NS"
+    },
+    {
+      "total_trades": 2,
+      "win_count": 0,
+      "loss_count": 2,
+      "win_rate": 0.0,
+      "avg_pnl": -2783.2417745361295,
+      "avg_pnl_pct": -0.10058544544298398,
+      "gross_profit": 0,
+      "gross_loss": 5566.483549072259,
+      "profit_factor": 0.0,
+      "cagr": -0.11394333377274513,
+      "sharpe_ratio": -2.338510667417469,
+      "max_drawdown": 0.06168006959350553,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.47540983606557374,
+      "precision": 0.48414716109990946,
+      "recall": 0.47540983606557374,
+      "f1_score": 0.4726721114043343,
+      "precision_buy": 0.21212121212121213,
+      "confidence_buckets": {
+        "low": {
+          "count": 11,
+          "correct": 0
+        },
+        "medium": {
+          "count": 43,
+          "correct": 0
+        },
+        "high": {
+          "count": 68,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -2783.2417745361295,
+        "avg_win": 0,
+        "avg_loss": 2783.2417745361295,
+        "win_rate": 0.0,
+        "total_trades": 2
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 2,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 17,
+        "1": 72,
+        "2": 33
+      },
+      "window_index": 2,
+      "symbol": "INFY.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 17.6405305175831,
+      "avg_pnl_pct": 0.0003163011471986306,
+      "gross_profit": 17.6405305175831,
+      "gross_loss": 1,
+      "profit_factor": 17.6405305175831,
+      "cagr": -0.0036198407873329064,
+      "sharpe_ratio": -28.575408967718662,
+      "max_drawdown": 0.001775634777144005,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5284552845528455,
+      "precision": 0.5038240540633254,
+      "recall": 0.5284552845528455,
+      "f1_score": 0.512742806513122,
+      "precision_buy": 0.35,
+      "confidence_buckets": {
+        "low": {
+          "count": 27,
+          "correct": 0
+        },
+        "medium": {
+          "count": 39,
+          "correct": 0
+        },
+        "high": {
+          "count": 57,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 17.6405305175831,
+        "avg_win": 17.6405305175831,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 24,
+        "1": 79,
+        "2": 20
+      },
+      "window_index": 3,
+      "symbol": "INFY.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 168.9443878173904,
+      "avg_pnl_pct": 0.004766662610647611,
+      "gross_profit": 168.9443878173904,
+      "gross_loss": 1,
+      "profit_factor": 168.9443878173904,
+      "cagr": 0.0009154192832043773,
+      "sharpe_ratio": -23.42180164955802,
+      "max_drawdown": 0.0009743259148405923,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.49166666666666664,
+      "precision": 0.561571358748778,
+      "recall": 0.49166666666666664,
+      "f1_score": 0.5136111655013127,
+      "precision_buy": 0.5,
+      "confidence_buckets": {
+        "low": {
+          "count": 15,
+          "correct": 0
+        },
+        "medium": {
+          "count": 46,
+          "correct": 0
+        },
+        "high": {
+          "count": 59,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 168.9443878173904,
+        "avg_win": 168.9443878173904,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 44,
+        "1": 62,
+        "2": 14
+      },
+      "window_index": 4,
+      "symbol": "INFY.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 730.0300473632819,
+      "avg_pnl_pct": 0.0169795938738361,
+      "gross_profit": 730.0300473632819,
+      "gross_loss": 1,
+      "profit_factor": 730.0300473632819,
+      "cagr": 0.01398753400803332,
+      "sharpe_ratio": -4.630924688780831,
+      "max_drawdown": 0.0,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.35714285714285715,
+      "precision": 0.5288065843621399,
+      "recall": 0.35714285714285715,
+      "f1_score": 0.2983296660716016,
+      "precision_buy": 1.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 15,
+          "correct": 0
+        },
+        "medium": {
+          "count": 42,
+          "correct": 0
+        },
+        "high": {
+          "count": 69,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 730.0300473632819,
+        "avg_win": 730.0300473632819,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 81,
+        "1": 44,
+        "2": 1
+      },
+      "window_index": 5,
+      "symbol": "INFY.NS"
+    },
+    {
+      "total_trades": 2,
+      "win_count": 0,
+      "loss_count": 2,
+      "win_rate": 0.0,
+      "avg_pnl": -564.7843950195302,
+      "avg_pnl_pct": -0.02594696525939122,
+      "gross_profit": 0,
+      "gross_loss": 1129.5687900390603,
+      "profit_factor": 0.0,
+      "cagr": -0.0262980819267844,
+      "sharpe_ratio": -5.900714457389129,
+      "max_drawdown": 0.01304763225735107,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5163934426229508,
+      "precision": 0.47950460166810466,
+      "recall": 0.5163934426229508,
+      "f1_score": 0.4920031406885722,
+      "precision_buy": 0.13333333333333333,
+      "confidence_buckets": {
+        "low": {
+          "count": 24,
+          "correct": 0
+        },
+        "medium": {
+          "count": 37,
+          "correct": 0
+        },
+        "high": {
+          "count": 61,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -564.7843950195302,
+        "avg_win": 0,
+        "avg_loss": 564.7843950195302,
+        "win_rate": 0.0,
+        "total_trades": 2
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 2,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 19,
+        "1": 88,
+        "2": 15
+      },
+      "window_index": 6,
+      "symbol": "INFY.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 0,
+      "loss_count": 3,
+      "win_rate": 0.0,
+      "avg_pnl": -762.0998124186182,
+      "avg_pnl_pct": -0.03480711571944393,
+      "gross_profit": 0,
+      "gross_loss": 2286.2994372558546,
+      "profit_factor": 0.0,
+      "cagr": -0.04986524836240591,
+      "sharpe_ratio": -4.491467103717001,
+      "max_drawdown": 0.025166120150412027,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.48,
+      "precision": 0.5015,
+      "recall": 0.48,
+      "f1_score": 0.45587027213524817,
+      "precision_buy": 0.4,
+      "confidence_buckets": {
+        "low": {
+          "count": 40,
+          "correct": 0
+        },
+        "medium": {
+          "count": 41,
+          "correct": 0
+        },
+        "high": {
+          "count": 44,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -762.0998124186182,
+        "avg_win": 0,
+        "avg_loss": 762.0998124186182,
+        "win_rate": 0.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 16,
+        "1": 74,
+        "2": 35
+      },
+      "window_index": 7,
+      "symbol": "INFY.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 276.077260986332,
+      "avg_pnl_pct": 0.010235339550464085,
+      "gross_profit": 276.077260986332,
+      "gross_loss": 1,
+      "profit_factor": 276.077260986332,
+      "cagr": 0.0037299905246528375,
+      "sharpe_ratio": -5.437898491839662,
+      "max_drawdown": 0.003579096315561987,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.3983739837398374,
+      "precision": 0.3857546836337929,
+      "recall": 0.3983739837398374,
+      "f1_score": 0.38358029904415203,
+      "precision_buy": 0.13043478260869565,
+      "confidence_buckets": {
+        "low": {
+          "count": 21,
+          "correct": 0
+        },
+        "medium": {
+          "count": 32,
+          "correct": 0
+        },
+        "high": {
+          "count": 70,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 276.077260986332,
+        "avg_win": 276.077260986332,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 20,
+        "1": 80,
+        "2": 23
+      },
+      "window_index": 0,
+      "symbol": "HDFCBANK.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 2,
+      "loss_count": 1,
+      "win_rate": 0.6666666666666666,
+      "avg_pnl": 312.6601194458041,
+      "avg_pnl_pct": 0.00851950071013068,
+      "gross_profit": 968.4568890380933,
+      "gross_loss": 30.476530700680996,
+      "profit_factor": 31.777136923805216,
+      "cagr": 0.015746260468567863,
+      "sharpe_ratio": -1.434299882317008,
+      "max_drawdown": 0.018520380614957258,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.408,
+      "precision": 0.42769018932874353,
+      "recall": 0.408,
+      "f1_score": 0.3829978605049209,
+      "precision_buy": 0.42857142857142855,
+      "confidence_buckets": {
+        "low": {
+          "count": 12,
+          "correct": 0
+        },
+        "medium": {
+          "count": 43,
+          "correct": 0
+        },
+        "high": {
+          "count": 70,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 312.66011944580407,
+        "avg_win": 484.22844451904666,
+        "avg_loss": 30.476530700680996,
+        "win_rate": 0.6666666666666666,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 35,
+        "1": 83,
+        "2": 7
+      },
+      "window_index": 1,
+      "symbol": "HDFCBANK.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 0,
+      "loss_count": 1,
+      "win_rate": 0.0,
+      "avg_pnl": -598.5017365722601,
+      "avg_pnl_pct": -0.016330146878597258,
+      "gross_profit": 0,
+      "gross_loss": 598.5017365722601,
+      "profit_factor": 0.0,
+      "cagr": -0.0147708103070473,
+      "sharpe_ratio": -10.671769087832706,
+      "max_drawdown": 0.007266275083881192,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.4344262295081967,
+      "precision": 0.46485610799539834,
+      "recall": 0.4344262295081967,
+      "f1_score": 0.43145379210952983,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 17,
+          "correct": 0
+        },
+        "medium": {
+          "count": 69,
+          "correct": 0
+        },
+        "high": {
+          "count": 36,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -598.5017365722601,
+        "avg_win": 0,
+        "avg_loss": 598.5017365722601,
+        "win_rate": 0.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 64,
+        "1": 57,
+        "2": 1
+      },
+      "window_index": 2,
+      "symbol": "HDFCBANK.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 3,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 377.3685884602889,
+      "avg_pnl_pct": 0.01647909589884444,
+      "gross_profit": 1132.1057653808666,
+      "gross_loss": 1,
+      "profit_factor": 1132.1057653808666,
+      "cagr": 0.016778971025830147,
+      "sharpe_ratio": -1.850657512718728,
+      "max_drawdown": 0.010156797067068131,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.43089430894308944,
+      "precision": 0.5070107222811358,
+      "recall": 0.43089430894308944,
+      "f1_score": 0.4484610917537747,
+      "precision_buy": 0.21739130434782608,
+      "confidence_buckets": {
+        "low": {
+          "count": 6,
+          "correct": 0
+        },
+        "medium": {
+          "count": 40,
+          "correct": 0
+        },
+        "high": {
+          "count": 77,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 377.3685884602889,
+        "avg_win": 377.3685884602889,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 23,
+        "1": 54,
+        "2": 46
+      },
+      "window_index": 3,
+      "symbol": "HDFCBANK.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 2,
+      "loss_count": 1,
+      "win_rate": 0.6666666666666666,
+      "avg_pnl": 65.903166442873,
+      "avg_pnl_pct": 0.009539593780642043,
+      "gross_profit": 633.2980054931668,
+      "gross_loss": 435.58850616454777,
+      "profit_factor": 1.4538905332225005,
+      "cagr": -0.001980750116397756,
+      "sharpe_ratio": -2.2727674519507532,
+      "max_drawdown": 0.016972783191061463,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5916666666666667,
+      "precision": 0.6728114478114477,
+      "recall": 0.5916666666666667,
+      "f1_score": 0.5236846359940872,
+      "precision_buy": 0.5,
+      "confidence_buckets": {
+        "low": {
+          "count": 9,
+          "correct": 0
+        },
+        "medium": {
+          "count": 30,
+          "correct": 0
+        },
+        "high": {
+          "count": 81,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 65.90316644287299,
+        "avg_win": 316.6490027465834,
+        "avg_loss": 435.58850616454777,
+        "win_rate": 0.6666666666666666,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 3,
+        "1": 99,
+        "2": 18
+      },
+      "window_index": 4,
+      "symbol": "HDFCBANK.NS"
+    },
+    {
+      "total_trades": 0,
+      "win_rate": 0,
+      "avg_pnl": 0,
+      "cagr": 0,
+      "sharpe_ratio": 0,
+      "max_drawdown": 0,
+      "profit_factor": 0,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.4444444444444444,
+      "precision": 0.5350259151279558,
+      "recall": 0.4444444444444444,
+      "f1_score": 0.4405843881091405,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 13,
+          "correct": 0
+        },
+        "medium": {
+          "count": 43,
+          "correct": 0
+        },
+        "high": {
+          "count": 70,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 0,
+        "avg_win": 0,
+        "avg_loss": 0,
+        "win_rate": 0
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 0
+      },
+      "prediction_counts": {
+        "0": 76,
+        "1": 49,
+        "2": 1
+      },
+      "window_index": 5,
+      "symbol": "HDFCBANK.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 0,
+      "loss_count": 1,
+      "win_rate": 0.0,
+      "avg_pnl": -112.4205371093708,
+      "avg_pnl_pct": -0.0029853330377589134,
+      "gross_profit": 0,
+      "gross_loss": 112.4205371093708,
+      "profit_factor": 0.0,
+      "cagr": -0.004948878970261861,
+      "sharpe_ratio": -5.994777488902304,
+      "max_drawdown": 0.00642520835000003,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5,
+      "precision": 0.5302903786510343,
+      "recall": 0.5,
+      "f1_score": 0.49886471538784244,
+      "precision_buy": 0.3333333333333333,
+      "confidence_buckets": {
+        "low": {
+          "count": 27,
+          "correct": 0
+        },
+        "medium": {
+          "count": 30,
+          "correct": 0
+        },
+        "high": {
+          "count": 65,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -112.4205371093708,
+        "avg_win": 0,
+        "avg_loss": 112.4205371093708,
+        "win_rate": 0.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 39,
+        "1": 74,
+        "2": 9
+      },
+      "window_index": 6,
+      "symbol": "HDFCBANK.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 2,
+      "loss_count": 1,
+      "win_rate": 0.6666666666666666,
+      "avg_pnl": 286.04303910319305,
+      "avg_pnl_pct": 0.003506579613526538,
+      "gross_profit": 1078.654233032234,
+      "gross_loss": 220.52511572265496,
+      "profit_factor": 4.8912987960464855,
+      "cagr": 0.010966914459672905,
+      "sharpe_ratio": -1.4710153317028436,
+      "max_drawdown": 0.017649873933967514,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.176,
+      "precision": 0.6661538461538461,
+      "recall": 0.176,
+      "f1_score": 0.19066041095678296,
+      "precision_buy": 0.08653846153846154,
+      "confidence_buckets": {
+        "low": {
+          "count": 18,
+          "correct": 0
+        },
+        "medium": {
+          "count": 25,
+          "correct": 0
+        },
+        "high": {
+          "count": 82,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 286.043039103193,
+        "avg_win": 539.327116516117,
+        "avg_loss": 220.52511572265496,
+        "win_rate": 0.6666666666666666,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 8,
+        "1": 13,
+        "2": 104
+      },
+      "window_index": 7,
+      "symbol": "HDFCBANK.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 3,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 1259.7529530232778,
+      "avg_pnl_pct": 0.05516064410587781,
+      "gross_profit": 3779.2588590698333,
+      "gross_loss": 1,
+      "profit_factor": 3779.2588590698333,
+      "cagr": 0.0760216352767551,
+      "sharpe_ratio": 0.5022160527330449,
+      "max_drawdown": 0.0023994761531001946,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.4065040650406504,
+      "precision": 0.43308317698561605,
+      "recall": 0.4065040650406504,
+      "f1_score": 0.4065040650406504,
+      "precision_buy": 0.21428571428571427,
+      "confidence_buckets": {
+        "low": {
+          "count": 29,
+          "correct": 0
+        },
+        "medium": {
+          "count": 47,
+          "correct": 0
+        },
+        "high": {
+          "count": 47,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 1259.7529530232778,
+        "avg_win": 1259.7529530232778,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 16,
+        "1": 65,
+        "2": 42
+      },
+      "window_index": 0,
+      "symbol": "ICICIBANK.NS"
+    },
+    {
+      "total_trades": 2,
+      "win_count": 2,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 1829.9728352661157,
+      "avg_pnl_pct": 0.07002577324074448,
+      "gross_profit": 3659.9456705322314,
+      "gross_loss": 1,
+      "profit_factor": 3659.9456705322314,
+      "cagr": 0.07284195827343187,
+      "sharpe_ratio": 0.4733906031248265,
+      "max_drawdown": 0.00047178359422011157,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.456,
+      "precision": 0.6351641791044776,
+      "recall": 0.456,
+      "f1_score": 0.4395250270855905,
+      "precision_buy": 1.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 3,
+          "correct": 0
+        },
+        "medium": {
+          "count": 37,
+          "correct": 0
+        },
+        "high": {
+          "count": 85,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 1829.9728352661157,
+        "avg_win": 1829.9728352661157,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 2
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 2,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 56,
+        "1": 67,
+        "2": 2
+      },
+      "window_index": 1,
+      "symbol": "ICICIBANK.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 0,
+      "loss_count": 1,
+      "win_rate": 0.0,
+      "avg_pnl": -2092.278813720699,
+      "avg_pnl_pct": -0.05745701602822887,
+      "gross_profit": 0,
+      "gross_loss": 2092.278813720699,
+      "profit_factor": 0.0,
+      "cagr": -0.044760328096134394,
+      "sharpe_ratio": -4.089497355199289,
+      "max_drawdown": 0.02349078450546816,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.48360655737704916,
+      "precision": 0.6098516571632216,
+      "recall": 0.4836065573770491,
+      "f1_score": 0.5275845890599988,
+      "precision_buy": 0.13043478260869565,
+      "confidence_buckets": {
+        "low": {
+          "count": 24,
+          "correct": 0
+        },
+        "medium": {
+          "count": 42,
+          "correct": 0
+        },
+        "high": {
+          "count": 56,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -2092.278813720699,
+        "avg_win": 0,
+        "avg_loss": 2092.278813720699,
+        "win_rate": 0.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 35,
+        "1": 64,
+        "2": 23
+      },
+      "window_index": 2,
+      "symbol": "ICICIBANK.NS"
+    },
+    {
+      "total_trades": 0,
+      "win_rate": 0,
+      "avg_pnl": 0,
+      "cagr": 0,
+      "sharpe_ratio": 0,
+      "max_drawdown": 0,
+      "profit_factor": 0,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5528455284552846,
+      "precision": 0.4153310104529617,
+      "recall": 0.5528455284552846,
+      "f1_score": 0.4390719725233964,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 8,
+          "correct": 0
+        },
+        "medium": {
+          "count": 43,
+          "correct": 0
+        },
+        "high": {
+          "count": 72,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 0,
+        "avg_win": 0,
+        "avg_loss": 0,
+        "win_rate": 0
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 0
+      },
+      "prediction_counts": {
+        "0": 10,
+        "1": 112,
+        "2": 1
+      },
+      "window_index": 3,
+      "symbol": "ICICIBANK.NS"
+    },
+    {
+      "total_trades": 0,
+      "win_rate": 0,
+      "avg_pnl": 0,
+      "cagr": 0,
+      "sharpe_ratio": 0,
+      "max_drawdown": 0,
+      "profit_factor": 0,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.55,
+      "precision": 0.46728395061728395,
+      "recall": 0.55,
+      "f1_score": 0.5037987104008972,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 1,
+          "correct": 0
+        },
+        "medium": {
+          "count": 43,
+          "correct": 0
+        },
+        "high": {
+          "count": 76,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 0,
+        "avg_win": 0,
+        "avg_loss": 0,
+        "win_rate": 0
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 0
+      },
+      "prediction_counts": {
+        "0": 27,
+        "1": 93
+      },
+      "window_index": 4,
+      "symbol": "ICICIBANK.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 2,
+      "loss_count": 1,
+      "win_rate": 0.6666666666666666,
+      "avg_pnl": 19.447429850262324,
+      "avg_pnl_pct": 0.002693115458697496,
+      "gross_profit": 373.5286193847692,
+      "gross_loss": 315.1863298339822,
+      "profit_factor": 1.1851041242223848,
+      "cagr": -0.0034173144594004112,
+      "sharpe_ratio": -3.95446970077771,
+      "max_drawdown": 0.0074163037921849174,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.47619047619047616,
+      "precision": 0.39463019250253295,
+      "recall": 0.4761904761904762,
+      "f1_score": 0.4313401661242532,
+      "precision_buy": 0.16666666666666666,
+      "confidence_buckets": {
+        "low": {
+          "count": 16,
+          "correct": 0
+        },
+        "medium": {
+          "count": 37,
+          "correct": 0
+        },
+        "high": {
+          "count": 73,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 19.44742985026231,
+        "avg_win": 186.7643096923846,
+        "avg_loss": 315.1863298339822,
+        "win_rate": 0.6666666666666666,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 2,
+        "1": 94,
+        "2": 30
+      },
+      "window_index": 5,
+      "symbol": "ICICIBANK.NS"
+    },
+    {
+      "total_trades": 2,
+      "win_count": 2,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 798.5266591186563,
+      "avg_pnl_pct": 0.03256988870840922,
+      "gross_profit": 1597.0533182373126,
+      "gross_loss": 1,
+      "profit_factor": 1597.0533182373126,
+      "cagr": 0.0285432619964876,
+      "sharpe_ratio": -1.222216830068117,
+      "max_drawdown": 0.011585187380773947,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.48360655737704916,
+      "precision": 0.4931570470063933,
+      "recall": 0.48360655737704916,
+      "f1_score": 0.48144376939815287,
+      "precision_buy": 0.14285714285714285,
+      "confidence_buckets": {
+        "low": {
+          "count": 13,
+          "correct": 0
+        },
+        "medium": {
+          "count": 41,
+          "correct": 0
+        },
+        "high": {
+          "count": 68,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 798.5266591186563,
+        "avg_win": 798.5266591186563,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 2
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 2,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 36,
+        "1": 79,
+        "2": 7
+      },
+      "window_index": 6,
+      "symbol": "ICICIBANK.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 3,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 561.2929556477914,
+      "avg_pnl_pct": 0.01910069695077878,
+      "gross_profit": 1683.878866943374,
+      "gross_loss": 1,
+      "profit_factor": 1683.878866943374,
+      "cagr": 0.027594588083264204,
+      "sharpe_ratio": -1.5308396148545427,
+      "max_drawdown": 0.004863015637117321,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.6,
+      "precision": 0.6173333333333334,
+      "recall": 0.6,
+      "f1_score": 0.5216512037896833,
+      "precision_buy": 0.3333333333333333,
+      "confidence_buckets": {
+        "low": {
+          "count": 13,
+          "correct": 0
+        },
+        "medium": {
+          "count": 47,
+          "correct": 0
+        },
+        "high": {
+          "count": 65,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 561.2929556477914,
+        "avg_win": 561.2929556477914,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 7,
+        "1": 112,
+        "2": 6
+      },
+      "window_index": 7,
+      "symbol": "ICICIBANK.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 0,
+      "loss_count": 1,
+      "win_rate": 0.0,
+      "avg_pnl": -1449.5599295043903,
+      "avg_pnl_pct": -0.05375871256453279,
+      "gross_profit": 0,
+      "gross_loss": 1449.5599295043903,
+      "profit_factor": 0.0,
+      "cagr": -0.03141649448795458,
+      "sharpe_ratio": -4.344877326783498,
+      "max_drawdown": 0.01543572190834122,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.4634146341463415,
+      "precision": 0.6982578397212543,
+      "recall": 0.4634146341463415,
+      "f1_score": 0.37219527568739286,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 10,
+          "correct": 0
+        },
+        "medium": {
+          "count": 28,
+          "correct": 0
+        },
+        "high": {
+          "count": 85,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -1449.5599295043903,
+        "avg_win": 0,
+        "avg_loss": 1449.5599295043903,
+        "win_rate": 0.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 3,
+        "1": 105,
+        "2": 15
+      },
+      "window_index": 0,
+      "symbol": "WIPRO.NS"
+    },
+    {
+      "total_trades": 0,
+      "win_rate": 0,
+      "avg_pnl": 0,
+      "cagr": 0,
+      "sharpe_ratio": 0,
+      "max_drawdown": 0,
+      "profit_factor": 0,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.36,
+      "precision": 0.5062184873949579,
+      "recall": 0.36,
+      "f1_score": 0.3048333333333333,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 10,
+          "correct": 0
+        },
+        "medium": {
+          "count": 26,
+          "correct": 0
+        },
+        "high": {
+          "count": 89,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 0,
+        "avg_win": 0,
+        "avg_loss": 0,
+        "win_rate": 0
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 0
+      },
+      "prediction_counts": {
+        "0": 102,
+        "1": 21,
+        "2": 2
+      },
+      "window_index": 1,
+      "symbol": "WIPRO.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 3,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 481.7713552449559,
+      "avg_pnl_pct": 0.022349123901861476,
+      "gross_profit": 1445.3140657348677,
+      "gross_loss": 1,
+      "profit_factor": 1445.3140657348677,
+      "cagr": 0.024177972723831154,
+      "sharpe_ratio": -1.2912858510209881,
+      "max_drawdown": 0.012482742326669686,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.4344262295081967,
+      "precision": 0.5741712518328878,
+      "recall": 0.4344262295081967,
+      "f1_score": 0.45808337456674814,
+      "precision_buy": 0.21052631578947367,
+      "confidence_buckets": {
+        "low": {
+          "count": 21,
+          "correct": 0
+        },
+        "medium": {
+          "count": 40,
+          "correct": 0
+        },
+        "high": {
+          "count": 61,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 481.7713552449559,
+        "avg_win": 481.7713552449559,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 61,
+        "1": 42,
+        "2": 19
+      },
+      "window_index": 2,
+      "symbol": "WIPRO.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 1216.9850509643588,
+      "avg_pnl_pct": 0.033206853440533576,
+      "gross_profit": 1216.9850509643588,
+      "gross_loss": 1,
+      "profit_factor": 1216.9850509643588,
+      "cagr": 0.022334826602334212,
+      "sharpe_ratio": -2.2737113974226184,
+      "max_drawdown": 0.0020874542002761154,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.4634146341463415,
+      "precision": 0.5381406141996643,
+      "recall": 0.4634146341463415,
+      "f1_score": 0.44335396811476485,
+      "precision_buy": 0.75,
+      "confidence_buckets": {
+        "low": {
+          "count": 16,
+          "correct": 0
+        },
+        "medium": {
+          "count": 46,
+          "correct": 0
+        },
+        "high": {
+          "count": 61,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 1216.9850509643588,
+        "avg_win": 1216.9850509643588,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 39,
+        "1": 76,
+        "2": 8
+      },
+      "window_index": 3,
+      "symbol": "WIPRO.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 1344.6825,
+      "avg_pnl_pct": 0.053284907512312754,
+      "gross_profit": 1344.6825,
+      "gross_loss": 1,
+      "profit_factor": 1344.6825,
+      "cagr": 0.02579665177378576,
+      "sharpe_ratio": -2.0044818552001313,
+      "max_drawdown": 0.0006937299337500007,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.4,
+      "precision": 0.45848214285714284,
+      "recall": 0.4,
+      "f1_score": 0.4081374321880651,
+      "precision_buy": 0.1,
+      "confidence_buckets": {
+        "low": {
+          "count": 39,
+          "correct": 0
+        },
+        "medium": {
+          "count": 55,
+          "correct": 0
+        },
+        "high": {
+          "count": 26,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 1344.6825,
+        "avg_win": 1344.6825,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 56,
+        "1": 54,
+        "2": 10
+      },
+      "window_index": 4,
+      "symbol": "WIPRO.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 0,
+      "loss_count": 1,
+      "win_rate": 0.0,
+      "avg_pnl": -2.1839999999929205,
+      "avg_pnl_pct": -7.506943923104561e-05,
+      "gross_profit": 0,
+      "gross_loss": 2.1839999999929205,
+      "profit_factor": 0.0,
+      "cagr": -0.002074845737600306,
+      "sharpe_ratio": -8.480149039232666,
+      "max_drawdown": 0.004495754948124959,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.3968253968253968,
+      "precision": 0.38119449082638374,
+      "recall": 0.39682539682539686,
+      "f1_score": 0.3881539648981509,
+      "precision_buy": 0.20689655172413793,
+      "confidence_buckets": {
+        "low": {
+          "count": 37,
+          "correct": 0
+        },
+        "medium": {
+          "count": 52,
+          "correct": 0
+        },
+        "high": {
+          "count": 37,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -2.1839999999929205,
+        "avg_win": 0,
+        "avg_loss": 2.1839999999929205,
+        "win_rate": 0.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 18,
+        "1": 79,
+        "2": 29
+      },
+      "window_index": 5,
+      "symbol": "WIPRO.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 689.1940997314475,
+      "avg_pnl_pct": 0.026171955102850152,
+      "gross_profit": 689.1940997314475,
+      "gross_loss": 1,
+      "profit_factor": 689.1940997314475,
+      "cagr": 0.01214838684429842,
+      "sharpe_ratio": -1.5773101744152684,
+      "max_drawdown": 0.016628548508198258,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.4918032786885246,
+      "precision": 0.44988516670626433,
+      "recall": 0.4918032786885246,
+      "f1_score": 0.4698117905187237,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 15,
+          "correct": 0
+        },
+        "medium": {
+          "count": 24,
+          "correct": 0
+        },
+        "high": {
+          "count": 83,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 689.1940997314475,
+        "avg_win": 689.1940997314475,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 23,
+        "1": 90,
+        "2": 9
+      },
+      "window_index": 6,
+      "symbol": "WIPRO.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 0,
+      "loss_count": 1,
+      "win_rate": 0.0,
+      "avg_pnl": -1069.999403594969,
+      "avg_pnl_pct": -0.041885334327043645,
+      "gross_profit": 0,
+      "gross_loss": 1069.999403594969,
+      "profit_factor": 0.0,
+      "cagr": -0.023126718991273276,
+      "sharpe_ratio": -6.16412222511708,
+      "max_drawdown": 0.011591426240535075,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.544,
+      "precision": 0.5500799999999999,
+      "recall": 0.544,
+      "f1_score": 0.505369976359338,
+      "precision_buy": 0.28,
+      "confidence_buckets": {
+        "low": {
+          "count": 23,
+          "correct": 0
+        },
+        "medium": {
+          "count": 51,
+          "correct": 0
+        },
+        "high": {
+          "count": 51,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -1069.999403594969,
+        "avg_win": 0,
+        "avg_loss": 1069.999403594969,
+        "win_rate": 0.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 5,
+        "1": 95,
+        "2": 25
+      },
+      "window_index": 7,
+      "symbol": "WIPRO.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 3,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 686.3072827962263,
+      "avg_pnl_pct": 0.02823127858780498,
+      "gross_profit": 2058.921848388679,
+      "gross_loss": 1,
+      "profit_factor": 2058.921848388679,
+      "cagr": 0.037902844587700546,
+      "sharpe_ratio": -0.8943828622469135,
+      "max_drawdown": 0.005650763736422344,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5203252032520326,
+      "precision": 0.5517092362620818,
+      "recall": 0.5203252032520326,
+      "f1_score": 0.4785056282742643,
+      "precision_buy": 0.25925925925925924,
+      "confidence_buckets": {
+        "low": {
+          "count": 12,
+          "correct": 0
+        },
+        "medium": {
+          "count": 48,
+          "correct": 0
+        },
+        "high": {
+          "count": 63,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 686.3072827962263,
+        "avg_win": 686.3072827962263,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 5,
+        "1": 91,
+        "2": 27
+      },
+      "window_index": 0,
+      "symbol": "SBIN.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 423.8553194274932,
+      "avg_pnl_pct": 0.014235181952657855,
+      "gross_profit": 423.8553194274932,
+      "gross_loss": 1,
+      "profit_factor": 423.8553194274932,
+      "cagr": 0.006422985464820341,
+      "sharpe_ratio": -4.334357221968303,
+      "max_drawdown": 0.00625857323165565,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.376,
+      "precision": 0.47648970747562297,
+      "recall": 0.376,
+      "f1_score": 0.3704337899543379,
+      "precision_buy": 0.5,
+      "confidence_buckets": {
+        "low": {
+          "count": 5,
+          "correct": 0
+        },
+        "medium": {
+          "count": 43,
+          "correct": 0
+        },
+        "high": {
+          "count": 77,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 423.8553194274932,
+        "avg_win": 423.8553194274932,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 52,
+        "1": 71,
+        "2": 2
+      },
+      "window_index": 1,
+      "symbol": "SBIN.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 551.4318560791066,
+      "avg_pnl_pct": 0.0169888661908346,
+      "gross_profit": 551.4318560791066,
+      "gross_loss": 1,
+      "profit_factor": 551.4318560791066,
+      "cagr": 0.008951404623874781,
+      "sharpe_ratio": -6.1559339140373766,
+      "max_drawdown": 0.002406546913252358,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.45901639344262296,
+      "precision": 0.4477845225546145,
+      "recall": 0.45901639344262296,
+      "f1_score": 0.4438361328252894,
+      "precision_buy": 0.2857142857142857,
+      "confidence_buckets": {
+        "low": {
+          "count": 30,
+          "correct": 0
+        },
+        "medium": {
+          "count": 41,
+          "correct": 0
+        },
+        "high": {
+          "count": 51,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 551.4318560791066,
+        "avg_win": 551.4318560791066,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 33,
+        "1": 82,
+        "2": 7
+      },
+      "window_index": 2,
+      "symbol": "SBIN.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 2,
+      "loss_count": 1,
+      "win_rate": 0.6666666666666666,
+      "avg_pnl": 63.66591835531002,
+      "avg_pnl_pct": 0.002500074178451311,
+      "gross_profit": 455.8292498169036,
+      "gross_loss": 264.83149475097355,
+      "profit_factor": 1.7212048372325548,
+      "cagr": 0.0005373691536565417,
+      "sharpe_ratio": -4.784374612813964,
+      "max_drawdown": 0.01062729715276106,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.4065040650406504,
+      "precision": 0.43359641198751164,
+      "recall": 0.4065040650406504,
+      "f1_score": 0.4012092704300947,
+      "precision_buy": 0.25925925925925924,
+      "confidence_buckets": {
+        "low": {
+          "count": 31,
+          "correct": 0
+        },
+        "medium": {
+          "count": 44,
+          "correct": 0
+        },
+        "high": {
+          "count": 48,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 63.665918355309984,
+        "avg_win": 227.9146249084518,
+        "avg_loss": 264.83149475097355,
+        "win_rate": 0.6666666666666666,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 12,
+        "1": 57,
+        "2": 54
+      },
+      "window_index": 3,
+      "symbol": "SBIN.NS"
+    },
+    {
+      "total_trades": 0,
+      "win_rate": 0,
+      "avg_pnl": 0,
+      "cagr": 0,
+      "sharpe_ratio": 0,
+      "max_drawdown": 0,
+      "profit_factor": 0,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.625,
+      "precision": 0.47111581920903955,
+      "recall": 0.625,
+      "f1_score": 0.4943539764783288,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 0,
+          "correct": 0
+        },
+        "medium": {
+          "count": 5,
+          "correct": 0
+        },
+        "high": {
+          "count": 115,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 0,
+        "avg_win": 0,
+        "avg_loss": 0,
+        "win_rate": 0
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 0
+      },
+      "prediction_counts": {
+        "0": 2,
+        "1": 118
+      },
+      "window_index": 4,
+      "symbol": "SBIN.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 0,
+      "loss_count": 1,
+      "win_rate": 0.0,
+      "avg_pnl": -293.3119075927717,
+      "avg_pnl_pct": -0.011645687096583151,
+      "gross_profit": 0,
+      "gross_loss": 293.3119075927717,
+      "profit_factor": 0.0,
+      "cagr": -0.00759772600008235,
+      "sharpe_ratio": -4.9267339294963515,
+      "max_drawdown": 0.008265808739114356,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.4603174603174603,
+      "precision": 0.5011916678583346,
+      "recall": 0.4603174603174603,
+      "f1_score": 0.4479197680658423,
+      "precision_buy": 0.16216216216216217,
+      "confidence_buckets": {
+        "low": {
+          "count": 12,
+          "correct": 0
+        },
+        "medium": {
+          "count": 42,
+          "correct": 0
+        },
+        "high": {
+          "count": 72,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -293.3119075927717,
+        "avg_win": 0,
+        "avg_loss": 293.3119075927717,
+        "win_rate": 0.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 9,
+        "1": 80,
+        "2": 37
+      },
+      "window_index": 5,
+      "symbol": "SBIN.NS"
+    },
+    {
+      "total_trades": 2,
+      "win_count": 0,
+      "loss_count": 2,
+      "win_rate": 0.0,
+      "avg_pnl": -946.7621005249013,
+      "avg_pnl_pct": -0.038590704859004996,
+      "gross_profit": 0,
+      "gross_loss": 1893.5242010498025,
+      "profit_factor": 0.0,
+      "cagr": -0.04145336715492032,
+      "sharpe_ratio": -4.332068327358741,
+      "max_drawdown": 0.024758775957261663,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5163934426229508,
+      "precision": 0.5348895224518888,
+      "recall": 0.5163934426229508,
+      "f1_score": 0.5233562627912265,
+      "precision_buy": 0.30434782608695654,
+      "confidence_buckets": {
+        "low": {
+          "count": 30,
+          "correct": 0
+        },
+        "medium": {
+          "count": 44,
+          "correct": 0
+        },
+        "high": {
+          "count": 48,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -946.7621005249013,
+        "avg_win": 0,
+        "avg_loss": 946.7621005249013,
+        "win_rate": 0.0,
+        "total_trades": 2
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 2,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 30,
+        "1": 69,
+        "2": 23
+      },
+      "window_index": 6,
+      "symbol": "SBIN.NS"
+    },
+    {
+      "total_trades": 0,
+      "win_rate": 0,
+      "avg_pnl": 0,
+      "cagr": 0,
+      "sharpe_ratio": 0,
+      "max_drawdown": 0,
+      "profit_factor": 0,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.384,
+      "precision": 0.4361422834193918,
+      "recall": 0.384,
+      "f1_score": 0.3597267388967,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 13,
+          "correct": 0
+        },
+        "medium": {
+          "count": 43,
+          "correct": 0
+        },
+        "high": {
+          "count": 69,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 0,
+        "avg_win": 0,
+        "avg_loss": 0,
+        "win_rate": 0
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 0
+      },
+      "prediction_counts": {
+        "0": 83,
+        "1": 42
+      },
+      "window_index": 7,
+      "symbol": "SBIN.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 1120.332400817876,
+      "avg_pnl_pct": 0.03534375975290414,
+      "gross_profit": 1120.332400817876,
+      "gross_loss": 1,
+      "profit_factor": 1120.332400817876,
+      "cagr": 0.02081649535253427,
+      "sharpe_ratio": -1.6652581516064593,
+      "max_drawdown": 0.01142480372456308,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.6016260162601627,
+      "precision": 0.5154931737996625,
+      "recall": 0.6016260162601627,
+      "f1_score": 0.5306015635222411,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 14,
+          "correct": 0
+        },
+        "medium": {
+          "count": 30,
+          "correct": 0
+        },
+        "high": {
+          "count": 79,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 1120.332400817876,
+        "avg_win": 1120.332400817876,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 14,
+        "1": 106,
+        "2": 3
+      },
+      "window_index": 0,
+      "symbol": "BHARTIARTL.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 0,
+      "loss_count": 3,
+      "win_rate": 0.0,
+      "avg_pnl": -1108.1492396647125,
+      "avg_pnl_pct": -0.050224206540772635,
+      "gross_profit": 0,
+      "gross_loss": 3324.447718994137,
+      "profit_factor": 0.0,
+      "cagr": -0.07002015495295855,
+      "sharpe_ratio": -2.633739598515038,
+      "max_drawdown": 0.040448410092974785,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.376,
+      "precision": 0.5228570099976749,
+      "recall": 0.376,
+      "f1_score": 0.3974933155080214,
+      "precision_buy": 0.2727272727272727,
+      "confidence_buckets": {
+        "low": {
+          "count": 9,
+          "correct": 0
+        },
+        "medium": {
+          "count": 39,
+          "correct": 0
+        },
+        "high": {
+          "count": 77,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -1108.1492396647125,
+        "avg_win": 0,
+        "avg_loss": 1108.1492396647125,
+        "win_rate": 0.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 68,
+        "1": 46,
+        "2": 11
+      },
+      "window_index": 1,
+      "symbol": "BHARTIARTL.NS"
+    },
+    {
+      "total_trades": 2,
+      "win_count": 2,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 1167.1355481567416,
+      "avg_pnl_pct": 0.04097070647673419,
+      "gross_profit": 2334.271096313483,
+      "gross_loss": 1,
+      "profit_factor": 2334.271096313483,
+      "cagr": 0.043945188947477565,
+      "sharpe_ratio": -0.8759148954244319,
+      "max_drawdown": 0.0035628184313255796,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.7377049180327869,
+      "precision": 0.622495446265938,
+      "recall": 0.7377049180327869,
+      "f1_score": 0.6570319240724763,
+      "precision_buy": 0.5,
+      "confidence_buckets": {
+        "low": {
+          "count": 5,
+          "correct": 0
+        },
+        "medium": {
+          "count": 19,
+          "correct": 0
+        },
+        "high": {
+          "count": 98,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 1167.1355481567416,
+        "avg_win": 1167.1355481567416,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 2
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 2,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 1,
+        "1": 117,
+        "2": 4
+      },
+      "window_index": 2,
+      "symbol": "BHARTIARTL.NS"
+    },
+    {
+      "total_trades": 2,
+      "win_count": 2,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 1004.0093679199258,
+      "avg_pnl_pct": 0.030476592669857607,
+      "gross_profit": 2008.0187358398516,
+      "gross_loss": 1,
+      "profit_factor": 2008.0187358398516,
+      "cagr": 0.036607028850477175,
+      "sharpe_ratio": -0.8661419356695444,
+      "max_drawdown": 0.003994920741136713,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5934959349593496,
+      "precision": 0.5826110327218975,
+      "recall": 0.5934959349593496,
+      "f1_score": 0.4574017615176152,
+      "precision_buy": 1.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 0,
+          "correct": 0
+        },
+        "medium": {
+          "count": 9,
+          "correct": 0
+        },
+        "high": {
+          "count": 114,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 1004.0093679199258,
+        "avg_win": 1004.0093679199258,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 2
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 2,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "1": 121,
+        "2": 2
+      },
+      "window_index": 3,
+      "symbol": "BHARTIARTL.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 2393.6557165527365,
+      "avg_pnl_pct": 0.0742825920210281,
+      "gross_profit": 2393.6557165527365,
+      "gross_loss": 1,
+      "profit_factor": 2393.6557165527365,
+      "cagr": 0.047081216714798924,
+      "sharpe_ratio": -0.6229581485339928,
+      "max_drawdown": 0.0015589339510922173,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.475,
+      "precision": 0.38193732193732194,
+      "recall": 0.475,
+      "f1_score": 0.4228029423151375,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 5,
+          "correct": 0
+        },
+        "medium": {
+          "count": 38,
+          "correct": 0
+        },
+        "high": {
+          "count": 77,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 2393.6557165527365,
+        "avg_win": 2393.6557165527365,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 26,
+        "1": 90,
+        "2": 4
+      },
+      "window_index": 4,
+      "symbol": "BHARTIARTL.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 3,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 205.61336047363542,
+      "avg_pnl_pct": 0.00957794654165293,
+      "gross_profit": 616.8400814209062,
+      "gross_loss": 1,
+      "profit_factor": 616.8400814209062,
+      "cagr": 0.007342335223751162,
+      "sharpe_ratio": -1.4836941185782848,
+      "max_drawdown": 0.013472635456334623,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5396825396825397,
+      "precision": 0.5730771475256771,
+      "recall": 0.5396825396825397,
+      "f1_score": 0.5300000896274188,
+      "precision_buy": 0.21875,
+      "confidence_buckets": {
+        "low": {
+          "count": 4,
+          "correct": 0
+        },
+        "medium": {
+          "count": 40,
+          "correct": 0
+        },
+        "high": {
+          "count": 82,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 205.61336047363542,
+        "avg_win": 205.61336047363542,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 9,
+        "1": 85,
+        "2": 32
+      },
+      "window_index": 5,
+      "symbol": "BHARTIARTL.NS"
+    },
+    {
+      "total_trades": 2,
+      "win_count": 2,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 154.94723321533593,
+      "avg_pnl_pct": 0.006331101014526903,
+      "gross_profit": 309.89446643067186,
+      "gross_loss": 1,
+      "profit_factor": 309.89446643067186,
+      "cagr": 0.0023554883913285973,
+      "sharpe_ratio": -7.618261863965468,
+      "max_drawdown": 0.003724545013179066,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.45081967213114754,
+      "precision": 0.478011428831101,
+      "recall": 0.45081967213114754,
+      "f1_score": 0.4541556803851886,
+      "precision_buy": 0.1111111111111111,
+      "confidence_buckets": {
+        "low": {
+          "count": 15,
+          "correct": 0
+        },
+        "medium": {
+          "count": 45,
+          "correct": 0
+        },
+        "high": {
+          "count": 62,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 154.94723321533593,
+        "avg_win": 154.94723321533593,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 2
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 2,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 39,
+        "1": 74,
+        "2": 9
+      },
+      "window_index": 6,
+      "symbol": "BHARTIARTL.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 0,
+      "loss_count": 1,
+      "win_rate": 0.0,
+      "avg_pnl": -872.127387817379,
+      "avg_pnl_pct": -0.02149768728860686,
+      "gross_profit": 0,
+      "gross_loss": 872.127387817379,
+      "profit_factor": 0.0,
+      "cagr": -0.020243754865605368,
+      "sharpe_ratio": -3.8006475357450054,
+      "max_drawdown": 0.011921263857836647,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.496,
+      "precision": 0.42622549399457577,
+      "recall": 0.496,
+      "f1_score": 0.4485178796046721,
+      "precision_buy": 0.3103448275862069,
+      "confidence_buckets": {
+        "low": {
+          "count": 22,
+          "correct": 0
+        },
+        "medium": {
+          "count": 52,
+          "correct": 0
+        },
+        "high": {
+          "count": 51,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -872.127387817379,
+        "avg_win": 0,
+        "avg_loss": 872.127387817379,
+        "win_rate": 0.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 7,
+        "1": 89,
+        "2": 29
+      },
+      "window_index": 7,
+      "symbol": "BHARTIARTL.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 1277.783199218753,
+      "avg_pnl_pct": 0.04869040670435929,
+      "gross_profit": 1277.783199218753,
+      "gross_loss": 1,
+      "profit_factor": 1277.783199218753,
+      "cagr": 0.025998370053203157,
+      "sharpe_ratio": -2.852741201164429,
+      "max_drawdown": 0.0020344984288426676,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5121951219512195,
+      "precision": 0.4568959203105544,
+      "recall": 0.5121951219512195,
+      "f1_score": 0.479257730618612,
+      "precision_buy": 0.24324324324324326,
+      "confidence_buckets": {
+        "low": {
+          "count": 20,
+          "correct": 0
+        },
+        "medium": {
+          "count": 36,
+          "correct": 0
+        },
+        "high": {
+          "count": 67,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 1277.783199218753,
+        "avg_win": 1277.783199218753,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 5,
+        "1": 81,
+        "2": 37
+      },
+      "window_index": 0,
+      "symbol": "BAJAJ-AUTO.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 2,
+      "loss_count": 1,
+      "win_rate": 0.6666666666666666,
+      "avg_pnl": 153.7093580729188,
+      "avg_pnl_pct": 0.011987253204665841,
+      "gross_profit": 651.4249838867208,
+      "gross_loss": 190.29690966796443,
+      "profit_factor": 3.4232031672156213,
+      "cagr": 0.004368486601943111,
+      "sharpe_ratio": -3.459514727726517,
+      "max_drawdown": 0.01165207022269038,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.528,
+      "precision": 0.5456700437773607,
+      "recall": 0.528,
+      "f1_score": 0.5364499178981939,
+      "precision_buy": 0.07692307692307693,
+      "confidence_buckets": {
+        "low": {
+          "count": 19,
+          "correct": 0
+        },
+        "medium": {
+          "count": 34,
+          "correct": 0
+        },
+        "high": {
+          "count": 72,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 153.7093580729188,
+        "avg_win": 325.7124919433604,
+        "avg_loss": 190.29690966796443,
+        "win_rate": 0.6666666666666666,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 30,
+        "1": 82,
+        "2": 13
+      },
+      "window_index": 1,
+      "symbol": "BAJAJ-AUTO.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 9.711272460938744,
+      "avg_pnl_pct": 0.00042199275061266354,
+      "gross_profit": 9.711272460938744,
+      "gross_loss": 1,
+      "profit_factor": 9.711272460938744,
+      "cagr": -0.0014448833570106512,
+      "sharpe_ratio": -7.326539650904515,
+      "max_drawdown": 0.004555146989620952,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5573770491803278,
+      "precision": 0.538481571910243,
+      "recall": 0.5573770491803278,
+      "f1_score": 0.5140631663245168,
+      "precision_buy": 0.3333333333333333,
+      "confidence_buckets": {
+        "low": {
+          "count": 12,
+          "correct": 0
+        },
+        "medium": {
+          "count": 44,
+          "correct": 0
+        },
+        "high": {
+          "count": 66,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 9.711272460938744,
+        "avg_win": 9.711272460938744,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 25,
+        "1": 94,
+        "2": 3
+      },
+      "window_index": 2,
+      "symbol": "BAJAJ-AUTO.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 2198.3140195312517,
+      "avg_pnl_pct": 0.059539271798571734,
+      "gross_profit": 2198.3140195312517,
+      "gross_loss": 1,
+      "profit_factor": 2198.3140195312517,
+      "cagr": 0.04482569788220836,
+      "sharpe_ratio": -0.5142202004124881,
+      "max_drawdown": 0.0,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5121951219512195,
+      "precision": 0.4269172561855488,
+      "recall": 0.5121951219512195,
+      "f1_score": 0.45785194694052206,
+      "precision_buy": 0.23809523809523808,
+      "confidence_buckets": {
+        "low": {
+          "count": 19,
+          "correct": 0
+        },
+        "medium": {
+          "count": 37,
+          "correct": 0
+        },
+        "high": {
+          "count": 67,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 2198.3140195312517,
+        "avg_win": 2198.3140195312517,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 3,
+        "1": 99,
+        "2": 21
+      },
+      "window_index": 3,
+      "symbol": "BAJAJ-AUTO.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 1688.7401914062539,
+      "avg_pnl_pct": 0.06327983990012682,
+      "gross_profit": 1688.7401914062539,
+      "gross_loss": 1,
+      "profit_factor": 1688.7401914062539,
+      "cagr": 0.03281436067912247,
+      "sharpe_ratio": -1.283596189108114,
+      "max_drawdown": 0.002543169537670077,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5294117647058824,
+      "precision": 0.4843420712093762,
+      "recall": 0.5294117647058824,
+      "f1_score": 0.5042814934192856,
+      "precision_buy": 0.37209302325581395,
+      "confidence_buckets": {
+        "low": {
+          "count": 6,
+          "correct": 0
+        },
+        "medium": {
+          "count": 49,
+          "correct": 0
+        },
+        "high": {
+          "count": 64,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 1688.7401914062539,
+        "avg_win": 1688.7401914062539,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 2,
+        "1": 74,
+        "2": 43
+      },
+      "window_index": 4,
+      "symbol": "BAJAJ-AUTO.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 0,
+      "loss_count": 1,
+      "win_rate": 0.0,
+      "avg_pnl": -3.2183730468714202,
+      "avg_pnl_pct": -0.00011374164245809457,
+      "gross_profit": 0,
+      "gross_loss": 3.2183730468714202,
+      "profit_factor": 0.0,
+      "cagr": -0.002039804387525601,
+      "sharpe_ratio": -6.330724247166639,
+      "max_drawdown": 0.00660948412904399,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5079365079365079,
+      "precision": 0.41173601617680566,
+      "recall": 0.5079365079365079,
+      "f1_score": 0.44665219824900465,
+      "precision_buy": 0.3157894736842105,
+      "confidence_buckets": {
+        "low": {
+          "count": 7,
+          "correct": 0
+        },
+        "medium": {
+          "count": 34,
+          "correct": 0
+        },
+        "high": {
+          "count": 85,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -3.2183730468714202,
+        "avg_win": 0,
+        "avg_loss": 3.2183730468714202,
+        "win_rate": 0.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 11,
+        "1": 96,
+        "2": 19
+      },
+      "window_index": 5,
+      "symbol": "BAJAJ-AUTO.NS"
+    },
+    {
+      "total_trades": 0,
+      "win_rate": 0,
+      "avg_pnl": 0,
+      "cagr": 0,
+      "sharpe_ratio": 0,
+      "max_drawdown": 0,
+      "profit_factor": 0,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5901639344262295,
+      "precision": 0.4174076132258961,
+      "recall": 0.5901639344262295,
+      "f1_score": 0.45919878122049607,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 2,
+          "correct": 0
+        },
+        "medium": {
+          "count": 11,
+          "correct": 0
+        },
+        "high": {
+          "count": 109,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 0,
+        "avg_win": 0,
+        "avg_loss": 0,
+        "win_rate": 0
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 0
+      },
+      "prediction_counts": {
+        "0": 4,
+        "1": 118
+      },
+      "window_index": 6,
+      "symbol": "BAJAJ-AUTO.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 1186.546000000002,
+      "avg_pnl_pct": 0.03581149967856923,
+      "gross_profit": 1186.546000000002,
+      "gross_loss": 1,
+      "profit_factor": 1186.546000000002,
+      "cagr": 0.021594915086803113,
+      "sharpe_ratio": -1.8153901979604568,
+      "max_drawdown": 0.004050829249999952,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.448,
+      "precision": 0.3937321571772254,
+      "recall": 0.44799999999999995,
+      "f1_score": 0.41905792972459643,
+      "precision_buy": 0.10344827586206896,
+      "confidence_buckets": {
+        "low": {
+          "count": 15,
+          "correct": 0
+        },
+        "medium": {
+          "count": 44,
+          "correct": 0
+        },
+        "high": {
+          "count": 66,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 1186.546000000002,
+        "avg_win": 1186.546000000002,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 10,
+        "1": 86,
+        "2": 29
+      },
+      "window_index": 7,
+      "symbol": "BAJAJ-AUTO.NS"
+    },
+    {
+      "total_trades": 0,
+      "win_rate": 0,
+      "avg_pnl": 0,
+      "cagr": 0,
+      "sharpe_ratio": 0,
+      "max_drawdown": 0,
+      "profit_factor": 0,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5528455284552846,
+      "precision": 0.41761517615176147,
+      "recall": 0.5528455284552846,
+      "f1_score": 0.4653387163146598,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 4,
+          "correct": 0
+        },
+        "medium": {
+          "count": 17,
+          "correct": 0
+        },
+        "high": {
+          "count": 102,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 0,
+        "avg_win": 0,
+        "avg_loss": 0,
+        "win_rate": 0
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 0
+      },
+      "prediction_counts": {
+        "0": 12,
+        "1": 110,
+        "2": 1
+      },
+      "window_index": 0,
+      "symbol": "SUNPHARMA.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 3,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 405.2229678141305,
+      "avg_pnl_pct": 0.01687387950474829,
+      "gross_profit": 1215.6689034423916,
+      "gross_loss": 1,
+      "profit_factor": 1215.6689034423916,
+      "cagr": 0.019427028154710202,
+      "sharpe_ratio": -1.366743499438725,
+      "max_drawdown": 0.010527430262812765,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.528,
+      "precision": 0.6041381818181818,
+      "recall": 0.528,
+      "f1_score": 0.5303922940377989,
+      "precision_buy": 0.5,
+      "confidence_buckets": {
+        "low": {
+          "count": 13,
+          "correct": 0
+        },
+        "medium": {
+          "count": 46,
+          "correct": 0
+        },
+        "high": {
+          "count": 66,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 405.2229678141305,
+        "avg_win": 405.2229678141305,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 44,
+        "1": 75,
+        "2": 6
+      },
+      "window_index": 1,
+      "symbol": "SUNPHARMA.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 3,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 173.5229797363323,
+      "avg_pnl_pct": 0.008003353086763827,
+      "gross_profit": 520.5689392089969,
+      "gross_loss": 1,
+      "profit_factor": 520.5689392089969,
+      "cagr": 0.005323608831669491,
+      "sharpe_ratio": -3.0203629922338426,
+      "max_drawdown": 0.007914180942759086,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5245901639344263,
+      "precision": 0.4834159359512009,
+      "recall": 0.5245901639344263,
+      "f1_score": 0.4997574934523232,
+      "precision_buy": 0.16666666666666666,
+      "confidence_buckets": {
+        "low": {
+          "count": 16,
+          "correct": 0
+        },
+        "medium": {
+          "count": 33,
+          "correct": 0
+        },
+        "high": {
+          "count": 73,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 173.5229797363323,
+        "avg_win": 173.5229797363323,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "1": 86,
+        "2": 36
+      },
+      "window_index": 2,
+      "symbol": "SUNPHARMA.NS"
+    },
+    {
+      "total_trades": 0,
+      "win_rate": 0,
+      "avg_pnl": 0,
+      "cagr": 0,
+      "sharpe_ratio": 0,
+      "max_drawdown": 0,
+      "profit_factor": 0,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.4878048780487805,
+      "precision": 0.6569849620064827,
+      "recall": 0.48780487804878053,
+      "f1_score": 0.48387974037933834,
+      "precision_buy": 1.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 7,
+          "correct": 0
+        },
+        "medium": {
+          "count": 37,
+          "correct": 0
+        },
+        "high": {
+          "count": 79,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 0,
+        "avg_win": 0,
+        "avg_loss": 0,
+        "win_rate": 0
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 0
+      },
+      "prediction_counts": {
+        "0": 36,
+        "1": 85,
+        "2": 2
+      },
+      "window_index": 3,
+      "symbol": "SUNPHARMA.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 0,
+      "loss_count": 1,
+      "win_rate": 0.0,
+      "avg_pnl": -1082.787954101559,
+      "avg_pnl_pct": -0.035136302655132526,
+      "gross_profit": 0,
+      "gross_loss": 1082.787954101559,
+      "profit_factor": 0.0,
+      "cagr": -0.02413925543959461,
+      "sharpe_ratio": -6.412036319721882,
+      "max_drawdown": 0.011903760115344194,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.6666666666666666,
+      "precision": 0.44817927170868355,
+      "recall": 0.6666666666666666,
+      "f1_score": 0.5360134003350084,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 1,
+          "correct": 0
+        },
+        "medium": {
+          "count": 17,
+          "correct": 0
+        },
+        "high": {
+          "count": 102,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -1082.787954101559,
+        "avg_win": 0,
+        "avg_loss": 1082.787954101559,
+        "win_rate": 0.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "1": 119,
+        "2": 1
+      },
+      "window_index": 4,
+      "symbol": "SUNPHARMA.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 3067.524975830083,
+      "avg_pnl_pct": 0.0843648512568608,
+      "gross_profit": 3067.524975830083,
+      "gross_loss": 1,
+      "profit_factor": 3067.524975830083,
+      "cagr": 0.059528200532028785,
+      "sharpe_ratio": -0.05151167706228041,
+      "max_drawdown": 0.0058736688247352535,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.6111111111111112,
+      "precision": 0.5677666511739271,
+      "recall": 0.6111111111111112,
+      "f1_score": 0.5879049475540704,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 22,
+          "correct": 0
+        },
+        "medium": {
+          "count": 36,
+          "correct": 0
+        },
+        "high": {
+          "count": 68,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 3067.524975830083,
+        "avg_win": 3067.524975830083,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 23,
+        "1": 98,
+        "2": 5
+      },
+      "window_index": 5,
+      "symbol": "SUNPHARMA.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 566.1694421386733,
+      "avg_pnl_pct": 0.023634875678670654,
+      "gross_profit": 566.1694421386733,
+      "gross_loss": 1,
+      "profit_factor": 566.1694421386733,
+      "cagr": 0.009808635999238646,
+      "sharpe_ratio": -2.6664878075469827,
+      "max_drawdown": 0.008659521949313348,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5819672131147541,
+      "precision": 0.6523625843780135,
+      "recall": 0.5819672131147541,
+      "f1_score": 0.45013105868763603,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 2,
+          "correct": 0
+        },
+        "medium": {
+          "count": 10,
+          "correct": 0
+        },
+        "high": {
+          "count": 110,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 566.1694421386733,
+        "avg_win": 566.1694421386733,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 2,
+        "1": 119,
+        "2": 1
+      },
+      "window_index": 6,
+      "symbol": "SUNPHARMA.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 2,
+      "loss_count": 1,
+      "win_rate": 0.6666666666666666,
+      "avg_pnl": 124.5797579345724,
+      "avg_pnl_pct": 0.00580935497924047,
+      "gross_profit": 399.8361390380908,
+      "gross_loss": 26.09686523437358,
+      "profit_factor": 15.321232471685724,
+      "cagr": 0.002513493624319185,
+      "sharpe_ratio": -2.5601212162103635,
+      "max_drawdown": 0.0095976294895506,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.56,
+      "precision": 0.5228939130434783,
+      "recall": 0.56,
+      "f1_score": 0.5402607204116638,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 25,
+          "correct": 0
+        },
+        "medium": {
+          "count": 39,
+          "correct": 0
+        },
+        "high": {
+          "count": 61,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 124.5797579345724,
+        "avg_win": 199.9180695190454,
+        "avg_loss": 26.09686523437358,
+        "win_rate": 0.6666666666666666,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 25,
+        "1": 92,
+        "2": 8
+      },
+      "window_index": 7,
+      "symbol": "SUNPHARMA.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 0,
+      "loss_count": 1,
+      "win_rate": 0.0,
+      "avg_pnl": -1050.2362585449205,
+      "avg_pnl_pct": -0.044958865306284866,
+      "gross_profit": 0,
+      "gross_loss": 1050.2362585449205,
+      "profit_factor": 0.0,
+      "cagr": -0.02308457774033046,
+      "sharpe_ratio": -5.42471077837464,
+      "max_drawdown": 0.011317334787777654,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.2845528455284553,
+      "precision": 0.36328371423959027,
+      "recall": 0.2845528455284553,
+      "f1_score": 0.2838991387571955,
+      "precision_buy": 0.07547169811320754,
+      "confidence_buckets": {
+        "low": {
+          "count": 23,
+          "correct": 0
+        },
+        "medium": {
+          "count": 40,
+          "correct": 0
+        },
+        "high": {
+          "count": 60,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -1050.2362585449205,
+        "avg_win": 0,
+        "avg_loss": 1050.2362585449205,
+        "win_rate": 0.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 11,
+        "1": 59,
+        "2": 53
+      },
+      "window_index": 0,
+      "symbol": "TECHM.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 912.3226328125011,
+      "avg_pnl_pct": 0.031263890897397444,
+      "gross_profit": 912.3226328125011,
+      "gross_loss": 1,
+      "profit_factor": 912.3226328125011,
+      "cagr": 0.016321107574046145,
+      "sharpe_ratio": -2.990756701557876,
+      "max_drawdown": 0.002647668570840243,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.264,
+      "precision": 0.4763014492753623,
+      "recall": 0.264,
+      "f1_score": 0.2745751122700275,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 10,
+          "correct": 0
+        },
+        "medium": {
+          "count": 42,
+          "correct": 0
+        },
+        "high": {
+          "count": 73,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 912.3226328125011,
+        "avg_win": 912.3226328125011,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 92,
+        "1": 30,
+        "2": 3
+      },
+      "window_index": 1,
+      "symbol": "TECHM.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 2140.1406036377007,
+      "avg_pnl_pct": 0.060893971105396336,
+      "gross_profit": 2140.1406036377007,
+      "gross_loss": 1,
+      "profit_factor": 2140.1406036377007,
+      "cagr": 0.04158053760983793,
+      "sharpe_ratio": -0.9441567222721248,
+      "max_drawdown": 0.0023411853417483032,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5327868852459017,
+      "precision": 0.5631404491494938,
+      "recall": 0.5327868852459017,
+      "f1_score": 0.5069680461148874,
+      "precision_buy": 0.6,
+      "confidence_buckets": {
+        "low": {
+          "count": 15,
+          "correct": 0
+        },
+        "medium": {
+          "count": 47,
+          "correct": 0
+        },
+        "high": {
+          "count": 60,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 2140.1406036377007,
+        "avg_win": 2140.1406036377007,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 29,
+        "1": 88,
+        "2": 5
+      },
+      "window_index": 2,
+      "symbol": "TECHM.NS"
+    },
+    {
+      "total_trades": 2,
+      "win_count": 2,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 1726.1510969238293,
+      "avg_pnl_pct": 0.05703023149697399,
+      "gross_profit": 3452.3021938476586,
+      "gross_loss": 1,
+      "profit_factor": 3452.3021938476586,
+      "cagr": 0.06725677580431388,
+      "sharpe_ratio": 0.20740816330591066,
+      "max_drawdown": 0.003796668307007253,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.6097560975609756,
+      "precision": 0.5760996456118407,
+      "recall": 0.6097560975609756,
+      "f1_score": 0.5495142910409306,
+      "precision_buy": 0.6666666666666666,
+      "confidence_buckets": {
+        "low": {
+          "count": 23,
+          "correct": 0
+        },
+        "medium": {
+          "count": 34,
+          "correct": 0
+        },
+        "high": {
+          "count": 66,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 1726.1510969238293,
+        "avg_win": 1726.1510969238293,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 2
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 2,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 10,
+        "1": 104,
+        "2": 9
+      },
+      "window_index": 3,
+      "symbol": "TECHM.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 0,
+      "loss_count": 3,
+      "win_rate": 0.0,
+      "avg_pnl": -621.9774415690064,
+      "avg_pnl_pct": -0.024606665525678712,
+      "gross_profit": 0,
+      "gross_loss": 1865.9323247070192,
+      "profit_factor": 0.0,
+      "cagr": -0.04256360540723503,
+      "sharpe_ratio": -3.867081686345167,
+      "max_drawdown": 0.02313455420552312,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.525,
+      "precision": 0.46509259259259267,
+      "recall": 0.525,
+      "f1_score": 0.4914884516680924,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 17,
+          "correct": 0
+        },
+        "medium": {
+          "count": 37,
+          "correct": 0
+        },
+        "high": {
+          "count": 66,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -621.9774415690064,
+        "avg_win": 0,
+        "avg_loss": 621.9774415690064,
+        "win_rate": 0.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 15,
+        "1": 90,
+        "2": 15
+      },
+      "window_index": 4,
+      "symbol": "TECHM.NS"
+    },
+    {
+      "total_trades": 2,
+      "win_count": 2,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 848.092563781741,
+      "avg_pnl_pct": 0.03968140364248455,
+      "gross_profit": 1696.185127563482,
+      "gross_loss": 1,
+      "profit_factor": 1696.185127563482,
+      "cagr": 0.031249069249139394,
+      "sharpe_ratio": -1.1856052807721957,
+      "max_drawdown": 0.0071933037730879884,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5396825396825397,
+      "precision": 0.5871904785799111,
+      "recall": 0.5396825396825397,
+      "f1_score": 0.5525762245056975,
+      "precision_buy": 0.14285714285714285,
+      "confidence_buckets": {
+        "low": {
+          "count": 45,
+          "correct": 0
+        },
+        "medium": {
+          "count": 45,
+          "correct": 0
+        },
+        "high": {
+          "count": 36,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 848.092563781741,
+        "avg_win": 848.092563781741,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 2
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 2,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 39,
+        "1": 73,
+        "2": 14
+      },
+      "window_index": 5,
+      "symbol": "TECHM.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 41.95349267578422,
+      "avg_pnl_pct": 0.0021117550676185226,
+      "gross_profit": 41.95349267578422,
+      "gross_loss": 1,
+      "profit_factor": 41.95349267578422,
+      "cagr": -0.0005597728850346151,
+      "sharpe_ratio": -7.552063357614612,
+      "max_drawdown": 0.004158672335181202,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5573770491803278,
+      "precision": 0.45621161051297404,
+      "recall": 0.5573770491803278,
+      "f1_score": 0.47082033083301084,
+      "precision_buy": 0.18181818181818182,
+      "confidence_buckets": {
+        "low": {
+          "count": 21,
+          "correct": 0
+        },
+        "medium": {
+          "count": 27,
+          "correct": 0
+        },
+        "high": {
+          "count": 74,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 41.95349267578422,
+        "avg_win": 41.95349267578422,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 4,
+        "1": 107,
+        "2": 11
+      },
+      "window_index": 6,
+      "symbol": "TECHM.NS"
+    },
+    {
+      "total_trades": 2,
+      "win_count": 0,
+      "loss_count": 2,
+      "win_rate": 0.0,
+      "avg_pnl": -776.9636743164012,
+      "avg_pnl_pct": -0.027564733138234973,
+      "gross_profit": 0,
+      "gross_loss": 1553.9273486328025,
+      "profit_factor": 0.0,
+      "cagr": -0.03474237733225516,
+      "sharpe_ratio": -5.520062045936887,
+      "max_drawdown": 0.018845083723454246,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.248,
+      "precision": 0.26682352941176474,
+      "recall": 0.248,
+      "f1_score": 0.25462456140350875,
+      "precision_buy": 0.21739130434782608,
+      "confidence_buckets": {
+        "low": {
+          "count": 36,
+          "correct": 0
+        },
+        "medium": {
+          "count": 52,
+          "correct": 0
+        },
+        "high": {
+          "count": 37,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -776.9636743164012,
+        "avg_win": 0,
+        "avg_loss": 776.9636743164012,
+        "win_rate": 0.0,
+        "total_trades": 2
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 2,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 51,
+        "1": 51,
+        "2": 23
+      },
+      "window_index": 7,
+      "symbol": "TECHM.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 0,
+      "loss_count": 3,
+      "win_rate": 0.0,
+      "avg_pnl": -282.8806741129536,
+      "avg_pnl_pct": -0.01602187213130476,
+      "gross_profit": 0,
+      "gross_loss": 848.6420223388608,
+      "profit_factor": 0.0,
+      "cagr": -0.01939883581339774,
+      "sharpe_ratio": -3.906334729998519,
+      "max_drawdown": 0.019006923156311504,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.6666666666666666,
+      "precision": 0.6198334186139065,
+      "recall": 0.6666666666666666,
+      "f1_score": 0.6282676672920574,
+      "precision_buy": 0.25,
+      "confidence_buckets": {
+        "low": {
+          "count": 7,
+          "correct": 0
+        },
+        "medium": {
+          "count": 42,
+          "correct": 0
+        },
+        "high": {
+          "count": 74,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -282.8806741129536,
+        "avg_win": 0,
+        "avg_loss": 282.8806741129536,
+        "win_rate": 0.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 11,
+        "1": 104,
+        "2": 8
+      },
+      "window_index": 0,
+      "symbol": "KOTAKBANK.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 3,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 869.4119613647482,
+      "avg_pnl_pct": 0.04482906341770143,
+      "gross_profit": 2608.2358840942447,
+      "gross_loss": 1,
+      "profit_factor": 2608.2358840942447,
+      "cagr": 0.05010803631478811,
+      "sharpe_ratio": -0.3027125799923021,
+      "max_drawdown": 0.010087039671202348,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.552,
+      "precision": 0.658092946965555,
+      "recall": 0.552,
+      "f1_score": 0.5589609807790059,
+      "precision_buy": 0.5,
+      "confidence_buckets": {
+        "low": {
+          "count": 12,
+          "correct": 0
+        },
+        "medium": {
+          "count": 48,
+          "correct": 0
+        },
+        "high": {
+          "count": 65,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 869.4119613647482,
+        "avg_win": 869.4119613647482,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 59,
+        "1": 62,
+        "2": 4
+      },
+      "window_index": 1,
+      "symbol": "KOTAKBANK.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 3,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 666.4907245483412,
+      "avg_pnl_pct": 0.024007009505690808,
+      "gross_profit": 1999.4721736450235,
+      "gross_loss": 1,
+      "profit_factor": 1999.4721736450235,
+      "cagr": 0.03591011026549218,
+      "sharpe_ratio": -0.7591730829921052,
+      "max_drawdown": 0.013755119409523403,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5163934426229508,
+      "precision": 0.5000158431569708,
+      "recall": 0.5163934426229508,
+      "f1_score": 0.5075221566244206,
+      "precision_buy": 0.35294117647058826,
+      "confidence_buckets": {
+        "low": {
+          "count": 7,
+          "correct": 0
+        },
+        "medium": {
+          "count": 38,
+          "correct": 0
+        },
+        "high": {
+          "count": 77,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 666.4907245483412,
+        "avg_win": 666.4907245483412,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 22,
+        "1": 83,
+        "2": 17
+      },
+      "window_index": 2,
+      "symbol": "KOTAKBANK.NS"
+    },
+    {
+      "total_trades": 0,
+      "win_rate": 0,
+      "avg_pnl": 0,
+      "cagr": 0,
+      "sharpe_ratio": 0,
+      "max_drawdown": 0,
+      "profit_factor": 0,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5040650406504065,
+      "precision": 0.47103658536585363,
+      "recall": 0.5040650406504065,
+      "f1_score": 0.48449262270400484,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 3,
+          "correct": 0
+        },
+        "medium": {
+          "count": 31,
+          "correct": 0
+        },
+        "high": {
+          "count": 89,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 0,
+        "avg_win": 0,
+        "avg_loss": 0,
+        "win_rate": 0
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 0
+      },
+      "prediction_counts": {
+        "0": 48,
+        "1": 75
+      },
+      "window_index": 3,
+      "symbol": "KOTAKBANK.NS"
+    },
+    {
+      "total_trades": 2,
+      "win_count": 1,
+      "loss_count": 1,
+      "win_rate": 0.5,
+      "avg_pnl": -57.55341012573021,
+      "avg_pnl_pct": -0.002694225809528075,
+      "gross_profit": 13.198660217288591,
+      "gross_loss": 128.305480468749,
+      "profit_factor": 0.10286902920334218,
+      "cagr": -0.00616010035083403,
+      "sharpe_ratio": -2.9525237701030744,
+      "max_drawdown": 0.014131522296752956,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.575,
+      "precision": 0.5458651026392963,
+      "recall": 0.575,
+      "f1_score": 0.5475917076357136,
+      "precision_buy": 0.09090909090909091,
+      "confidence_buckets": {
+        "low": {
+          "count": 11,
+          "correct": 0
+        },
+        "medium": {
+          "count": 37,
+          "correct": 0
+        },
+        "high": {
+          "count": 72,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -57.55341012573021,
+        "avg_win": 13.198660217288591,
+        "avg_loss": 128.305480468749,
+        "win_rate": 0.5,
+        "total_trades": 2
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 2,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 5,
+        "1": 93,
+        "2": 22
+      },
+      "window_index": 4,
+      "symbol": "KOTAKBANK.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 2145.696155883792,
+      "avg_pnl_pct": 0.05990518687031482,
+      "gross_profit": 2145.696155883792,
+      "gross_loss": 1,
+      "profit_factor": 2145.696155883792,
+      "cagr": 0.04071858384292848,
+      "sharpe_ratio": -1.4730764451567526,
+      "max_drawdown": 0.0009846427637136366,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5238095238095238,
+      "precision": 0.6571019385197688,
+      "recall": 0.5238095238095238,
+      "f1_score": 0.4957665531349742,
+      "precision_buy": 1.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 11,
+          "correct": 0
+        },
+        "medium": {
+          "count": 30,
+          "correct": 0
+        },
+        "high": {
+          "count": 85,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 2145.696155883792,
+        "avg_win": 2145.696155883792,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 49,
+        "1": 76,
+        "2": 1
+      },
+      "window_index": 5,
+      "symbol": "KOTAKBANK.NS"
+    },
+    {
+      "total_trades": 0,
+      "win_rate": 0,
+      "avg_pnl": 0,
+      "cagr": 0,
+      "sharpe_ratio": 0,
+      "max_drawdown": 0,
+      "profit_factor": 0,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.39344262295081966,
+      "precision": 0.4183451722873402,
+      "recall": 0.39344262295081966,
+      "f1_score": 0.3682152003279877,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 7,
+          "correct": 0
+        },
+        "medium": {
+          "count": 37,
+          "correct": 0
+        },
+        "high": {
+          "count": 78,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 0,
+        "avg_win": 0,
+        "avg_loss": 0,
+        "win_rate": 0
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 0
+      },
+      "prediction_counts": {
+        "0": 71,
+        "1": 51
+      },
+      "window_index": 6,
+      "symbol": "KOTAKBANK.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 0,
+      "loss_count": 1,
+      "win_rate": 0.0,
+      "avg_pnl": -3625.07721264648,
+      "avg_pnl_pct": -0.09480489218878022,
+      "gross_profit": 0,
+      "gross_loss": 3625.07721264648,
+      "profit_factor": 0.0,
+      "cagr": -0.07399141389836728,
+      "sharpe_ratio": -3.2829549354918517,
+      "max_drawdown": 0.03758001275843446,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.592,
+      "precision": 0.49404160619254955,
+      "recall": 0.592,
+      "f1_score": 0.5194536687998598,
+      "precision_buy": 0.38461538461538464,
+      "confidence_buckets": {
+        "low": {
+          "count": 29,
+          "correct": 0
+        },
+        "medium": {
+          "count": 43,
+          "correct": 0
+        },
+        "high": {
+          "count": 53,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -3625.07721264648,
+        "avg_win": 0,
+        "avg_loss": 3625.07721264648,
+        "win_rate": 0.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 6,
+        "1": 106,
+        "2": 13
+      },
+      "window_index": 7,
+      "symbol": "KOTAKBANK.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 1087.7328002929698,
+      "avg_pnl_pct": 0.06679982871724043,
+      "gross_profit": 1087.7328002929698,
+      "gross_loss": 1,
+      "profit_factor": 1087.7328002929698,
+      "cagr": 0.02125949860144294,
+      "sharpe_ratio": -3.3832704905115625,
+      "max_drawdown": 0.0021932156449059833,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5609756097560976,
+      "precision": 0.5153587840226228,
+      "recall": 0.5609756097560976,
+      "f1_score": 0.5190161089457812,
+      "precision_buy": 0.3333333333333333,
+      "confidence_buckets": {
+        "low": {
+          "count": 11,
+          "correct": 0
+        },
+        "medium": {
+          "count": 29,
+          "correct": 0
+        },
+        "high": {
+          "count": 83,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 1087.7328002929698,
+        "avg_win": 1087.7328002929698,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 25,
+        "1": 92,
+        "2": 6
+      },
+      "window_index": 0,
+      "symbol": "ADANIPORTS.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 0,
+      "loss_count": 1,
+      "win_rate": 0.0,
+      "avg_pnl": -23.249612182610235,
+      "avg_pnl_pct": -0.0006901830709995818,
+      "gross_profit": 0,
+      "gross_loss": 23.249612182610235,
+      "profit_factor": 0.0,
+      "cagr": -0.0028305879531813627,
+      "sharpe_ratio": -42.313262220996215,
+      "max_drawdown": 0.001411453335295664,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.408,
+      "precision": 0.5707458006718925,
+      "recall": 0.408,
+      "f1_score": 0.3943845517241379,
+      "precision_buy": 0.5,
+      "confidence_buckets": {
+        "low": {
+          "count": 19,
+          "correct": 0
+        },
+        "medium": {
+          "count": 30,
+          "correct": 0
+        },
+        "high": {
+          "count": 76,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -23.249612182610235,
+        "avg_win": 0,
+        "avg_loss": 23.249612182610235,
+        "win_rate": 0.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 76,
+        "1": 47,
+        "2": 2
+      },
+      "window_index": 1,
+      "symbol": "ADANIPORTS.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 0,
+      "loss_count": 3,
+      "win_rate": 0.0,
+      "avg_pnl": -1388.6789514567038,
+      "avg_pnl_pct": -0.06930895244574774,
+      "gross_profit": 0,
+      "gross_loss": 4166.0368543701115,
+      "profit_factor": 0.0,
+      "cagr": -0.08769827128872743,
+      "sharpe_ratio": -4.18597448598721,
+      "max_drawdown": 0.043984656047010066,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5327868852459017,
+      "precision": 0.3936068200924759,
+      "recall": 0.5327868852459017,
+      "f1_score": 0.45274042079774873,
+      "precision_buy": 0.23076923076923078,
+      "confidence_buckets": {
+        "low": {
+          "count": 12,
+          "correct": 0
+        },
+        "medium": {
+          "count": 40,
+          "correct": 0
+        },
+        "high": {
+          "count": 70,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -1388.6789514567038,
+        "avg_win": 0,
+        "avg_loss": 1388.6789514567038,
+        "win_rate": 0.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "1": 96,
+        "2": 26
+      },
+      "window_index": 2,
+      "symbol": "ADANIPORTS.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 288.13330242920324,
+      "avg_pnl_pct": 0.012136620922592198,
+      "gross_profit": 288.13330242920324,
+      "gross_loss": 1,
+      "profit_factor": 288.13330242920324,
+      "cagr": 0.004186846102357977,
+      "sharpe_ratio": -6.7144966766244405,
+      "max_drawdown": 0.004178287957455856,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.34959349593495936,
+      "precision": 0.5813008130081301,
+      "recall": 0.34959349593495936,
+      "f1_score": 0.36055326054183356,
+      "precision_buy": 0.6666666666666666,
+      "confidence_buckets": {
+        "low": {
+          "count": 13,
+          "correct": 0
+        },
+        "medium": {
+          "count": 50,
+          "correct": 0
+        },
+        "high": {
+          "count": 60,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 288.13330242920324,
+        "avg_win": 288.13330242920324,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 78,
+        "1": 42,
+        "2": 3
+      },
+      "window_index": 3,
+      "symbol": "ADANIPORTS.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 787.8267707519569,
+      "avg_pnl_pct": 0.040109555785954015,
+      "gross_profit": 787.8267707519569,
+      "gross_loss": 1,
+      "profit_factor": 787.8267707519569,
+      "cagr": 0.014723699779018551,
+      "sharpe_ratio": -4.643434212629052,
+      "max_drawdown": 0.002464360259147284,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.38333333333333336,
+      "precision": 0.3621527777777777,
+      "recall": 0.38333333333333336,
+      "f1_score": 0.3716395992047088,
+      "precision_buy": 0.0625,
+      "confidence_buckets": {
+        "low": {
+          "count": 32,
+          "correct": 0
+        },
+        "medium": {
+          "count": 46,
+          "correct": 0
+        },
+        "high": {
+          "count": 42,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 787.8267707519569,
+        "avg_win": 787.8267707519569,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 32,
+        "1": 72,
+        "2": 16
+      },
+      "window_index": 4,
+      "symbol": "ADANIPORTS.NS"
+    },
+    {
+      "total_trades": 2,
+      "win_count": 2,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 341.88628967285626,
+      "avg_pnl_pct": 0.012863158375499412,
+      "gross_profit": 683.7725793457125,
+      "gross_loss": 1,
+      "profit_factor": 683.7725793457125,
+      "cagr": 0.00954951148029104,
+      "sharpe_ratio": -1.9604113420301519,
+      "max_drawdown": 0.01304119923315724,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.4523809523809524,
+      "precision": 0.4244841864781894,
+      "recall": 0.4523809523809524,
+      "f1_score": 0.43503034495770576,
+      "precision_buy": 0.125,
+      "confidence_buckets": {
+        "low": {
+          "count": 30,
+          "correct": 0
+        },
+        "medium": {
+          "count": 44,
+          "correct": 0
+        },
+        "high": {
+          "count": 52,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 341.88628967285626,
+        "avg_win": 341.88628967285626,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 2
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 2,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 23,
+        "1": 87,
+        "2": 16
+      },
+      "window_index": 5,
+      "symbol": "ADANIPORTS.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 621.599860107423,
+      "avg_pnl_pct": 0.032343154685380314,
+      "gross_profit": 621.599860107423,
+      "gross_loss": 1,
+      "profit_factor": 621.599860107423,
+      "cagr": 0.011277271303704373,
+      "sharpe_ratio": -2.5412097733343364,
+      "max_drawdown": 0.011173992126654075,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.47540983606557374,
+      "precision": 0.6081186572989852,
+      "recall": 0.47540983606557374,
+      "f1_score": 0.43454772241301104,
+      "precision_buy": 1.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 8,
+          "correct": 0
+        },
+        "medium": {
+          "count": 39,
+          "correct": 0
+        },
+        "high": {
+          "count": 75,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 621.599860107423,
+        "avg_win": 621.599860107423,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 42,
+        "1": 78,
+        "2": 2
+      },
+      "window_index": 6,
+      "symbol": "ADANIPORTS.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 0,
+      "loss_count": 3,
+      "win_rate": 0.0,
+      "avg_pnl": -541.3333527425096,
+      "avg_pnl_pct": -0.025997937590675535,
+      "gross_profit": 0,
+      "gross_loss": 1624.0000582275288,
+      "profit_factor": 0.0,
+      "cagr": -0.03757984718929841,
+      "sharpe_ratio": -2.7843060918662705,
+      "max_drawdown": 0.027583726700883902,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.48,
+      "precision": 0.5301626373626374,
+      "recall": 0.48,
+      "f1_score": 0.5014338575393155,
+      "precision_buy": 0.12,
+      "confidence_buckets": {
+        "low": {
+          "count": 36,
+          "correct": 0
+        },
+        "medium": {
+          "count": 50,
+          "correct": 0
+        },
+        "high": {
+          "count": 39,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -541.3333527425096,
+        "avg_win": 0,
+        "avg_loss": 541.3333527425096,
+        "win_rate": 0.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 35,
+        "1": 65,
+        "2": 25
+      },
+      "window_index": 7,
+      "symbol": "ADANIPORTS.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 3,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 1336.9550789388043,
+      "avg_pnl_pct": 0.0742752725757125,
+      "gross_profit": 4010.865236816413,
+      "gross_loss": 1,
+      "profit_factor": 4010.865236816413,
+      "cagr": 0.07974807531485961,
+      "sharpe_ratio": 0.42214946979895435,
+      "max_drawdown": 0.008680990826373164,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5528455284552846,
+      "precision": 0.4167470488264204,
+      "recall": 0.5528455284552846,
+      "f1_score": 0.4240685187600539,
+      "precision_buy": 0.6666666666666666,
+      "confidence_buckets": {
+        "low": {
+          "count": 1,
+          "correct": 0
+        },
+        "medium": {
+          "count": 8,
+          "correct": 0
+        },
+        "high": {
+          "count": 114,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 1336.9550789388043,
+        "avg_win": 1336.9550789388043,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 2,
+        "1": 118,
+        "2": 3
+      },
+      "window_index": 0,
+      "symbol": "NESTLEIND.NS"
+    },
+    {
+      "total_trades": 0,
+      "win_rate": 0,
+      "avg_pnl": 0,
+      "cagr": 0,
+      "sharpe_ratio": 0,
+      "max_drawdown": 0,
+      "profit_factor": 0,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.6,
+      "precision": 0.5927623369256948,
+      "recall": 0.6,
+      "f1_score": 0.5851015134736065,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 4,
+          "correct": 0
+        },
+        "medium": {
+          "count": 25,
+          "correct": 0
+        },
+        "high": {
+          "count": 96,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 0,
+        "avg_win": 0,
+        "avg_loss": 0,
+        "win_rate": 0
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 0
+      },
+      "prediction_counts": {
+        "0": 43,
+        "1": 82
+      },
+      "window_index": 1,
+      "symbol": "NESTLEIND.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 1661.9635074462976,
+      "avg_pnl_pct": 0.03180369152677609,
+      "gross_profit": 1661.9635074462976,
+      "gross_loss": 1,
+      "profit_factor": 1661.9635074462976,
+      "cagr": 0.030404017802359462,
+      "sharpe_ratio": -1.040447019516147,
+      "max_drawdown": 0.01067340346395009,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.6065573770491803,
+      "precision": 0.6041530054644809,
+      "recall": 0.6065573770491803,
+      "f1_score": 0.5588831222302884,
+      "precision_buy": 0.6666666666666666,
+      "confidence_buckets": {
+        "low": {
+          "count": 9,
+          "correct": 0
+        },
+        "medium": {
+          "count": 22,
+          "correct": 0
+        },
+        "high": {
+          "count": 91,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 1661.9635074462976,
+        "avg_win": 1661.9635074462976,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 16,
+        "1": 100,
+        "2": 6
+      },
+      "window_index": 2,
+      "symbol": "NESTLEIND.NS"
+    },
+    {
+      "total_trades": 3,
+      "win_count": 3,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 229.4786333007847,
+      "avg_pnl_pct": 0.00881490262064616,
+      "gross_profit": 688.4358999023541,
+      "gross_loss": 1,
+      "profit_factor": 688.4358999023541,
+      "cagr": 0.00801521339254574,
+      "sharpe_ratio": -1.5617915921972292,
+      "max_drawdown": 0.015285486087714118,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5121951219512195,
+      "precision": 0.6032626600775811,
+      "recall": 0.5121951219512194,
+      "f1_score": 0.5403608693181207,
+      "precision_buy": 0.24444444444444444,
+      "confidence_buckets": {
+        "low": {
+          "count": 30,
+          "correct": 0
+        },
+        "medium": {
+          "count": 37,
+          "correct": 0
+        },
+        "high": {
+          "count": 56,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 229.4786333007847,
+        "avg_win": 229.4786333007847,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 3
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 3,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 10,
+        "1": 68,
+        "2": 45
+      },
+      "window_index": 3,
+      "symbol": "NESTLEIND.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 746.6344211425808,
+      "avg_pnl_pct": 0.021721575835157162,
+      "gross_profit": 746.6344211425808,
+      "gross_loss": 1,
+      "profit_factor": 746.6344211425808,
+      "cagr": 0.012818077653057314,
+      "sharpe_ratio": -4.934153064390169,
+      "max_drawdown": 0.0037287934190566308,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.6416666666666667,
+      "precision": 0.5485906862745099,
+      "recall": 0.6416666666666667,
+      "f1_score": 0.5909473684210526,
+      "precision_buy": 0.125,
+      "confidence_buckets": {
+        "low": {
+          "count": 14,
+          "correct": 0
+        },
+        "medium": {
+          "count": 26,
+          "correct": 0
+        },
+        "high": {
+          "count": 80,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 746.6344211425808,
+        "avg_win": 746.6344211425808,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 2,
+        "1": 102,
+        "2": 16
+      },
+      "window_index": 4,
+      "symbol": "NESTLEIND.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 0,
+      "loss_count": 1,
+      "win_rate": 0.0,
+      "avg_pnl": -1407.9306109619122,
+      "avg_pnl_pct": -0.05141734764685435,
+      "gross_profit": 0,
+      "gross_loss": 1407.9306109619122,
+      "profit_factor": 0.0,
+      "cagr": -0.029782082123227194,
+      "sharpe_ratio": -6.770796451906665,
+      "max_drawdown": 0.01503417044016882,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.5476190476190477,
+      "precision": 0.46649029982363316,
+      "recall": 0.5476190476190477,
+      "f1_score": 0.47961406784936195,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 5,
+          "correct": 0
+        },
+        "medium": {
+          "count": 37,
+          "correct": 0
+        },
+        "high": {
+          "count": 84,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -1407.9306109619122,
+        "avg_win": 0,
+        "avg_loss": 1407.9306109619122,
+        "win_rate": 0.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 10,
+        "1": 108,
+        "2": 8
+      },
+      "window_index": 5,
+      "symbol": "NESTLEIND.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 0,
+      "loss_count": 1,
+      "win_rate": 0.0,
+      "avg_pnl": -1455.2595615234295,
+      "avg_pnl_pct": -0.035929974616452406,
+      "gross_profit": 0,
+      "gross_loss": 1455.2595615234295,
+      "profit_factor": 0.0,
+      "cagr": -0.032132641313083354,
+      "sharpe_ratio": -8.011627975254488,
+      "max_drawdown": 0.015966550581745686,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.6229508196721312,
+      "precision": 0.4672131147540984,
+      "recall": 0.6229508196721312,
+      "f1_score": 0.5339578454332552,
+      "precision_buy": 0.0,
+      "confidence_buckets": {
+        "low": {
+          "count": 15,
+          "correct": 0
+        },
+        "medium": {
+          "count": 18,
+          "correct": 0
+        },
+        "high": {
+          "count": 89,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": -1455.2595615234295,
+        "avg_win": 0,
+        "avg_loss": 1455.2595615234295,
+        "win_rate": 0.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 5,
+        "1": 112,
+        "2": 5
+      },
+      "window_index": 6,
+      "symbol": "NESTLEIND.NS"
+    },
+    {
+      "total_trades": 1,
+      "win_count": 1,
+      "loss_count": 0,
+      "win_rate": 1.0,
+      "avg_pnl": 1148.836521972662,
+      "avg_pnl_pct": 0.02652818420219408,
+      "gross_profit": 1148.836521972662,
+      "gross_loss": 1,
+      "profit_factor": 1148.836521972662,
+      "cagr": 0.02010844659300126,
+      "sharpe_ratio": -2.8303371904005896,
+      "max_drawdown": 0.0030985071806250196,
+      "tier_enabled": false,
+      "tier_completion_rate": 0,
+      "avg_profit_per_tier": {},
+      "total_tier_exits": 0,
+      "total_realized_pnl": 0,
+      "accuracy": 0.608,
+      "precision": 0.5298018018018018,
+      "recall": 0.608,
+      "f1_score": 0.5257777777777777,
+      "precision_buy": 0.36363636363636365,
+      "confidence_buckets": {
+        "low": {
+          "count": 10,
+          "correct": 0
+        },
+        "medium": {
+          "count": 38,
+          "correct": 0
+        },
+        "high": {
+          "count": 77,
+          "correct": 0
+        }
+      },
+      "trade_expectancy": {
+        "expectancy": 1148.836521972662,
+        "avg_win": 1148.836521972662,
+        "avg_loss": 0,
+        "win_rate": 1.0,
+        "total_trades": 1
+      },
+      "optimal_confidence_threshold": {
+        "optimal_threshold": 0.5,
+        "expected_return": 0,
+        "trade_count": 1,
+        "all_negative_expectancy": true
+      },
+      "prediction_counts": {
+        "0": 3,
+        "1": 111,
+        "2": 11
+      },
+      "window_index": 7,
+      "symbol": "NESTLEIND.NS"
+    }
+  ],
+  "best_model": {
+    "total_trades": 3,
+    "win_count": 3,
+    "loss_count": 0,
+    "win_rate": 1.0,
+    "avg_pnl": 1259.7529530232778,
+    "avg_pnl_pct": 0.05516064410587781,
+    "gross_profit": 3779.2588590698333,
+    "gross_loss": 1,
+    "profit_factor": 3779.2588590698333,
+    "cagr": 0.0760216352767551,
+    "sharpe_ratio": 0.5022160527330449,
+    "max_drawdown": 0.0023994761531001946,
+    "tier_enabled": false,
+    "tier_completion_rate": 0,
+    "avg_profit_per_tier": {},
+    "total_tier_exits": 0,
+    "total_realized_pnl": 0,
+    "accuracy": 0.4065040650406504,
+    "precision": 0.43308317698561605,
+    "recall": 0.4065040650406504,
+    "f1_score": 0.4065040650406504,
+    "precision_buy": 0.21428571428571427,
+    "confidence_buckets": {
+      "low": {
+        "count": 29,
+        "correct": 0
+      },
+      "medium": {
+        "count": 47,
+        "correct": 0
+      },
+      "high": {
+        "count": 47,
+        "correct": 0
+      }
+    },
+    "trade_expectancy": {
+      "expectancy": 1259.7529530232778,
+      "avg_win": 1259.7529530232778,
+      "avg_loss": 0,
+      "win_rate": 1.0,
+      "total_trades": 3
+    },
+    "optimal_confidence_threshold": {
+      "optimal_threshold": 0.5,
+      "expected_return": 0,
+      "trade_count": 3,
+      "all_negative_expectancy": true
+    },
+    "prediction_counts": {
+      "0": 16,
+      "1": 65,
+      "2": 42
+    },
+    "window_index": 0,
+    "symbol": "ICICIBANK.NS"
+  }
+}

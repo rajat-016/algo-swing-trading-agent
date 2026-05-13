@@ -1,0 +1,37 @@
+============================================================
+EXECUTIVE SUMMARY - WALK-FORWARD BACKTEST
+============================================================
+Generated: 2026-05-05T17:43:22.486370
+Total Windows: 813
+Windows with Trades: 586/813
+Total Trades: 1111
+
+--- Strategy Metrics (Aggregated Across All Windows) ---
+Avg Sharpe Ratio: -2.99 (Target: >= 1.0)
+Avg Max Drawdown: 0.82% (Target: <= 25%)
+Avg Precision(BUY): 21.38%
+
+--- Trade Expectancy (Aggregated) ---
+Avg Expectancy/Window: 63.04
+Avg Gross Profit/Window: 547.76
+Avg Gross Loss/Window: 461.71
+System Win Rate: 51.22% (569 wins / 1111 trades)
+
+--- Optimal Confidence Threshold ---
+Average Optimal Threshold: 0.50
+Windows with Valid Threshold: 586/813
+
+--- Overfitting Check ---
+Avg Train Accuracy: 86.59%
+Avg Val Accuracy:   63.07%
+Avg Test Accuracy:  42.15%
+Val-Test Gap:       20.91%
+  --> Overfitting!
+
+--- Best Model (Selected) ---
+Symbol: HAL.NS
+Window: 1
+Sharpe: 1.38
+DD: 0.63%
+Precision(BUY): 37.50%
+============================================================
