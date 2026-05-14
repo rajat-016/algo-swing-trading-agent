@@ -1,0 +1,514 @@
+# Autonomous Agent Framework — Phase 2
+
+# Development Sequence & Strategic Execution Roadmap
+
+Repository:
+https://github.com/rajat-016/algo-swing-trading-agent
+
+========================================================
+PHASE 2 MASTER IMPLEMENTATION STRATEGY
+======================================
+
+PRIMARY IMPLEMENTATION PRINCIPLE
+
+Infrastructure before intelligence.
+
+Do NOT begin with:
+
+* advanced agents
+* dashboards
+* reflection systems
+* AI enhancements
+
+FIRST establish:
+
+* event reliability
+* orchestration stability
+* memory consistency
+* governance controls
+
+Because Phase 2 success depends on:
+
+"coordinated distributed intelligence"
+
+—not isolated AI features.
+
+========================================================
+PHASE 2A — INFRASTRUCTURE FOUNDATION
+====================================
+
+OBJECTIVE
+
+Build the distributed backbone required for all autonomous agents.
+
+---
+
+## IMPLEMENTATION ORDER
+
+1. ISSUE-201
+   Build Event-Driven Infrastructure Foundation
+
+2. ISSUE-201.1
+   Define Unified Event Schema Framework
+
+3. ISSUE-202
+   Implement LangGraph Agent Orchestration Framework
+
+4. ISSUE-202.1
+   Build Agent Registry & Lifecycle Manager
+
+5. ISSUE-203
+   Build Shared Multi-Agent Memory Infrastructure
+
+6. ISSUE-211
+   Build Autonomous Agent API Gateway
+
+7. ISSUE-214
+   Implement Multi-Provider LLM Routing Infrastructure
+
+---
+
+## WHY THIS PHASE COMES FIRST
+
+All autonomous systems depend on:
+
+* event communication
+* workflow orchestration
+* shared memory
+* API contracts
+* distributed execution coordination
+
+Without these components:
+
+* agents cannot coordinate
+* workflows cannot scale
+* context propagation fails
+* reflection systems become fragmented
+
+---
+
+## KEY OUTPUTS
+
+* Kafka infrastructure
+* event persistence
+* event replay
+* LangGraph orchestration
+* workflow state tracking
+* shared semantic memory
+* API gateway
+* LiteLLM abstraction
+* Ollama + Groq failover support
+
+---
+
+## CRITICAL DEPENDENCIES
+
+ALL future agents depend on:
+
+* ISSUE-201
+* ISSUE-202
+* ISSUE-203
+
+========================================================
+PHASE 2B — CORE AGENT DEPLOYMENT
+================================
+
+OBJECTIVE
+
+Deploy foundational financial intelligence agents.
+
+---
+
+## IMPLEMENTATION ORDER
+
+1. ISSUE-204
+   Implement Regime Agent
+
+2. ISSUE-205
+   Implement Signal Validation Agent
+
+3. ISSUE-206
+   Implement Autonomous Risk Agent
+
+4. ISSUE-207
+   Implement Portfolio Coordination Agent
+
+5. ISSUE-208
+   Implement Human Approval & Governance Framework
+
+---
+
+## WHY THIS ORDER IS IMPORTANT
+
+STEP 1 — REGIME AGENT
+
+The Regime Agent provides:
+
+* market context
+* volatility awareness
+* macro environment interpretation
+
+Every downstream decision depends on this.
+
+---
+
+STEP 2 — SIGNAL AGENT
+
+The Signal Agent validates:
+
+* ML predictions
+* historical similarity
+* contextual trade quality
+
+Requires:
+
+* regime intelligence
+* shared memory
+
+---
+
+STEP 3 — RISK AGENT
+
+Risk validation must occur BEFORE:
+
+* portfolio balancing
+* execution workflows
+
+This prevents unsafe portfolio states.
+
+---
+
+STEP 4 — PORTFOLIO AGENT
+
+Portfolio Agent depends on:
+
+* validated signals
+* approved risk state
+* exposure analysis
+
+---
+
+STEP 5 — GOVERNANCE FRAMEWORK
+
+Human approval layer must sit AFTER:
+
+* signal generation
+* risk validation
+* portfolio coordination
+
+This ensures:
+
+* execution safety
+* institutional governance
+* auditability
+
+---
+
+## KEY OUTPUTS
+
+* autonomous market intelligence
+* event-driven validation
+* risk-aware workflows
+* portfolio-aware reasoning
+* human approval queues
+* execution safeguards
+
+========================================================
+PHASE 2C — REFLECTION & LEARNING
+================================
+
+OBJECTIVE
+
+Enable adaptive learning and historical intelligence.
+
+---
+
+## IMPLEMENTATION ORDER
+
+1. ISSUE-209
+   Implement Reflection Agent
+
+2. ISSUE-209.1
+   Build Reflection Intelligence Workflows
+
+3. ISSUE-213
+   Implement Distributed Failure Recovery Framework
+
+---
+
+## WHY THIS PHASE COMES LATER
+
+Reflection systems require:
+
+* historical trade data
+* portfolio history
+* event history
+* regime history
+* execution outcomes
+
+Without operational agents:
+reflection quality will be weak.
+
+---
+
+## KEY OUTPUTS
+
+* recurring failure detection
+* degradation analysis
+* reflection intelligence
+* adaptive recommendations
+* instability detection
+* historical learning loops
+
+========================================================
+PHASE 2D — OBSERVABILITY & OPERATIONS
+=====================================
+
+OBJECTIVE
+
+Operationalize the distributed architecture.
+
+---
+
+## IMPLEMENTATION ORDER
+
+1. ISSUE-210
+   Implement Distributed Monitoring & Observability Stack
+
+2. ISSUE-210.1
+   Create Agent Intelligence Dashboards
+
+3. ISSUE-212
+   Implement Containerized Distributed Infrastructure
+
+4. ISSUE-212.1
+   Build Deployment Recovery & Rollback Framework
+
+---
+
+## WHY THIS PHASE IS IMPORTANT
+
+Distributed systems become extremely difficult to debug without:
+
+* tracing
+* telemetry
+* queue monitoring
+* orchestration visibility
+* recovery tooling
+
+Operational visibility is mandatory before production deployment.
+
+---
+
+## KEY OUTPUTS
+
+* Prometheus metrics
+* Grafana dashboards
+* Loki logs
+* OpenTelemetry tracing
+* Kubernetes-ready deployment
+* rollback support
+* blue-green deployment
+
+========================================================
+PHASE 2E — TESTING & HARDENING
+==============================
+
+OBJECTIVE
+
+Validate distributed intelligence reliability.
+
+---
+
+## IMPLEMENTATION ORDER
+
+1. TEST-201
+   Build Event Bus Reliability Test Suite
+
+2. TEST-202
+   Implement Multi-Agent Coordination Testing
+
+3. TEST-203
+   Build Shared Memory Consistency Test Suite
+
+4. TEST-204
+   Implement Autonomous Risk Workflow Testing
+
+5. TEST-205
+   Build Reflection & Learning Validation Framework
+
+6. TEST-206
+   Implement Chaos & Failure Injection Testing
+
+7. TEST-207
+   Build Distributed Observability Validation Suite
+
+---
+
+## WHY THIS PHASE MATTERS
+
+Autonomous distributed systems fail in:
+
+* coordination
+* retries
+* queue overload
+* stale memory
+* orchestration complexity
+
+Testing must validate:
+
+* reliability
+* resilience
+* graceful degradation
+* recovery workflows
+
+---
+
+## KEY OUTPUTS
+
+* chaos testing
+* replay validation
+* orchestration stability
+* recovery testing
+* risk workflow validation
+* observability validation
+
+========================================================
+HIGH-PRIORITY DEPENDENCY GRAPH
+==============================
+
+Event Bus
+↓
+Orchestration Layer
+↓
+Shared Memory
+↓
+Regime Agent
+↓
+Signal Agent
+↓
+Risk Agent
+↓
+Portfolio Agent
+↓
+Governance Layer
+↓
+Reflection Agent
+↓
+Observability & Recovery
+
+========================================================
+RECOMMENDED TEAM STRUCTURE
+==========================
+
+TEAM A — INFRASTRUCTURE
+
+Ownership:
+
+* Kafka
+* orchestration
+* APIs
+* deployment
+* event replay
+
+---
+
+TEAM B — AI & MEMORY
+
+Ownership:
+
+* ChromaDB
+* retrieval
+* reflection
+* embeddings
+* semantic memory
+
+---
+
+TEAM C — TRADING INTELLIGENCE
+
+Ownership:
+
+* regime agent
+* signal agent
+* risk agent
+* portfolio agent
+
+---
+
+TEAM D — PLATFORM RELIABILITY
+
+Ownership:
+
+* monitoring
+* tracing
+* dashboards
+* chaos testing
+* recovery systems
+
+========================================================
+CRITICAL ARCHITECTURAL RULES
+============================
+
+RULE 1
+
+Agents NEVER directly communicate.
+
+Only event-driven communication is allowed.
+
+---
+
+RULE 2
+
+Agents consume shared intelligence.
+
+No duplicated reasoning pipelines.
+
+---
+
+RULE 3
+
+Execution ALWAYS requires governance approval.
+
+No autonomous execution authority.
+
+---
+
+RULE 4
+
+Portfolio context is mandatory.
+
+No isolated signal decisions allowed.
+
+---
+
+RULE 5
+
+All decisions must be:
+
+* explainable
+* auditable
+* traceable
+
+========================================================
+FINAL STRATEGIC RECOMMENDATION
+==============================
+
+The strongest long-term advantage will NOT be:
+
+* prediction accuracy alone
+
+The strongest advantage becomes:
+
+* accumulated market intelligence
+* contextual memory
+* adaptive reasoning
+* portfolio coordination
+* institutional orchestration
+* historical learning
+
+The future architecture should resemble:
+
+"An autonomous institutional financial intelligence operating system"
+
+—not merely another trading bot.
