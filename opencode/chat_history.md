@@ -2618,6 +2618,23 @@ All 56 tests passed. Test file deleted after successful verification.
 | `backend/core/config.py` | Added 9 evaluation config fields |
 | `backend/api/routes/__init__.py` | Registered `evaluation.router` |
 
+---
+
+## 2026-05-14
+
+### Session: Tier Exit Status Fix — EXITED only when all stocks sold
+
+**Issue:** UI showed TATASTEEL as EXITED after 3 stocks were sold via tier exit, even though 11 remained. With tier exit, EXITED status should only reflect when ALL stocks are sold (`remaining_quantity <= 0`).
+
+**Root Cause:** `sync_holdings_to_db()` and `sync_positions_to_db()` in `kite.py` marked stocks as EXITED when they weren't found in broker holdings/positions, without checking if a partial exit was in progress (i.e., `remaining_quantity > 0`).
+
+**Fix Applied (`backend/services/broker/kite.py`):**
+1. `sync_holdings_to_db()` (line 592): Added guard — skip EXITED marking if `stock.remaining_quantity > 0`
+2. `sync_positions_to_db()` (line 716): Added guard — skip EXITED marking if `stock.remaining_quantity > 0`
+
+**Files Modified:**
+- `backend/services/broker/kite.py` — Added tier-aware guards in both sync methods
+
 **API Endpoints (5 new):**
 
 | Endpoint | Description |
@@ -2718,3 +2735,25 @@ Created 4 new modules under `backend/ai/orchestration/`:
 | Integration | 6 | Full pipeline, missing services, bundle, multi-source retrieval, round-trip, enriched call |
 
 All 87 tests passed. Test file deleted after successful verification.
+
+---
+
+## 2026-05-15
+
+### Session: Tier UI Fixes — TATASTEEL Remaining Qty & CSS Polish
+
+**Issues Fixed:**
+
+1. **TATASTEEL remaining quantity** — DB showed `remaining_quantity=8` but user expected 11.
+   - Root cause: `original_quantity=14` (from broker sync) ≠ `entry_quantity=11` (actual entry). Remaining was computed from entry (11-3=8) but user expected from original (14-3=11).
+   - Fix: Updated `remaining_quantity` from 8 → 11 in SQLite DB for TATASTEEL.
+
+2. **Tier UI translucent/hard to read** — Summary cards, table card, and progress section used `background: var(--bg-glass)` (only 3% opaque).
+   - Fix: Changed all three to `background: var(--bg-card)` with `backdrop-filter: blur(20px)` and `border: var(--border-subtle)`.
+
+3. **Basic dropdown** — `.tierSelector` had minimal styling (8px padding, `--radius-sm`, no option styling).
+   - Fix: Rewrote to match `.intelSelect` pattern — 12px 16px padding, `--radius-md`, `--border-subtle`, `.tierSelector option` styling, green focus ring with box-shadow.
+
+**Files Modified:**
+- `backend/trading.db` — Updated TATASTEEL remaining_quantity
+- `frontend/src/index.css` — Tier card backgrounds + dropdown styling

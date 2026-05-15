@@ -11,6 +11,7 @@ import MarketIntelligence from './components/MarketIntelligence';
 import PortfolioIntelligence from './components/PortfolioIntelligence';
 import TradeIntelligence from './components/TradeIntelligence';
 import ResearchIntelligence from './components/ResearchIntelligence';
+import TierOverview from './components/TierOverview';
 
 function App() {
   const [stocks, setStocks] = useState([]);
@@ -215,6 +216,7 @@ function App() {
     { id: 'portfolio-intel', label: 'Portfolio Intel', icon: '📋' },
     { id: 'trade-intel', label: 'Trade Intel', icon: '🔍' },
     { id: 'research', label: 'Research', icon: '🔬' },
+    { id: 'tiers', label: 'Tiers', icon: '⊞' },
     { id: 'monitoring', label: 'Monitoring', icon: '◎' },
   ];
 
@@ -363,6 +365,10 @@ function App() {
         ) : activeTab === 'research' ? (
           <section className="intelSection">
             <ResearchIntelligence />
+          </section>
+        ) : activeTab === 'tiers' ? (
+          <section className="tierSection">
+            <TierOverview stocks={stocks} />
           </section>
         ) : activeTab === 'monitoring' ? (
           <section className="monitoringSection">

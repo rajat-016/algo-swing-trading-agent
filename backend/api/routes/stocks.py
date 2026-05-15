@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from core.database import get_db
-from models.stock import Stock, StockStatus, ExitReason
+from models.stock import Stock, StockStatus, ExitReason, ExitLog
 from core.logging import logger
 from services.broker.kite import get_broker
 
@@ -27,6 +27,19 @@ async def get_stock(symbol: str, db: Session = Depends(get_db)):
     if not stock:
         raise HTTPException(status_code=404, detail="Stock not found")
     return stock.to_dict()
+
+
+@router.get("/{symbol}/exit-logs")
+async def get_stock_exit_logs(symbol: str, db: Session = Depends(get_db)):
+    stock = db.query(Stock).filter(Stock.symbol == symbol).first()
+    if not stock:
+        raise HTTPException(status_code=404, detail="Stock not found")
+    logs = db.query(ExitLog).filter(ExitLog.stock_id == stock.id).order_by(ExitLog.tier).all()
+    return {
+        "symbol": symbol,
+        "exit_logs": [log.to_dict() for log in logs],
+        "total": len(logs),
+    }
 
 
 @router.get("/status/{status}")

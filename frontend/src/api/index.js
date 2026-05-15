@@ -26,6 +26,7 @@ export const stocksApi = {
   getPortfolio: () => api.get('/stocks/summary/portfolio'),
   getAnalytics: () => api.get('/stocks/summary/analytics'),
   exitStock: (symbol, reason) => api.post(`/stocks/${symbol}/exit`, { reason }),
+  getExitLogs: (symbol) => api.get(`/stocks/${symbol}/exit-logs`),
 };
 
 export const tradingApi = {
@@ -33,6 +34,7 @@ export const tradingApi = {
   switchMode: (mode) => api.post('/trading/mode', { mode }),
   start: () => api.post('/trading/start'),
   stop: () => api.post('/trading/stop'),
+  getTierConfig: () => api.get('/trading/tier-config'),
 };
 
 export class WebSocketManager {

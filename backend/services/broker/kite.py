@@ -589,6 +589,9 @@ class KiteBroker:
                 if not h:
                     existing = db.query(Stock).filter(Stock.symbol == symbol).first()
                     if existing and existing.status == StockStatus.ENTERED:
+                        if existing.remaining_quantity and existing.remaining_quantity > 0:
+                            logger.info(f"Skipping EXITED for {symbol}: remaining_quantity={existing.remaining_quantity} (tier exit in progress)")
+                            continue
                         existing.status = StockStatus.EXITED
                         existing.broker_status = "NOT_HOLDING"
                         marked_exited += 1
@@ -639,6 +642,10 @@ class KiteBroker:
                         existing.target_price = avg_price * (1 + self.target_pct / 100)
                     if not existing.stop_loss:
                         existing.stop_loss = avg_price * (1 - self.sl_pct / 100)
+                    if not existing.original_quantity or existing.original_quantity == 0:
+                        existing.original_quantity = total_qty
+                    if not existing.remaining_quantity or existing.remaining_quantity == 0:
+                        existing.remaining_quantity = total_qty
                     logger.debug(f"Updated holding: {symbol} qty={total_qty}")
                 else:
                     target = avg_price * (1 + self.target_pct / 100)
@@ -657,6 +664,8 @@ class KiteBroker:
                         pnl=pnl,
                         pnl_percentage=pnl_pct,
                         broker_status="HOLDING",
+                        original_quantity=total_qty,
+                        remaining_quantity=total_qty,
                     )
                     db.add(stock)
                     logger.info(f"Added holding: {symbol} qty={total_qty} on {exchange}")
@@ -710,6 +719,9 @@ class KiteBroker:
             all_entered = db.query(Stock).filter(Stock.status == StockStatus.ENTERED).all()
             for stock in all_entered:
                 if stock.symbol not in pos_by_symbol and stock.symbol not in holding_symbols:
+                    if stock.remaining_quantity and stock.remaining_quantity > 0:
+                        logger.info(f"Skipping EXITED for {stock.symbol}: remaining_quantity={stock.remaining_quantity} (tier exit in progress)")
+                        continue
                     stock.status = StockStatus.EXITED
                     stock.broker_status = "POSITION_CLOSED"
                     marked_exited += 1
